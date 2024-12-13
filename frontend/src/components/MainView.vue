@@ -1,4 +1,14 @@
 <template>
+    <v-container class="d-flex justify-end">
+      <div>
+        <RouterLink>
+          회원가입
+        </RouterLink> / 
+        <RouterLink>
+          로그인
+        </RouterLink>
+      </div>
+    </v-container>
     <!-- flex와 grid 함께 사용하지 말기 (어째선지 제대로 정렬이 안됨)-->
     <v-container class="d-flex flex-column justify-center" style="height:100%">
         <h1 style="text-align: center;" class="mb-5">pretender</h1>

@@ -1,9 +1,13 @@
 <template>
   <h1 v-show="props.mediaInfo.length > 0">tv 쇼</h1> <!--v-if 어째선지 안됨...-->
-  <v-container>
+  <v-container v-if="mediaInfoReady">
     <v-row v-for="i in rowNumber"> <!--1, 2, 3...-->
       <v-col v-for="j in colList(i)"cols="4" class="ga-3">
-        <v-card elevation="10"><RouterLink :to="{path: '/detail', query: {id : mediaId(index(i, j))}}">
+        <v-card elevation="10">
+          <RouterLink 
+            :to="{path: '/detail', query: {id : mediaId(index(i, j))}}"
+            v-on:click.prevent="handleClick(index(i, j))"
+          >
           <v-img
             :src="posterPath(index(i, j))"
             height="300px"
@@ -28,6 +32,7 @@
 </style>
 
 <script setup>
+ // v-on:click.prevent="handleClick(index(i, j))"
   import { computed } from 'vue'
   const itemsPerRow = 3
   const posterBaseUrl = "http://image.tmdb.org/t/p/w500/"
@@ -58,10 +63,22 @@
   const posterPath = (index) => {
     return props.mediaInfo[index]["poster_path"] ? (posterBaseUrl + props.mediaInfo[index]["poster_path"]) : noImageUrl
   }
+  const backDropPath = (index) => {
+    return props.mediaInfo[index]["backdrop_path"] ? (posterBaseUrl + props.mediaInfo[index]["backdrop_path"]) : noImageUrl
+  }
   const mediaId = (index) => {
-    return props.mediaInfo[index]["id"]
+    return props.mediaInfo[index]["id"] ? props.mediaInfo[index]["id"] : -1
   }
   const mediaInfoReady = computed(() => {
     return props.mediaInfo.length > 0
   })
+
+  import { useMediaDetailStore } from '../stores/MediaDetail'
+  const store = useMediaDetailStore()
+  const handleClick = (index) => {
+    store.setMediaDetail({
+      id: mediaId(index),
+      backDropPath: backDropPath(index)
+    })
+  }
 </script>
