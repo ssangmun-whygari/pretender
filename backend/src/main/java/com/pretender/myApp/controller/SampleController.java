@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pretender.myApp.service.SampleService;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000"})
 public class SampleController {
 	@Autowired
 	private SampleService sampleService;

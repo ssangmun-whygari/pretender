@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pretender.myApp.mapper.membersMapper">
+    <select id="findUserByUsername" parameterType="string" resultType="com.pretender.myApp.model.PretenderUserDetails">
+    	select id as username,
+    	password,
+    	case
+    		when status = 'active'
+    		then true
+    		else false
+    	end as enabled,
+    	case
+    		when is_admin = '0'
+    		then false
+    		when is_admin = '1'
+    		then true
+    	end as isAdmin
+    	from members
+    	where id = #{username}
+    </select>
+</mapper>
