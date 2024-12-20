@@ -1,10 +1,15 @@
 <template>
     <v-container class="d-flex justify-end">
-      <div>
+      <div v-if="isAuthenticated == true">
+        <RouterLink to="/myPage">
+          마이페이지
+        </RouterLink>
+      </div>
+      <div v-else>
         <RouterLink>
           회원가입
         </RouterLink> / 
-        <RouterLink>
+        <RouterLink to="/login">
           로그인
         </RouterLink>
       </div>
@@ -28,14 +33,14 @@
   import { useRouter } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
   const { lgAndUp } = useDisplay();
   const router = useRouter()
 
   let word = ref('')
   let responseData = ref(null)
+  let isAuthenticated = ref(false)
 
-  // axios 요청
   async function onEnter() {
       router.push({
             path: '/search',
@@ -43,5 +48,24 @@
               word: word.value
             }
           })
-    }
+  }
+
+  async function checkAuthenticated() {
+    let response = await axios.get(
+      'http://localhost:8080/api/authenticated',
+      {
+        withCredentials: true,
+
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }
+    ) // axios.get end
+    return response.data && response.data.authenticated == true
+  }
+
+  // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음음
+  onMounted(async () => {
+    isAuthenticated.value = await checkAuthenticated()
+  })
 </script>

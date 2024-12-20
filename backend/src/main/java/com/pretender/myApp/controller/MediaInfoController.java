@@ -16,7 +16,6 @@ import com.pretender.myApp.service.MediaInfoService;
 import reactor.core.publisher.Mono;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000"})
 public class MediaInfoController {
 	@Autowired
 	private MediaInfoService mediaInfoService;
