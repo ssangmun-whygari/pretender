@@ -4,6 +4,18 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.pretender.myApp.mapper.membersMapper">
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) 
+        FROM members 
+        WHERE id = #{id}
+    </select>
+    
+     <!-- 회원 정보 삽입 -->
+    <insert id="insertUser">
+        INSERT INTO members (id, password, nickname, birthday, gender, status, phone, image, is_admin)
+        VALUES (#{id}, #{password}, #{nickname}, #{birthday}, #{gender}, #{status}, #{phone}, #{image}, #{isAdmin})
+    </insert>
+  
     <select id="findUserByUsername" parameterType="string" resultType="com.pretender.myApp.model.PretenderUserDetails">
     	select id as username,
     	password,
