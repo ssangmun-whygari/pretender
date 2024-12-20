@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pretender.myApp.mapper.signUpMapper">
+   <select id="countById" resultType="int">
+        SELECT COUNT(*) 
+        FROM members 
+        WHERE id = #{id}
+    </select>
+    
+     <!-- 회원 정보 삽입 -->
+    <insert id="insertUser">
+        INSERT INTO members (id, password, nickname, birthday, gender, status, phone, image, is_admin)
+        VALUES (#{id}, #{password}, #{nickname}, #{birthday}, #{gender}, #{status}, #{phone}, #{image}, #{isAdmin})
+    </insert>
+</mapper>
