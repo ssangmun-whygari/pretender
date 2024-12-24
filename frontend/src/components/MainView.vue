@@ -72,7 +72,7 @@
     navigationStore.setPreviousPage(route.fullPath);
   }
 
-  // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음음
+  // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음
   onMounted(async () => {
     isAuthenticated.value = await checkAuthenticated()
   })

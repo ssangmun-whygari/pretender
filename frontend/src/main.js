@@ -21,6 +21,7 @@ import MainView from './components/MainView.vue'
 import SearchView from './components/search/SearchView.vue'
 import DetailView from './components/detail/DetailView.vue'
 import Test from './components/Test.vue'
+import Test2 from './components/Test2.vue'
 import SignUpView from './components/members/SignUpView.vue'
 import MyPageView from './components/members/MyPageView.vue'
 import LoginView from './components/members/LoginView.vue'
@@ -28,6 +29,7 @@ import LoginView from './components/members/LoginView.vue'
 const routes = [
     { path: '/', component: MainView },
     { path: '/test', component: Test },
+    { path: '/test2', component: Test2 },
     { path: '/search', component: SearchView},
     { path: '/detail', component: DetailView},
     { path: '/signUp', component: SignUpView},
@@ -49,4 +51,3 @@ app.use(router)
 const pinia = createPinia()
 app.use(pinia)
 app.mount('#app')
-

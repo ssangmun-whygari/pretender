@@ -13,6 +13,7 @@
     "axios": "^1.7.9",
     "pinia": "^2.3.0",
     "roboto-fontface": "*",
+    "swiper": "^11.1.15",
     "vue": "^3.4.31",
     "vue-router": "^4.5.0",
     "vuetify": "^3.6.14"

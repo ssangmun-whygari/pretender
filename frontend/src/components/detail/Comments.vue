@@ -1,5 +1,5 @@
 <template>
-  <h1>댓글</h1>
+  <h2>댓글 23,358개</h2>
 </template>
 
 <script setup>
