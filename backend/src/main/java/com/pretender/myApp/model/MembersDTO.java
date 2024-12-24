@@ -1,4 +1,4 @@
-package com.pretender.myApp.vodto;
+package com.pretender.myApp.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

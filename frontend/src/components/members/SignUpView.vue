@@ -56,12 +56,12 @@
           ></v-text-field>
         </template>
         <v-date-picker
-          locale="ko-KR"
-          v-model="fromDateVal"
-          no-title
-          @update:modelValue="handleDateInput"
-          :min="minDate"
-        ></v-date-picker>
+        locale="ko-KR"
+        :model-value="tempDate" 
+        no-title
+        @update:modelValue="handleDateInput"
+        :min="minDate"
+       />
       </v-menu>
 
       <!-- 성별 -->

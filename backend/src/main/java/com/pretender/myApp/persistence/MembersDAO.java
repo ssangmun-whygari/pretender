@@ -5,7 +5,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.pretender.myApp.vodto.MembersDTO;
+
+import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.model.PretenderUserDetails;
 
 @Component

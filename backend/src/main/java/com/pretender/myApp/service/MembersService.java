@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.persistence.MembersDAO;
-import com.pretender.myApp.vodto.MembersDTO;
 
 @Service
 public class MembersService {

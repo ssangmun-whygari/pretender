@@ -6,7 +6,7 @@
         </RouterLink>
       </div>
       <div v-else>
-        <RouterLink>
+        <RouterLink to="/signUp" @click="savePreviousPage">
           회원가입
         </RouterLink> / 
         <RouterLink to="/login">
@@ -30,12 +30,16 @@
 </template>
 
 <script setup>
-  import { useRouter } from 'vue-router';
+  import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
   import { ref, onMounted } from 'vue'
+  import { useNavigationStore } from './stores/navigation';
+
   const { lgAndUp } = useDisplay();
-  const router = useRouter()
+  const router = useRouter();
+  const route = useRoute();
+  const navigationStore = useNavigationStore();
 
   let word = ref('')
   let responseData = ref(null)
@@ -62,6 +66,10 @@
       }
     ) // axios.get end
     return response.data && response.data.authenticated == true
+  }
+
+  function savePreviousPage(){
+    navigationStore.setPreviousPage(route.fullPath);
   }
 
   // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음음

@@ -1,13 +1,11 @@
 package com.pretender.myApp.controller;
 
 
-import com.pretender.myApp.vodto.MembersDTO;
-
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
-
+import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.service.MembersService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

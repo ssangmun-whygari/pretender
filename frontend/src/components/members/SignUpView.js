@@ -16,7 +16,9 @@ export function useSignUpLogic() {
     const gender = ref('');
     const fromDateMenu = ref(false);
     const fromDateVal = ref(null); // Date 객체
+    const defaultDate = new Date(1995, 0, 1);
     const minDate = ref(new Date(1900, 0, 1)); // 최소 날짜
+    const tempDate =ref(null);
 
     // 검증
     const hasTypedId = ref(false);
@@ -31,8 +33,6 @@ export function useSignUpLogic() {
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,15}$/;
 
-    // 이전 페이지 저장
-    navigationStore.setPreviousPage(route.fullPath);
 
   // 검증 함수
     function validateId() {
@@ -65,10 +65,20 @@ export function useSignUpLogic() {
       return `${year}${month}${day}`;
     });
 
+
     function handleDateInput(date) {
-      fromDateVal.value = date;
-      fromDateMenu.value = false; // 날짜 선택 시 메뉴 닫기
+      if (date instanceof Date) {
+      fromDateVal.value = date; // 최종 선택 날짜
+      }
+      fromDateMenu.value = false; // 날짜 선택시 달력 닫기
     }
+
+      // 달력 열릴 때 기본 날짜 표시
+    watch(fromDateMenu, (isOpen) => {
+      if (isOpen) {
+        tempDate.value = fromDateVal.value || defaultDate; // 달력 열릴 때 기본 날짜 설정
+      }
+    });
 
     // 별명 자동 설정
     watch(id, (newId) => {
@@ -129,7 +139,9 @@ export function useSignUpLogic() {
       gender,
       fromDateMenu,
       fromDateVal,
+      defaultDate,
       minDate,
+      tempDate,
       hasTypedId,
       hasTypedPassword,
       isIdValid,

@@ -51,8 +51,13 @@ public class SecurityConfig {
 	SecurityWebFilterChain configure(ServerHttpSecurity http) throws Exception {
 		http.httpBasic(Customizer.withDefaults());
 		http.securityContextRepository(new WebSessionServerSecurityContextRepository());
+		
+		  // CSRF 비활성화
+        http.csrf(csrf -> csrf.disable());
+		
 		http.authorizeExchange((exchange) -> {
 			exchange.pathMatchers(HttpMethod.OPTIONS).permitAll()
+			.pathMatchers("/api/signup", "/api/login").permitAll() 
 			.pathMatchers("/api/myPage/**").authenticated()
 			.pathMatchers("/api/login").authenticated()
 			.anyExchange().permitAll();
