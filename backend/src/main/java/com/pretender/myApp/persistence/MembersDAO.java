@@ -1,22 +1,18 @@
 package com.pretender.myApp.persistence;
 
-
+import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
-
+import org.springframework.stereotype.Component;
 import com.pretender.myApp.vodto.MembersDTO;
+import com.pretender.myApp.model.PretenderUserDetails;
 
-
-
-@Repository
+@Component
 public class MembersDAO {
-	
-	private static final String ns = "com.pretender.myApp.mapper.membersMapper.";
-	
 	@Autowired
-	 private SqlSession ses;
+	private SqlSession ses;
+	private String ns = "com.pretender.myApp.mapper.membersMapper.";
 	
 	 // 이메일 중복 체크
 	 public int countById(String id) {
@@ -31,4 +27,12 @@ public class MembersDAO {
 	 public int insertUser(MembersDTO membersDTO) {
 		 return ses.insert(ns +"insertUser", membersDTO);
 	 }
+	public List<String> selectNames() {
+		return ses.selectList(ns + "selectName");
+	}
+
+	public PretenderUserDetails findUserByUsername(String username) {
+		return ses.selectOne(ns + "findUserByUsername", username);
+	}
+
 }

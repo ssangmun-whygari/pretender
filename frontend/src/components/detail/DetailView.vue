@@ -1,10 +1,12 @@
 <template>
-<h1>detail</h1>
+  <AppHeader></AppHeader>
   <MediaDetail/>
   <Comments/>
 </template>
 
 <script setup>
+import AppHeader from '../AppHeader.vue';
+
 
 
 

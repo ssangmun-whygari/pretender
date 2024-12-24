@@ -24,8 +24,66 @@
           </v-col>
       </v-row>
     </div>
+    <div><v-btn v-on:click="requestAuthExp">인증 요청(Basic 헤더, 실험용)</v-btn></div>
+    <div><v-btn v-on:click="requestAuthExp2">인증 요청(세션, 실험용)</v-btn></div>
+    <div><v-btn v-on:click="authenticatedExp">로그인되었는가?</v-btn></div>
 </template>
 
 <script setup>
+  import { useRouter } from 'vue-router';
+  import { useDisplay } from 'vuetify';
+  import axios from 'axios'
+  import { ref, onMounted } from 'vue'
+  const { lgAndUp } = useDisplay();
+  const router = useRouter()
     
+  async function requestAuthExp() {
+    console.log("requestAuthExp...")
+    let response = await axios.get(
+      'http://localhost:8080/api/myPage',
+      {
+        auth: {
+          username: 'whygari4321',
+          password: 'abc1234'
+        },
+
+        withCredentials: true,
+
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }
+    ) // axios.get end
+    console.log(response)
+  }
+
+  async function requestAuthExp2() {
+    console.log("requestAuthExp2...")
+    let response = await axios.get(
+      'http://localhost:8080/api/myPage',
+      {
+        withCredentials: true,
+
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }
+    ) // axios.get end
+    console.log(response)
+  }
+
+  async function authenticatedExp() {
+    let response = await axios.get(
+      'http://localhost:8080/api/authenticated',
+      {
+        withCredentials: true,
+
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }
+    ) // axios.get end
+    console.log("response : " + response)
+    console.log(response)
+  }
 </script>

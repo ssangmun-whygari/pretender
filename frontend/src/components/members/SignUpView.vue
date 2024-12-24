@@ -90,7 +90,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { useSignUpLogic } from './SignUpView.js'; // 외부 스크립트 가져오기
+import { useSignUpLogic } from './SignUpView.js'; 
 
 export default defineComponent({
   setup() {
