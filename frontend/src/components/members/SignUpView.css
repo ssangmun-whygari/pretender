@@ -1,0 +1,26 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .card {
+    padding: 16px;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  .card-title {
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .text-field {
+    margin-top: 12px;
+  }
+  
+  .button {
+    margin-top: 8px;
+  }
+  

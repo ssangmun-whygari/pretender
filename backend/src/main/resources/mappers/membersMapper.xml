@@ -3,16 +3,20 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.pretender.myApp.mapper.signUpMapper">
+<mapper namespace="com.pretender.myApp.mapper.membersMapper">
    <select id="countById" resultType="int">
-        SELECT COUNT(*) 
-        FROM members 
-        WHERE id = #{id}
+        select count(*) from members 
+        where id = #{id}
+    </select>
+    
+    <select id="countByNickname" resultType="int">
+    	select count(*) from members 
+    	where nickname = #{nickname}
     </select>
     
      <!-- 회원 정보 삽입 -->
     <insert id="insertUser">
-        INSERT INTO members (id, password, nickname, birthday, gender, status, phone, image, is_admin)
-        VALUES (#{id}, #{password}, #{nickname}, #{birthday}, #{gender}, #{status}, #{phone}, #{image}, #{isAdmin})
+        INSERT INTO members (id, password, nickname, birthday, gender, status)
+        VALUES (#{id}, #{password}, #{nickname}, #{birthday}, #{gender}, #{status})
     </insert>
 </mapper>
