@@ -1,112 +1,103 @@
 <template>
-  <v-container class="d-flex flex-column justify-center align-center" style="height: 100%;">
-    <v-card class="pa-4" elevation="2" style="max-width: 400px; width: 100%;">
-      <v-card-title class="text-h6 font-weight-bold text-center">
+  <v-container class="container">
+    <v-card class="card" elevation="2">
+      <v-card-title class="card-title">
         회원 가입
       </v-card-title>
 
       <!-- 아이디 -->
-      아이디
+       아이디
       <v-text-field
-        placeholder="id@email.com"
+        v-model="id"
+        placeholder="pretender@email.co.kr"
         outlined
         dense
-        class="mt-3"
-      ></v-text-field>
+        class="text-field"
+        :error="hasTypedId && (!isIdValid || !!idErrorMessage)"
+        :error-messages="hasTypedId && !isIdValid ? '유효한 이메일 주소를 입력하세요.' : idErrorMessage"
+        @input="validateId"
+      />
 
       <!-- 비밀번호 -->
-      비밀번호
+       비밀번호
       <v-text-field
+        v-model="password"
         type="password"
-        placeholder="8-16자리/영문 대소문자, 숫자, 특수문자 조합"
+        placeholder="6~15자 특수문자, 영어대문자, 영어소문자, 숫자 1자 이상 포함"
         outlined
         dense
-      ></v-text-field>
+        class="text-field"
+        :error="hasTypedPassword && !isPasswordValid"
+        :error-messages="hasTypedPassword && !isPasswordValid ? '비밀번호는 6~15자, 영문 대소문자, 숫자, 특수문자를 포함해야 합니다.' : ''"
+        @input="validatePassword"
+      />
 
       <!-- 생년월일 -->
-      생년월일
-       <v-dialog v-model="dateDialog" max-width="400px">
-        <template v-slot:activator="{ on, attrs }">
+       생년월일
+      <v-menu
+        v-model="fromDateMenu"
+        :close-on-content-click="false"
+        :nudge-right="40"
+        transition="scale-transition"
+        offset-y
+        max-width="290px"
+        min-width="290px"
+      >
+        <template v-slot:activator="{ props }">
           <v-text-field
-            v-model="birthDate"
-            label="YYYY-MM-DD"
+            placeholder="생년월일"
+            prepend-inner-icon="mdi-calendar"
             readonly
+            :value="fromDateDisp"
+            v-bind="props"
             outlined
             dense
-            v-bind="attrs"
-            v-on="on"
+            class="text-field"
           ></v-text-field>
         </template>
-        <v-card>
-          <v-card-title>
-            생년월일 선택
-          </v-card-title>
-          <v-card-text>
-            <v-calendar
-              v-model="birthDate"
-              type="date"
-              locale="ko-KR"
-            ></v-calendar>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="dateDialog = false">취소</v-btn>
-            <v-btn text @click="dateDialog = false">확인</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog> 
-      <template>
-  <v-row class="fill-height">
-    <v-col>
-      <v-sheet height="600">
-        <v-calendar
-          ref="calendar"
-          v-model="today"
-          :events="events"
-          color="primary"
-          type="month"
-        ></v-calendar>
-      </v-sheet>
-    </v-col>
-  </v-row>
-</template>
+        <v-date-picker
+        locale="ko-KR"
+        :model-value="tempDate" 
+        no-title
+        @update:modelValue="handleDateInput"
+        :min="minDate"
+       />
+      </v-menu>
 
       <!-- 성별 -->
       성별
       <v-radio-group v-model="gender" row>
-        <v-radio label="남성" value="male"></v-radio>
-        <v-radio label="여성" value="female"></v-radio>
+        <v-radio label="남성" value="M"></v-radio>
+        <v-radio label="여성" value="F"></v-radio>
+        <v-radio label="비공개" value="N"></v-radio>
       </v-radio-group>
 
       <!-- 별명 -->
-      별명
+       닉네임
       <v-text-field
-        placeholder="사용할 별명을 입력하세요"
+        v-model="nickname"
         outlined
         dense
-      ></v-text-field>
+        class="text-field"
+        :error="!!nicknameErrorMessage"
+        :error-messages="nicknameErrorMessage"
+      />
 
-      <v-btn class="mt-2" color="primary" block outlined>가입하기</v-btn>
+      <v-btn class="button" color="primary" block outlined @click="handleSubmit">가입하기</v-btn>
     </v-card>
   </v-container>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import { VCalendar } from 'vuetify/labs/VCalendar';
-
-const birthDate = ref('');
-const dateDialog = ref(false);
-const gender = ref('');
-</script>
-
 <script>
-import { createVuetify } from 'vuetify';
-import { VCalendar } from 'vuetify/labs/VCalendar';
+import { defineComponent } from 'vue';
+import { useSignUpLogic } from './SignUpView.js'; 
 
-export default createVuetify({
-  components: {
-    VCalendar,
+export default defineComponent({
+  setup() {
+    // 외부 함수 호출
+    return { ...useSignUpLogic() };
   },
 });
 </script>
+
+<style src="./SignUpView.css"></style>

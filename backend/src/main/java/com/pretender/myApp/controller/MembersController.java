@@ -1,9 +1,12 @@
 package com.pretender.myApp.controller;
 
+
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.pretender.myApp.model.MembersDTO;
+import com.pretender.myApp.service.MembersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,21 +20,30 @@ import com.pretender.myApp.service.MembersService;
 
 
 @RestController
+@RequestMapping("/api/signup")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")//CORS
 public class MembersController {
-	@Autowired
-  	private MembersService MembersService;
-  
-	@PostMapping("/api/signup")
-	public ResponseEntity<String> registerUser(@RequestBody MembersDTO signUpRequest) {
-	    // String result = MembersService.registerUser(signUpRequest);
-		String result = null;
-	    if (result.equals("회원가입 성공!")) {
-	        return ResponseEntity.ok(result);
-	    } else {
-	        return ResponseEntity.badRequest().body(result);
-	    }
-	}
-	
+  @Autowired
+  private MembersService MembersService;
+
+  @PostMapping("/api/signup")
+  public ResponseEntity<String> registerUser(@RequestBody MembersDTO signUpRequest) {
+
+    int result = 0;
+    try {
+      result = MembersService.registerUser(signUpRequest);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    if (result != 0) {
+      return ResponseEntity.ok("회원가입이 완료되었습니다.");
+    } else {
+      return ResponseEntity.badRequest().body("회원가입에 실패하였습니다.");
+    }
+
+  }
+
 	@GetMapping("/api/login")
 	public ResponseEntity<Map<String, Object>> login() {
 		Map<String, Object> response = new HashMap<>();
@@ -51,4 +63,5 @@ public class MembersController {
 		response.put("message", "어서 오세요");
 		return ResponseEntity.ok(response);
 	}
+
 }
