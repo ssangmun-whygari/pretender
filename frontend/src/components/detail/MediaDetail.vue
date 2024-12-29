@@ -26,41 +26,49 @@
       </div>
     </div>
   </v-sheet>
-  <section v-if="hasContentProvider()">
-    <h2>다음과 같은 플랫폼에서 볼 수 있어요</h2>
-    <div class="d-flex align-center ga-3" style="height: 70px;">
-      <img
-        v-for="( _ , i) in getContentProviders"
-        :src="getProviderLogoPath(i)"
-      ><img>
-      <!-- <img
-        src="http://image.tmdb.org/t/p/w154/wwemzKWzjKYJFfCeiB57q3r4Bcm.png"
-      ></img> -->
-    </div>
-  </section>
-  <section>
-    <h2>의견을 공유해보세요</h2>
-    <v-sheet class="ma-3 pa-3 bg-light-blue-lighten-5" rounded>
-      <div class="pb-3 d-flex align-center">
-        <p>별점 : </p>
-        <v-rating
-          active-color="amber-accent-4"
-          color="amber-accent-4"
-          density="compact"
-          size="x-large"
-          half-increments
-        />
-      </div>
-      <v-textarea 
-        variant="outlined"
-        bg-color="yellow-lighten-5"
-        color="amber-accent-1"
-      ></v-textarea>
-      <div class="d-flex justify-end">
-        <v-btn color="primary">게시하기</v-btn>
-      </div>
-    </v-sheet>
-  </section>
+  <v-container fluid>
+    <v-row justify="center">
+      <v-col lg="8" cols="12">
+        <section v-if="hasContentProvider()">
+          <h2>다음과 같은 플랫폼에서 볼 수 있어요</h2>
+          <div class="d-flex align-center ga-3" style="height: 70px;">
+            <img
+              v-for="( _ , i) in getContentProviders"
+              :src="getProviderLogoPath(i)"
+            ><img>
+            <!-- <img
+              src="http://image.tmdb.org/t/p/w154/wwemzKWzjKYJFfCeiB57q3r4Bcm.png"
+            ></img> -->
+          </div>
+        </section>
+        <section>
+          <h2>의견을 공유해보세요</h2>
+          <v-sheet class="ma-3 pa-3 bg-light-blue-lighten-5" rounded>
+            <div class="pb-3 d-flex align-center">
+              <p>별점 : </p>
+              <v-rating
+                active-color="amber-accent-4"
+                color="amber-accent-4"
+                density="compact"
+                size="x-large"
+                half-increments
+              />
+            </div>
+            <v-textarea 
+              variant="outlined"
+              bg-color="yellow-lighten-5"
+              color="amber-accent-1"
+            ></v-textarea>
+            <div class="d-flex justify-end">
+              <v-btn color="primary">게시하기</v-btn>
+            </div>
+          </v-sheet>
+        </section>
+        <Comments/>
+      </v-col>
+    </v-row>
+  </v-container>
+
 </template>
 
 

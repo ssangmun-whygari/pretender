@@ -1,59 +1,61 @@
 <template>
   <h1 v-show="mediaInfo.length > 0">tv 쇼</h1> <!--v-if 어째선지 안됨...-->
   <h2 v-if="showByIndividualYears == true">개별 연도로 표시</h2>
-  <v-container>
+  <v-container fluid>
     <div v-if="showByIndividualYears == true">
-      <div v-for="(item, _) in Object.values(mediaInfoRendered).sort((a, b) => b.year - a.year)">
-        <div class="yearCategory"> {{ item.year }}</div>
-        <swiper-container
-          :key="item.year"
-          :attr-year="item.year"
-          class="mySwiper mb-3"
-          centered-slides="true"
-          :breakpoints="{
-            '@0.75': {
-              slidesPerView: 2,
-              spaceBetween: 20,
-            },
-            '@1.00': {
-              slidesPerView: 3,
-              spaceBetween: 40,
-            },
-            '@1.50': {
-              slidesPerView: 4,
-              spaceBetween: 50,
-            },
-          }"
-        >
-          <swiper-slide 
-            class="slide"
-            v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
+      <v-row justify="center">
+        <v-col lg="8" cols="12" v-for="(item, _) in Object.values(mediaInfoRendered).sort((a, b) => b.year - a.year)">
+          <div class="yearCategory"> {{ item.year }}</div>
+          <swiper-container
+            :key="item.year"
+            :attr-year="item.year"
+            class="mySwiper mb-3"
+            centered-slides="true"
+            :breakpoints="{
+              '@0.75': {
+                slidesPerView: 2,
+                spaceBetween: 20,
+              },
+              '@1.00': {
+                slidesPerView: 3,
+                spaceBetween: 40,
+              },
+              '@1.50': {
+                slidesPerView: 4,
+                spaceBetween: 50,
+              },
+            }"
           >
-            <v-sheet class="slide py-3 w-100 h-100 border rounded"
-              :elevation="5">
-              <RouterLink 
-              class="h-100 w-100 d-flex justify-center"
-              :to="{path: '/detail', query: {id : innerItem['id']}}"
-              v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
-              <img 
-                :src="posterPath(innerItem['poster_path'])"
-                class="poster"
-              ></img>
-              </RouterLink>
-            </v-sheet>
-          </swiper-slide>
-        </swiper-container>
-        <v-sheet class="d-flex justify-center slide mb-3 py-3 w-100 border rounded"
-          :elevation="5"
-        >
-           <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
-        </v-sheet>
-        <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
-          <div class="marquee-content" :attr-year="item.year">
-            {{ stripContent(item['data'][item.activeIndex.value].overview) }}
-          </div>
-        </v-sheet>
-      </div>
+            <swiper-slide 
+              class="slide"
+              v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
+            >
+              <v-sheet class="slide py-3 w-100 h-100 border rounded"
+                :elevation="5">
+                <RouterLink 
+                class="h-100 w-100 d-flex justify-center"
+                :to="{path: '/detail', query: {id : innerItem['id']}}"
+                v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
+                <img 
+                  :src="posterPath(innerItem['poster_path'])"
+                  class="poster"
+                ></img>
+                </RouterLink>
+              </v-sheet>
+            </swiper-slide>
+          </swiper-container>
+          <v-sheet class="d-flex justify-center slide mb-3 py-3 w-100 border rounded"
+            :elevation="5"
+          >
+            <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
+          </v-sheet>
+          <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
+            <div class="marquee-content" :attr-year="item.year">
+              {{ stripContent(item['data'][item.activeIndex.value].overview) }}
+            </div>
+          </v-sheet>
+        </v-col>
+      </v-row>
     </div>
   </v-container>
 </template>
