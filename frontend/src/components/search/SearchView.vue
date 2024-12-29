@@ -24,9 +24,9 @@
       }
     ) // axios.get end
     mediaInfo.value.tv = mediaInfo.value.tv.concat(response.data.results)
-    console.log("==========mediaInfo=============")
-    console.log(mediaInfo.value)
-    console.log("==========mediaInfo=============")
+    // console.log("==========mediaInfo=============")
+    // console.log(mediaInfo.value)
+    // console.log("==========mediaInfo=============")
   }
   getResponse()
 </script>

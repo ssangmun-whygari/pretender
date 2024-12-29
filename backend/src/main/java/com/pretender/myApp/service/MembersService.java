@@ -1,8 +1,10 @@
 package com.pretender.myApp.service;
 
 import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.persistence.MembersDAO;
 
@@ -10,10 +12,10 @@ import com.pretender.myApp.persistence.MembersDAO;
 @Service
 public class MembersService {
 		
-		@Autowired
-		private MembersDAO membersDAO;
-	
-		private static final String EMAIL_REGEX = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+	@Autowired
+	private MembersDAO membersDAO;
+
+	private static final String EMAIL_REGEX = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
 
     //비밀번호 검증 패턴 (6~15자, 대문자, 소문자, 숫자, 특수문자 포함)
     private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{6,15}$";

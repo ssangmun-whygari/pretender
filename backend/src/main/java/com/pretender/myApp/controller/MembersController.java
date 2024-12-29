@@ -20,8 +20,6 @@ import com.pretender.myApp.service.MembersService;
 
 
 @RestController
-@RequestMapping("/api/signup")
-@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")//CORS
 public class MembersController {
   @Autowired
   private MembersService MembersService;

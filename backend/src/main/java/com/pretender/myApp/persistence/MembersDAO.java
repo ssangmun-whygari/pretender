@@ -15,19 +15,20 @@ public class MembersDAO {
 	private SqlSession ses;
 	private String ns = "com.pretender.myApp.mapper.membersMapper.";
 	
-	 // 이메일 중복 체크
-	 public int countById(String id) {
-		 return ses.selectOne(ns +"countById", id);
-	 }
+	// 이메일 중복 체크
+	public int countById(String id) {
+		return ses.selectOne(ns +"countById", id);
+	}
 	 
-	 public int countByNickname(String nickname) {
-		 return ses.selectOne(ns +"countByNickname", nickname);
-	 }
+	public int countByNickname(String nickname) {
+		return ses.selectOne(ns +"countByNickname", nickname);
+	}
 
-	 // 회원 정보 저장
-	 public int insertUser(MembersDTO membersDTO) {
+	// 회원 정보 저장
+	public int insertUser(MembersDTO membersDTO) {
 		 return ses.insert(ns +"insertUser", membersDTO);
-	 }
+	}
+		 
 	public List<String> selectNames() {
 		return ses.selectList(ns + "selectName");
 	}

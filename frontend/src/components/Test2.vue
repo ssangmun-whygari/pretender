@@ -16,7 +16,7 @@
   <p class="desc">설명</p>
 </template>
 
-<style>
+<style scoped>
   .mySwiper {
     width: 100%;
     height: 500px;
