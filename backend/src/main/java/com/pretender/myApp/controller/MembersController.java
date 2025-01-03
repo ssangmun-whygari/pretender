@@ -10,6 +10,7 @@ import com.pretender.myApp.service.MembersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,6 +52,7 @@ public class MembersController {
 	
 	@GetMapping("/api/authenticated")
 	public Principal user(Principal user) {
+		System.out.println("SecurityContext: " + SecurityContextHolder.getContext().getAuthentication());
 		System.out.println("user : " + user);
 	    return user;
 	}
@@ -60,6 +62,7 @@ public class MembersController {
 		Map<String, Object> response = new HashMap<>();
 		response.put("message", "어서 오세요");
 		return ResponseEntity.ok(response);
+		// TODO : 로그인 되어 있지 않을 시 잘못된 요청 페이지 보여줘야 함
 	}
 
 }

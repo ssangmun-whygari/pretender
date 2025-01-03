@@ -3,7 +3,7 @@ package com.pretender.myApp.component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @Component
 public class TMDBclient {
@@ -11,9 +11,9 @@ public class TMDBclient {
 	private String token;
 	
 	@Autowired
-	private WebClient.Builder builder;
+	private RestClient.Builder builder;
 	
-	public WebClient getWebClient() {
+	public RestClient getRestClient() {
 		return builder
 			.baseUrl("https://api.themoviedb.org")
 			.defaultHeaders(httpHeaders -> {

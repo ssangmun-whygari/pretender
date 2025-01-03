@@ -22,7 +22,8 @@
         half-increments
         />
         <h1 class="text-white">3.5</h1>
-        <v-btn class="ml-3" color="primary">내가 본 작품인가요?</v-btn>
+        <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
+        <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
       </div>
     </div>
   </v-sheet>
@@ -97,6 +98,29 @@
 
   let mediaInfo = ref({})
   let contentProviderImageBaseUrl = "http://image.tmdb.org/t/p/w154"
+  let hasWatched = ref(false)
+
+  async function getHasWatched() {
+    let response = await axios.get(
+      'http://localhost:8080/api/collection/watchList',
+      {
+        withCredentials: true,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        // TODO : 바꿔야 함
+        params : {
+          mediaType: "tv",
+          mediaId: id
+        }
+      }
+    )
+    console.log("getHasWatched()...")
+    console.log(response)
+    console.log("getHasWatched() end")
+    hasWatched.value = response.data
+  }
+  getHasWatched()
 
   // axios 요청
   async function getResponse() {
@@ -114,6 +138,31 @@
   }
   getResponse()
 
+  async function addToWatchList() {
+    let response = await axios.post(
+      'http://localhost:8080/api/collection/watchList',
+      null, // 본문
+      {
+        withCredentials: true,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        // TODO : 바꿔야 함
+        params : {
+          mediaType: "tv",
+          mediaId: id,
+          mediaTitle: title()
+        }
+      }
+    )
+    console.log("addToWatchList()...")
+    console.log(response)
+    console.log("addToWatchList() end")
+    if (response.status == 200) {
+      hasWatched.value = true
+    }
+  }
+
   console.log("======================================")
   console.log(mediaInfo)
   console.log("======================================")
@@ -123,7 +172,7 @@
   }
 
   let title = () => {
-    console.log("title? : ")
+    console.log(`title? : ${mediaInfo.value.name ? mediaInfo.value.name : mediaInfo.value.title}`)
     return mediaInfo.value.name ? mediaInfo.value.name : mediaInfo.value.title
   }
 

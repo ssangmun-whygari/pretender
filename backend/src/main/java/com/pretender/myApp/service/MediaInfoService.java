@@ -1,7 +1,8 @@
 package com.pretender.myApp.service;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,17 +10,15 @@ import org.springframework.stereotype.Service;
 
 import com.pretender.myApp.component.TMDBclient;
 
-import reactor.core.publisher.Mono;
-
 @Service
 public class MediaInfoService {
 	@Autowired
 	private TMDBclient client;
 	
-	public Mono<ResponseEntity<Map>> requestSearch(String type, String query) {
+	public ResponseEntity<Map> requestSearch(String type, String query) {
 		System.out.println("검색 요청 type : " + type + ", query : " + query);
 		return client
-			.getWebClient()
+			.getRestClient()
 			.get()
 			.uri(uriBuilder -> uriBuilder
 				.path("/3/search/" + type)
@@ -33,14 +32,14 @@ public class MediaInfoService {
 			.toEntity(Map.class);
 	}
 
-	public Mono<ResponseEntity<Map>> requestDetail(String type, String mediaId) {
+	public ResponseEntity<Map> requestDetail(String type, String mediaId) {
 		System.out.println("type : " + type);
 		System.out.println("mediaId : " + mediaId);
-		Mono<ResponseEntity<Map>> result = null;
+		ResponseEntity<Map> result = null;
 		try {
 			if (type.equals("tv")) { 
-				result = 
-					client.getWebClient()
+			Map<String, Object> filteredMap = 
+				((Map<String, Object>) client.getRestClient()
 					.get()
 					.uri(uriBuilder -> uriBuilder
 						.path("/3/tv/" + mediaId)
@@ -49,23 +48,19 @@ public class MediaInfoService {
 						)
 					.retrieve()
 					.toEntity(Map.class)
-					.flatMap(responseEntity -> {
-						Map<String, Object> body = responseEntity.getBody();
-						Map<String, Object> filtered = new HashMap<>();
-						filtered.put("name", body.get("name")); // tv 시리즈의 제목 (예 : 흑백요리사)
-						filtered.put("networks", body.get("networks")); // contents privider (예 : 넷플릭스)
-						filtered.put("overview", body.get("overview"));
-						filtered.put("genres", body.get("genres"));
-						return Mono.just(ResponseEntity.ok(filtered));
-					});
-				System.out.println(result);
-				return result;
+					.getBody()).entrySet().stream()
+					.filter(entry -> {
+						return Set.of("name", "networks", "overview", "genres", "poster_path").contains(entry.getKey());
+					}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				
+				
+				// return new ResponseEntity.ok(filteredMap);
 			} else if (type.equals("movie")) {
 				// TODO
 			}
 		} catch (Exception e) {
-			return Mono.just(ResponseEntity.badRequest().build());
+			return ResponseEntity.badRequest().build();
 		}
-		return Mono.just(ResponseEntity.badRequest().build());
+		return ResponseEntity.badRequest().build();
 	}
 }

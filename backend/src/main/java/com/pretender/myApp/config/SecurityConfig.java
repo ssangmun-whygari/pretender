@@ -6,36 +6,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.pretender.myApp.service.MyBatisUserDetailsService;
 
-// reference : https://docs.spring.io/spring-security/reference/reactive/configuration/webflux.html
 @Configuration
-@EnableWebFluxSecurity
+@EnableWebSecurity
 public class SecurityConfig {
-	// 테스트용
-//    @Bean
-//    MapReactiveUserDetailsService userDetailsService() {
-//    	PasswordEncoder encoder = passwordEncoder();
-//    	
-//        var user = User.withUsername("abc12345")
-//                .password(encoder.encode("12345"))
-//                .authorities("read")
-//                .build();
-//
-//        return new MapReactiveUserDetailsService(user);
-//    }
 	
 	@Bean
 	MyBatisUserDetailsService userDetailsService() {
@@ -48,20 +32,24 @@ public class SecurityConfig {
     }
 	
 	@Bean
-	SecurityWebFilterChain configure(ServerHttpSecurity http) throws Exception {
+	// reference : https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/config/annotation/web/builders/HttpSecurity.html
+	SecurityFilterChain configure(HttpSecurity http) throws Exception {
+		// reference : https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
+		http.sessionManagement((session) -> {
+			session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+		});
+		http.cors(Customizer.withDefaults());
 		http.httpBasic(Customizer.withDefaults());
-		http.securityContextRepository(new WebSessionServerSecurityContextRepository());
-		
 		// CSRF 비활성화
 		http.csrf(csrf -> csrf.disable());
-		
-		http.authorizeExchange((exchange) -> {
-			exchange.pathMatchers(HttpMethod.OPTIONS).permitAll()
-			.pathMatchers("/api/myPage/**").authenticated()
-			.pathMatchers("/api/login").authenticated()
-			.anyExchange().permitAll();
+		http.authorizeHttpRequests(authorizeHttpRequests -> {
+			authorizeHttpRequests
+				.requestMatchers(HttpMethod.OPTIONS).permitAll()
+				.requestMatchers("/api/myPage/**").authenticated()
+				.requestMatchers("/api/login").authenticated()
+				.requestMatchers("/api/collection/**").authenticated()
+				.anyRequest().permitAll();
 		});
-		
 		return http.build();
 	}
 	

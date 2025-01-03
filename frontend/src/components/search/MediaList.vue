@@ -177,7 +177,9 @@
           }
           mediaInfoRendered[year].data.push(info)
         }
+        console.log("=====================mediaInfoRendered...")
         console.log(mediaInfoRendered)
+        console.log("=====================mediaInfoRendered end")
       }
 
       // DOM이 렌더링될떄까지 기다린 다음 swiperslidechange에 이벤트 리스너를 붙인다.
@@ -279,11 +281,11 @@
     return mediaInfoRendered[yearCategory].renderedOverviewContainerWidth
   }
   const getTranslateEnd = (yearCategory) => {
-    console.log("===============getTranslateEnd...")
-    console.log(`yearCategory : ${yearCategory}`)
-    console.log(getRednderedOverviewTextWidth(yearCategory))
-    console.log(getRenderedOverviewContainerWidth(yearCategory))
-    console.log("===============getTranslateEnd...")
+    // console.log("===============getTranslateEnd...")
+    // console.log(`yearCategory : ${yearCategory}`)
+    // console.log(getRednderedOverviewTextWidth(yearCategory))
+    // console.log(getRenderedOverviewContainerWidth(yearCategory))
+    // console.log("===============getTranslateEnd...")
     let px = -(getRednderedOverviewTextWidth(yearCategory) - getRenderedOverviewContainerWidth(yearCategory)) - 24 // padding : 12px
     return px >= 0 ? 0 : px
   }
