@@ -30,7 +30,7 @@
               class="slide"
               v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
             >
-              <v-sheet class="slide py-3 w-100 h-100 border rounded"
+              <v-sheet class="ma-3 py-3 w-100 h-100 border rounded"
                 :elevation="5">
                 <RouterLink 
                 class="h-100 w-100 d-flex justify-center"
@@ -44,7 +44,7 @@
               </v-sheet>
             </swiper-slide>
           </swiper-container>
-          <v-sheet class="d-flex justify-center slide mb-3 py-3 w-100 border rounded"
+          <v-sheet class="d-flex justify-center mb-3 py-3 w-100 border rounded"
             :elevation="5"
           >
             <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
@@ -77,7 +77,6 @@
 
   .mySwiper {
     width: 100%;
-    height: 300px;
     /* background-color: rgb(250, 239, 175); */
   }
 

@@ -35,6 +35,7 @@ public class SecurityConfig {
 	// reference : https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/config/annotation/web/builders/HttpSecurity.html
 	SecurityFilterChain configure(HttpSecurity http) throws Exception {
 		// reference : https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
+		// TODO : 블로그에 적기...
 		http.sessionManagement((session) -> {
 			session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
 		});

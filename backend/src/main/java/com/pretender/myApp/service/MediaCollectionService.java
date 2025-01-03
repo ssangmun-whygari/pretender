@@ -1,6 +1,7 @@
 package com.pretender.myApp.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
@@ -37,23 +38,22 @@ public class MediaCollectionService {
 		return mediaCollectionDAO.countMediaInWatchList(memberId, mediaId, mediaType) >= 1;
 	}
 
-	// TODO : 예외처리하기
-	public boolean addItemInWatchList(String memberId, String mediaId, String mediaType, String mediaTitle) {
-//		boolean result = false;
-//		mediaInfoService.requestDetail(mediaType, mediaId)
-//			.flatMap(responseEntity -> {
-//				HttpStatusCode statusCode = responseEntity.getStatusCode();
-//				if (statusCode.is2xxSuccessful()) {
-//					if (mediaCollectionDAO.addItemInWatchList(memberId, mediaId, mediaType, mediaTitle) == 1) {
-//						result = true;
-//					} else {
-//						result = false;
-//					}
-//				} else {
-//					result = false;
-//				}
-//			});
-//		return result;
-		return (mediaCollectionDAO.addItemInWatchList(memberId, mediaId, mediaType, mediaTitle) == 1);
+	public boolean addItemInWatchList(String memberId, String mediaId, String mediaType) {
+		boolean result = false;
+		try {
+			Map<String, Object> response = mediaInfoService.requestDetail(mediaType, mediaId);
+			String mediaTitle = (String) (response.get("name") == null ? response.get("title") : response.get("name"));
+			String posterPath = (String) response.get("poster_path");
+			if (mediaCollectionDAO.addItemInWatchList(memberId, mediaId, mediaType, mediaTitle, posterPath) == 1) {
+				result = true;
+			} else {
+				throw new Exception("DB에 행이 제대로 삽입되지 않았습니다.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			result = false;
+			return result;
+		}
+		return result;
 	}
 }

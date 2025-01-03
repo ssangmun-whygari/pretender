@@ -32,35 +32,29 @@ public class MediaInfoService {
 			.toEntity(Map.class);
 	}
 
-	public ResponseEntity<Map> requestDetail(String type, String mediaId) {
+	public Map<String, Object> requestDetail(String type, String mediaId) throws Exception {
 		System.out.println("type : " + type);
 		System.out.println("mediaId : " + mediaId);
-		ResponseEntity<Map> result = null;
-		try {
-			if (type.equals("tv")) { 
-			Map<String, Object> filteredMap = 
-				((Map<String, Object>) client.getRestClient()
-					.get()
-					.uri(uriBuilder -> uriBuilder
-						.path("/3/tv/" + mediaId)
-						.queryParam("language", "ko-KR")
-						.build()
-						)
-					.retrieve()
-					.toEntity(Map.class)
-					.getBody()).entrySet().stream()
-					.filter(entry -> {
-						return Set.of("name", "networks", "overview", "genres", "poster_path").contains(entry.getKey());
-					}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-				
-				
-				// return new ResponseEntity.ok(filteredMap);
-			} else if (type.equals("movie")) {
-				// TODO
-			}
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().build();
+		Map<String, Object> result = null;
+		if (type.equals("tv")) { 
+		result = 
+			((Map<String, Object>) client.getRestClient()
+				.get()
+				.uri(uriBuilder -> uriBuilder
+					.path("/3/tv/" + mediaId)
+					.queryParam("language", "ko-KR")
+					.build()
+					)
+				.retrieve()
+				.toEntity(Map.class)
+				.getBody()).entrySet().stream()
+				.filter(entry -> {
+					return Set.of("name", "title", "networks", "overview", "genres", "poster_path").contains(entry.getKey());
+				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			return result;
+		} else if (type.equals("movie")) {
+			// TODO
 		}
-		return ResponseEntity.badRequest().build();
+		return result;
 	}
 }

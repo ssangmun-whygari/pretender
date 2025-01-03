@@ -36,12 +36,13 @@ public class MediaCollectionDAO {
 		return ses.selectOne(ns + "countMediaInWatchList", params);
 	}
 
-	public int addItemInWatchList(String memberId, String mediaId, String mediaType, String mediaTitle) {
+	public int addItemInWatchList(String memberId, String mediaId, String mediaType, String mediaTitle, String posterPath) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
 		params.put("mediaId", mediaId);
 		params.put("mediaType", mediaType);
 		params.put("mediaTitle", mediaTitle);
+		params.put("posterPath", posterPath);
 		return ses.insert(ns + "insertItemInWatchList", params);
 	}
 }

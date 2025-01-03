@@ -27,7 +27,12 @@ public class MediaInfoController {
 	public ResponseEntity<Map> getDetailById(
 			@RequestParam String type,
 			@RequestParam String mediaId) {
-		ResponseEntity<Map> result = mediaInfoService.requestDetail(type, mediaId);
-		return result;
+		Map<String, Object> result = null;
+		try {
+			result = mediaInfoService.requestDetail(type, mediaId);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().build();
+		}
+		return ResponseEntity.ok(result);
 	}
 }

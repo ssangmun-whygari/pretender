@@ -1,7 +1,9 @@
 package com.pretender.myApp.controller;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.service.MediaCollectionService;
-import com.pretender.myApp.service.MediaInfoService;
 
 @RestController
 public class MediaCollectionController {
@@ -35,6 +36,7 @@ public class MediaCollectionController {
 		System.out.println("token.getName() : " + token.getName());
 		String memberId = token.getName();
 		if (mediaId == null || mediaType == null) {
+			Map<String, Object> map = new HashMap<>();
 			List<CollectionItemDTO> watchList = mediaCollectionService.getWatchList(memberId);
 			return ResponseEntity.ok(watchList);
 		} else {
@@ -56,8 +58,11 @@ public class MediaCollectionController {
 //			return Mono.just(ResponseEntity.status(HttpStatus.FOUND).body("로그인 페이지로 이동합니다."));
 //		}
 		String memberId = token.getName();
-		mediaCollectionService.addItemInWatchList(memberId, mediaId, mediaType, mediaTitle);
-		return ResponseEntity.ok("내가 본 리스트에 추가되었습니다.");
+		if (mediaCollectionService.addItemInWatchList(memberId, mediaId, mediaType) == true) {
+			return ResponseEntity.ok("내가 본 리스트에 추가되었습니다.");
+		} else {
+			return ResponseEntity.internalServerError().body("서버에 문제가 생겼습니다. 잠시 후 다시 시도해주세요.");
+		}
 	}
 	
 	@GetMapping("/api/collection/userCollection")

@@ -16,4 +16,5 @@ public class CollectionItemDTO {
 	private String mediaType;
 	private String mediaTitle;
 	private LocalDateTime addedDate;
+	private String posterPath;
 }
