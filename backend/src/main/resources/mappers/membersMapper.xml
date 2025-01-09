@@ -38,4 +38,14 @@
     	from members
     	where id = #{username}
     </select>
+    
+    <update id="updateProfileImageName">
+    	update members
+    	set image = #{fileName}
+    	where id = #{memberId}
+    </update>
+    
+    <select id="selectProfileImageName" resultType="String">
+		select image from members where id = #{memberId}
+	</select>
 </mapper>

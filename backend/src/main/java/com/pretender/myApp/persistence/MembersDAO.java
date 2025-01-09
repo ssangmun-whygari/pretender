@@ -1,7 +1,9 @@
 package com.pretender.myApp.persistence;
 
+import java.util.HashMap;
 import java.util.List;
-import org.apache.ibatis.annotations.Param;
+import java.util.Map;
+
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,17 @@ public class MembersDAO {
 
 	public PretenderUserDetails findUserByUsername(String username) {
 		return ses.selectOne(ns + "findUserByUsername", username);
+	}
+	
+	public String getProfileImageName(String memberId) {
+		return ses.selectOne(ns + "selectProfileImageName", memberId);
+	}
+	
+	public int updateProfileImageName(String memberId, String fileName) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberId", memberId);
+		params.put("fileName", fileName);
+		return ses.update(ns + "updateProfileImageName", params);
 	}
 
 }

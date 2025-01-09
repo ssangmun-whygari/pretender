@@ -1,9 +1,17 @@
 package com.pretender.myApp.service;
 
+import java.io.File;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.persistence.MembersDAO;
@@ -58,5 +66,35 @@ public class MembersService {
     private boolean isDuplicateNickname(String nickname) {
       return membersDAO.countByNickname(nickname) > 0;
     }
-  
+    
+    @Transactional
+    public void updateProfileImage(String memberId, MultipartFile imageFile) throws Exception {
+    	File imageSaveDir = new File("images/members/");
+        System.out.println("파일 저장 디렉토리: " + imageSaveDir.getAbsolutePath());
+        
+        // TODO : S3 저장소에서 파일을 쓰고 지우는 걸로 바꿔야 함. 일단 임시로 서버를 저장소로 사용
+        // 기존의 파일 삭제
+        String oldFilename = membersDAO.getProfileImageName(memberId);
+        if (!("default_profile.png").equals(oldFilename)) {
+        	File target = new File(imageSaveDir + "/" + oldFilename);
+        	target.delete();
+        }
+        
+        // ID_현재시간의 형식으로 파일이름을 지정
+        String newFilename = memberId + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+        // 절대경로 사용해야 한다고 함...
+        // reference : https://deonggi.tistory.com/123
+        imageFile.transferTo(new File(imageSaveDir.getAbsolutePath() + File.separator + newFilename));
+        if (membersDAO.updateProfileImageName(memberId, newFilename) != 1) {
+        	throw new Exception("DB 업데이트 중 문제 발생");
+        }
+    }
+    
+    public Resource getProfileImage(String memberId) throws Exception {
+    	String fileName = membersDAO.getProfileImageName(memberId);
+    	File imageFile = new File("images/members/" + fileName);
+    	
+    	Resource resource = new UrlResource(Paths.get(imageFile.getAbsolutePath()).normalize().toUri());
+    	return resource;
+    }
 }

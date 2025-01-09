@@ -49,6 +49,7 @@ public class SecurityConfig {
 				.requestMatchers("/api/myPage/**").authenticated()
 				.requestMatchers("/api/login").authenticated()
 				.requestMatchers("/api/collection/**").authenticated()
+				.requestMatchers("api/members/**").authenticated()
 				.anyRequest().permitAll();
 		});
 		return http.build();
