@@ -22,14 +22,17 @@ import SearchView from './components/search/SearchView.vue'
 import DetailView from './components/detail/DetailView.vue'
 import Test from './components/Test.vue'
 import Test2 from './components/Test2.vue'
+import Test3 from './components/Test3.vue'
 import SignUpView from './components/members/SignUpView.vue'
-import MyPageView from './components/members/MyPageView.vue'
+import MyPageView from './components/members/myPage/MyPageView.vue'
+import Background3Dmodel from './components/members/myPage/Background3Dmodel.vue'
 import LoginView from './components/members/LoginView.vue'
 
 const routes = [
     { path: '/', component: MainView },
     { path: '/test', component: Test },
     { path: '/test2', component: Test2 },
+    { path: '/test3', component: Test3 },
     { path: '/search', component: SearchView},
     { path: '/detail', component: DetailView},
     { path: '/signUp', component: SignUpView},

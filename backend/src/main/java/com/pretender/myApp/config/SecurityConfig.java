@@ -51,6 +51,7 @@ public class SecurityConfig {
 				.requestMatchers("/api/collection/**").authenticated()
 				.requestMatchers("/api/reviewLike").authenticated()
 				.requestMatchers("/api/insertReview").authenticated() 
+				.requestMatchers("api/members/**").authenticated()
 				.anyRequest().permitAll();
 		});
 		return http.build();
