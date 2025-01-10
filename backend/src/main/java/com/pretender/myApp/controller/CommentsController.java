@@ -135,7 +135,6 @@ public class CommentsController {
 	        }
 		 
 		String membersId = auth.getName();
-		String type = cService.getCollectionItem(id).getMediaType();
 		int parentNo = comment.getParent_no();
 		String content = comment.getContent();
 		
@@ -144,7 +143,7 @@ public class CommentsController {
 		review.setParentNo(parentNo);
 		review.setContent(content);
 		review.setId(id);
-		review.setType(type);
+		review.setType("tv");
 		
 		if(parentNo == 0) {
 			review.setIsParent('Y');
@@ -160,7 +159,7 @@ public class CommentsController {
 	}
 	
 	//댓글 삭제
-	@DeleteMapping("api/deleteReview")
+	@PutMapping("api/deleteReview")
 	public ResponseEntity<Object> deleteReview(
 	    @RequestParam int id,
 	    @RequestParam int no,

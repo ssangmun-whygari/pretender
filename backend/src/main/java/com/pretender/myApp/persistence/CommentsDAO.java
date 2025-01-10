@@ -66,7 +66,7 @@ public class CommentsDAO {
 		HashMap<String, Integer> idAndNo = new HashMap<>();
 		idAndNo.put("id", id);
 		idAndNo.put("no", no);
-		return ses.delete(ns+"deleteRvw", idAndNo);
+		return ses.update(ns+"deleteRvw", idAndNo);
 	}
 
 	public int modifyTheReview(ReviewDTO review) {

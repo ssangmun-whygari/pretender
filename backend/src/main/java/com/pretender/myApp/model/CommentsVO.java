@@ -18,6 +18,7 @@ public class CommentsVO {
 	private int parent_no;
 	private String content;
 	private LocalDateTime post_date;
+	private LocalDateTime correct_date;
 	private Character is_deleted;
 	private String image;
 	private String nickname;
