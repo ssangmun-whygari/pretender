@@ -50,6 +50,8 @@ public class SecurityConfig {
 				.requestMatchers("/api/login").authenticated()
 				.requestMatchers("/api/collection/**").authenticated()
 				.requestMatchers("api/members/**").authenticated()
+				.requestMatchers("/api/reviewLike").authenticated()
+				.requestMatchers("/api/insertReview").authenticated() 
 				.anyRequest().permitAll();
 		});
 		return http.build();
@@ -60,7 +62,7 @@ public class SecurityConfig {
 	UrlBasedCorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-		configuration.setAllowedMethods(Arrays.asList("GET","POST","OPTIONS"));
+		configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT", "DELETE","OPTIONS"));
 		configuration.setAllowCredentials(true);
 		configuration.addAllowedHeader("*");
 	    configuration.addExposedHeader("*");
