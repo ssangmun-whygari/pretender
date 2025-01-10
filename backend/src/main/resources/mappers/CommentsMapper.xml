@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <mapper namespace="com.pretender.myApp.mapper.CommentsMapper">
+	
+	<select id="selectAllCmnts" resultType="com.pretender.myApp.model.CommentsVO">
+    SELECT 
+        r.no,
+        r.members_id, 
+        r.parent_no, 
+        r.content, 
+        r.post_date, 
+        r.is_deleted, 
+        m.image, 
+        m.nickname,
+        (SELECT COUNT(*) FROM review_likes WHERE reviews_no = r.no) AS likeCount,
+        (SELECT COUNT(*) FROM reviews WHERE media_id = #{id} AND is_parent = 'Y') AS count,
+        (SELECT COUNT(*) FROM reviews WHERE parent_no = r.no) AS replyCount
+    FROM reviews r
+    JOIN members m ON m.id = r.members_id
+    WHERE r.media_id = #{id} AND r.is_parent = 'Y'
+    <choose>
+        <when test="sortBy == 'no'">
+            ORDER BY r.no DESC
+        </when>
+        <otherwise>
+            ORDER BY likeCount DESC
+        </otherwise>
+    </choose>
+    LIMIT #{startNo}, #{lastNo}
+</select>
+
+
+  <select id="selectAllRpls" resultType="com.pretender.myApp.model.CommentsDTO">
+  	select r.no,r.members_id, r.parent_no, r.content, r.post_date, r.is_deleted, m.image, m.nickname,
+	(select count(*) from review_likes where reviews_no = r.no) as likeCount
+	from reviews r join members m
+	on m.id = r.members_id
+	where r.media_id = #{ id } and r.is_parent='N' and parent_no = #{ parentId }
+	order by r.no asc 
+	limit #{ startNo },#{ lastNo }
+  </select>
+  
+  <insert id="insertReviewLk">
+  	insert into review_likes values(#{ mediaId }, #{ mediaType }, #{ reviewsNo }, #{ membersId })
+  </insert>
+  
+  <delete id="deleteReviewLk">
+    delete from review_likes 
+    where media_id = #{ mediaId } and reviews_no = #{ reviewsNo } and members_id = #{ membersId } limit 1;
+
+  </delete>
+  	
+  <select id="getCollectionItm" resultType="com.pretender.myApp.model.CollectionItemDTO">
+    SELECT 
+        media_id AS mediaId, 
+        media_type AS mediaType, 
+        media_title AS mediaTitle, 
+        added_time AS addedDate, 
+        NULL AS posterPath -- 컬럼이 없는 경우 기본값 NULL
+    FROM collections
+    WHERE media_id = #{id}
+ </select>
+
+  
+  <insert id="insertRvw" parameterType="com.pretender.myApp.model.ReviewDTO">
+    <!-- 리뷰 번호 계산 -->
+    <selectKey keyProperty="no" resultType="int" order="BEFORE">
+      SELECT IFNULL(MAX(no), 0) + 1 FROM reviews WHERE media_id = #{ id } FOR UPDATE;
+    </selectKey>
+
+    <!-- 리뷰 삽입 -->
+    INSERT INTO reviews (no, members_id, is_parent, parent_no, content, media_id, media_type)
+    VALUES (#{no}, #{membersId}, #{isParent}, #{parentNo}, #{content}, #{id}, #{type});
+  </insert>
+  
+  <delete id="deleteRvw">
+   	delete from reviews where media_id =#{ id } and (no = #{ no } or parent_no = #{ no })
+  </delete>
+  
+  <update id="modifyRvw">
+  	update reviews set content = #{ content } where no = #{ no } and media_id = #{ id }
+  </update>
+  
+  <select id="myReviewlikeList" resultType="java.lang.Integer">
+  	SELECT reviews_no FROM review_likes 
+    WHERE members_id = #{ userId } and media_id= #{ contentId }
+  </select>
+  
+  </mapper>
