@@ -48,14 +48,6 @@ public class CommentsService {
 		return cDao.deleteMyReviewLike(likeEle);
 	}
 
-
-	public CollectionItemDTO getCollectionItem(int id) {
-		// 작품의 정보 가져오기
-		CollectionItemDTO colItem = cDao.getTheCollectionItem(id);
-		return colItem;
-	}
-
-
 	public int insertIntoReview(ReviewDTO review) {
 		// 댓글 달기
 		return cDao.insertIntoTheReview(review);

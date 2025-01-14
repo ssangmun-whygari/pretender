@@ -39,7 +39,7 @@ public class CommentsController {
 	private static final int PAGE_SIZE_REPLIES = 20;
 	
 	// 모든 코멘트 가져오기 (페이지네이션)
-	@PostMapping("/api/comments")
+	@GetMapping("/api/comments")
 	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "likeCount") String sortBy){
 		int size = PAGE_SIZE_COMMENTS;
 		Map<String, Object> response = new HashMap<>();
@@ -75,9 +75,8 @@ public class CommentsController {
 		 
 		String userId = auth.getName();
 		int id = likeEle.getMediaId();
-		String type = cService.getCollectionItem(id).getMediaType();
 		
-		likeEle.setMediaType(type);
+		likeEle.setMediaType("tv");
 		likeEle.setMembersId(userId);
 		
 		if(cService.insertReviewLike(likeEle) == 1) {

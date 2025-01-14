@@ -50,11 +50,6 @@ public class CommentsDAO {
 		// 좋아요 테이블에서 삭제
 		return ses.delete(ns+"deleteReviewLk", likeEle);
 	}
-
-	public CollectionItemDTO getTheCollectionItem(int id) {
-		// 작품 정보 가져오기
-		return ses.selectOne(ns+"getCollectionItm", id);
-	}
 	
 	public int insertIntoTheReview(ReviewDTO review) {
 		// 댓글 저장

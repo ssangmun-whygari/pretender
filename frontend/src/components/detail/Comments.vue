@@ -4,37 +4,13 @@
     <h2 v-else-if="error">{{ error }}</h2>
     <div v-else>
       <h2>댓글 {{ totalComments }}개</h2>
-      <div class="reply-input-container">
-                <textarea
-                placeholder="댓글 추가..."
-                class="reply-textarea"
-                v-model="newReply"
-                @input="handleInput"
-              ></textarea>
-              <div class="reply-actions">
-                <button
-                  @click="cancelReply"
-                  class="cancel-btn"
-                  :class="{ active: newReply.trim() !== '' }"
-                >
-                  취소
-                </button>
-                <button
-                  @click="submitReply(0)"
-                  class="submit-btn"
-                  :disabled="!newReply.trim()"
-                >
-                 댓글</button>
-                </div>
-              </div>
-
-              <div class="sort-container">
-                <label for="sort">정렬:</label>
-                <select id="sort" v-model="sortOrder" @change="updateComments">
-                  <option value="no">최신순</option>
-                  <option value="likeCount">좋아요순</option>
-                </select>
-              </div>
+          <div class="sort-container">
+            <label for="sort">정렬:</label>
+            <select id="sort" v-model="sortOrder" @change="updateComments">
+              <option value="no">최신순</option>
+              <option value="likeCount">좋아요순</option>
+            </select>
+          </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" class="comment-item">
           <img :src="comment.image" alt="프로필" class="comment-image" />
@@ -42,6 +18,9 @@
             <div class="comment-header">
               <span class="nickname">{{ comment.nickname }}</span>
               <span class="time">{{ formatDate(comment.post_date) }}</span>
+              <span v-if="comment.correct_date">
+                (수정됨: {{ formatDate(comment.correct_date) }})
+              </span>
               <div class="dropdown-container">
                 <button class="dots-btn" @click="toggleDropdown(comment)">
                   &#x22EE;
@@ -101,6 +80,9 @@
                 <div class="comment-header">
                   <span class="nickname">{{ reply.nickname }}</span>
                   <span class="time">{{ formatDate(reply.post_date) }}</span>
+                    <span v-if="reply.correct_date">
+                      (수정됨: {{ formatDate(reply.correct_date) }})
+                    </span>
                   <div class="dropdown-container">
                     <button class="dots-btn" @click="toggleDropdown(reply)">
                       &#x22EE;
@@ -185,15 +167,8 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../stores/navigation';
 
-const comments = ref([
-  { no: 1, content: "첫 번째 댓글", id: 123, isEditing: false, updatedContent: "" },
-  { no: 2, content: "두 번째 댓글", id: 123, isEditing: false, updatedContent: "" },
-]);
-const replies = ref({
-  1: [
-    { no: 11, content: "첫 번째 대댓글", id: 123, isEditing: false, updatedContent: "" },
-  ],
-});
+const comments = ref([]);
+const replies = ref([]);
 const newReply = ref(''); // newReply 변수 초기화
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
 const totalComments = ref(0); // 전체 댓글 수
@@ -271,11 +246,6 @@ const toggleLike = async (commentId) => {
       console.error("댓글이나 contentId를 찾을 수 없습니다.");
       return;
     }
-
-    console.log("좋아요 요청 데이터:", {
-      mediaId: contentId.value,
-      reviewsNo: commentId,
-    });
 
     const isAuthenticated = await checkAuthenticated();
     if (!isAuthenticated) {
@@ -369,7 +339,7 @@ const saveEditComment = async (item) => {
 const deleteComment = async (item) => {
   try {
     // 삭제 확인 대화상자
-    const response = await axios.delete("http://localhost:8080/api/deleteReview", {
+    const response = await axios.put("http://localhost:8080/api/deleteReview", null, {
       params: {
         id: contentId.value, // 게시물 ID
         no: item.no, // 댓글 ID
@@ -400,39 +370,55 @@ const deleteComment = async (item) => {
   }
 };
 
-
 // 날짜 포맷 함수
 const formatDate = (date) => {
-  const diff = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
-  if (diff < 1) return "오늘";
-  if (diff < 30) return `${diff}일 전`;
-  if (diff < 365) return `${Math.floor(diff / 30)}개월 전`;
-  return `${Math.floor(diff / 365)}년 전`;
+  if (!date) return "";
+
+  const now = new Date();
+  const diff = Math.floor((now - new Date(date)) / 1000); // 차이를 초 단위로 계산
+
+  if (diff < 60) return `${diff}초 전`; // 1분 미만
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`; // 1시간 미만
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`; // 24시간 미만
+  if (diff < 30 * 86400) return `${Math.floor(diff / 86400)}일 전`; // 30일 미만
+  if (diff < 365 * 86400) return `${Math.floor(diff / (30 * 86400))}개월 전`; // 1년 미만
+  return `${Math.floor(diff / (365 * 86400))}년 전`; // 1년 이상
 };
+
 
 // 좋아요 숫자 포맷 함수
 const formatLikeCount = (count) => {
+  if (count == null || count === undefined) return "0"; 
   if (count >= 10000) return `${(count / 10000).toFixed(1)}만`;
   return count.toString();
 };
 
 // 댓글 가져오기 함수
-const fetchComments = async (contentId, sort = "likeCount") => {
+const fetchComments = async (contentId, sortBy = "likeCount") => {
   try {
-    const response = await axios.post(`http://localhost:8080/api/comments`, null, {
-      params: { id: contentId, sortBy:sort  },
+    const response = await axios.get(`http://localhost:8080/api/comments`, {
+      params: { id: contentId, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
     });
+
     if (response.data && response.data.comments) {
       comments.value = response.data.comments; // 댓글 목록 저장
       totalComments.value = response.data.comments[0]?.count || 0; // 전체 댓글 수 저장
     }
   } catch (err) {
-    console.error('API 호출 중 오류가 발생했습니다:', err);
-    error.value = '댓글 정보를 불러오는 데 실패했습니다.';
+    console.error("API 호출 중 오류가 발생했습니다:", err);
+    error.value = "댓글 정보를 불러오는 데 실패했습니다.";
   } finally {
     isLoading.value = false; // 로딩 상태 해제
   }
 };
+
+
+// 정렬 옵션 변경 시 호출되는 함수
+const updateComments = () => {
+  isLoading.value = true; // 로딩 상태 설정
+  fetchComments(contentId.value, sortOrder.value); // sortOrder를 기반으로 fetchComments 호출
+};
+
 
 
 // 대댓글 가져오기 함수
