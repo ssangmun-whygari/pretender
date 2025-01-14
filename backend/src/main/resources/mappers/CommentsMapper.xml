@@ -30,7 +30,7 @@
         </otherwise>
     </choose>
     LIMIT #{startNo}, #{lastNo}
-</select>
+	</select>
 
 
   <select id="selectAllRpls" resultType="com.pretender.myApp.model.CommentsDTO">
@@ -58,7 +58,7 @@
         media_id AS mediaId, 
         media_type AS mediaType, 
         media_title AS mediaTitle, 
-        added_time AS addedDate, 
+        added_date AS addedDate, 
         NULL AS posterPath -- 컬럼이 없는 경우 기본값 NULL
     FROM collections
     WHERE media_id = #{id}

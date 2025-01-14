@@ -37,7 +37,7 @@
               </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" class="comment-item">
-          <img :src="comment.image" alt="프로필" class="comment-image" />
+          <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
               <span class="nickname">{{ comment.nickname }}</span>
@@ -96,7 +96,7 @@
           <!-- 대댓글 목록 -->
           <ul v-if="replies[comment.no]" class="reply-list">
             <li v-for="reply in replies[comment.no]" :key="reply.no" class="comment-item">
-              <img :src="reply.image" alt="프로필" class="comment-image" />
+              <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
               <div class="comment-content">
                 <div class="comment-header">
                   <span class="nickname">{{ reply.nickname }}</span>
@@ -412,6 +412,9 @@ const formatDate = (date) => {
 
 // 좋아요 숫자 포맷 함수
 const formatLikeCount = (count) => {
+  if (!count) {
+    return null;
+  }
   if (count >= 10000) return `${(count / 10000).toFixed(1)}만`;
   return count.toString();
 };
@@ -512,7 +515,7 @@ onMounted(async () => {
   console.log(`contentId: ${contentId.value}`);
     // 이전 페이지 설정
     const currentPath = router.currentRoute.value.fullPath;
-  console.log('현재 페이지:', currentPath);
+    console.log('현재 페이지:', currentPath);
 
   if (!navigationStore.getPreviousPage() || navigationStore.getPreviousPage() === '/') {
     navigationStore.setPreviousPage(currentPath); // 현재 페이지를 이전 페이지로 설정

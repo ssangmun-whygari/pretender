@@ -95,11 +95,17 @@ public class MembersController {
 	
 	@GetMapping("api/members/profile/image")
 	public ResponseEntity<Object> getProfileImage (
+			@RequestParam(required = false) String memberId,
 			UsernamePasswordAuthenticationToken token
 		) {
 		System.out.println("GET api/members/profile/image");
 		try {
-			Resource resource = membersService.getProfileImage(token.getName());
+			Resource resource;
+			if (memberId == null) {
+				resource = membersService.getProfileImage(token.getName()); // 로그인한 아이디로 조회
+			} else {
+				resource = membersService.getProfileImage(memberId); // 멤버 아이디로 조회
+			}
             if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, "image/*")

@@ -94,7 +94,7 @@
         params : {
           mediaType: "tv",
           mediaId: id,
-          mediaTitle: title()
+          mediaTitle: title.value
         }
       }
     )

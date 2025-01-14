@@ -92,7 +92,13 @@ public class MembersService {
     
     public Resource getProfileImage(String memberId) throws Exception {
     	String fileName = membersDAO.getProfileImageName(memberId);
-    	File imageFile = new File("images/members/" + fileName);
+    	File imageFile;
+    	// 디폴트 프로필 이미지와 유저가 지정한 프로필 이미지의 경로가 다름
+    	if (!("default_profile.png").equals(fileName)) {
+    		imageFile = new File("images/members/" + fileName);
+    	} else {
+    		imageFile = new File("images/public/" + fileName);
+    	}
     	
     	Resource resource = new UrlResource(Paths.get(imageFile.getAbsolutePath()).normalize().toUri());
     	return resource;
