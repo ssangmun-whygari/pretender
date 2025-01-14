@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue';
-import { useNavigationStore } from '../stores/navigation';
+import { useNavigationStore } from '../../composables/stores/navigation';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 

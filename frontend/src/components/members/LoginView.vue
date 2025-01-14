@@ -1,16 +1,53 @@
 <template>
-  <h1>로그인</h1>
-  <v-text-field label="아이디" v-model="userId"></v-text-field>
-  <v-text-field label="비밀번호" type="password" v-model="userPassword"></v-text-field>
-  <div id="errorMessage">{{ errorMessage }}</div>
-  <v-btn v-on:click="requestAuth">로그인</v-btn>
+  <v-container class="d-flex justify-center h-100 align-center" fluid>
+    <v-card class="card" elevation="2">
+      <v-card-title class="card-title">
+        로그인
+      </v-card-title>
+      아이디
+      <v-text-field
+        v-model="userId"
+        placeholder="pretender@email.co.kr"
+        outlined
+        dense
+        class="text-field"
+      />
+      비밀번호
+      <v-text-field
+        v-model="userPassword"
+        type="password"
+        outlined
+        dense
+        class="text-field"
+      />
+      <div id="errorMessage">{{ errorMessage }}</div>
+      <v-btn class="button" color="primary" block outlined @click="requestAuth">로그인</v-btn>
+    </v-card>
+  </v-container>
 </template>
+
+<style>
+  .card {
+    padding: 16px;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  .card-title {
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .text-field {
+    margin-top: 12px;
+  }
+</style>
 
 <script setup>
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { ref } from 'vue';
-import { useNavigationStore } from '../stores/navigation';
+import { useNavigationStore } from '../../composables/stores/navigation';
 
 // Vue Router와 Pinia Store 초기화
 const router = useRouter();

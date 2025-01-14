@@ -183,7 +183,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { useNavigationStore } from '../stores/navigation';
+import { useNavigationStore } from '../../composables/stores/navigation';
 
 const comments = ref([
   { no: 1, content: "첫 번째 댓글", id: 123, isEditing: false, updatedContent: "" },

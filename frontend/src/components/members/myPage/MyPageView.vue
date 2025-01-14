@@ -329,7 +329,7 @@
 
   // TODO : id도 굳이 pinia에 저장할 필요 있나?
   // TODO : "movie"인지, "tv"인지를 저장해야 함(그것에 따라 요청해야 하는 외부 api가 다름)
-  import { useMediaDetailStore } from '@/components/stores/MediaDetail'
+  import { useMediaDetailStore } from '@/composables/stores/MediaDetail'
   import Background3Dmodel from './Background3Dmodel.vue';
   const store = useMediaDetailStore()
   const handleClick = (mediaId, backDropPath) => {

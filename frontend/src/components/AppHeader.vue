@@ -19,6 +19,9 @@
     <div class="mr-3" v-if="isAuthenticated == true">
       <RouterLink  to="/myPage">
         마이페이지
+      </RouterLink> /
+      <RouterLink to="logout" @click="onLogout">
+        로그아웃
       </RouterLink>
     </div>
     <div class="mr-3" v-else>
@@ -44,10 +47,13 @@
 
 <script setup>
   import { ref, onMounted } from 'vue'
-  import { useNavigationStore } from './stores/navigation';
+  import { useRoute } from 'vue-router'
+  import { useNavigationStore } from '../composables/stores/navigation';
   import axios from 'axios'
 
   let isAuthenticated = ref(false)
+  let navigationStore = useNavigationStore()
+  let route = useRoute()
 
   onMounted(async () => {
     isAuthenticated.value = await checkAuthenticated()
@@ -72,6 +78,10 @@
     navigationStore.setPreviousPage(route.fullPath);
   }
 
+  function onLogout() {
+    savePreviousPage()
+  }
+
   import { useDisplay } from 'vuetify';
   import { watch } from 'vue'
 
@@ -92,7 +102,7 @@
   watch(() => { return lgAndUp.value }, updateSearchBarLength)
 
   // 검색 기능
-  import { useRouter, useRoute } from 'vue-router';
+  import { useRouter } from 'vue-router';
   let word = ref('')
   const router = useRouter()
   const onEnter = async () => {
