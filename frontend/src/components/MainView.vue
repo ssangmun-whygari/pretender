@@ -3,6 +3,9 @@
       <div v-if="isAuthenticated == true">
         <RouterLink to="/myPage">
           마이페이지
+        </RouterLink> / 
+        <RouterLink to="logout" @click="onLogout">
+          로그아웃
         </RouterLink>
       </div>
       <div v-else>
@@ -34,7 +37,7 @@
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
   import { ref, onMounted } from 'vue'
-  import { useNavigationStore } from './stores/navigation';
+  import { useNavigationStore } from '../composables/stores/navigation';
 
   const { lgAndUp } = useDisplay();
   const router = useRouter();
@@ -70,6 +73,10 @@
 
   function savePreviousPage(){
     navigationStore.setPreviousPage(route.fullPath);
+  }
+
+  function onLogout() {
+    savePreviousPage()
   }
 
   // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음

@@ -32,11 +32,13 @@
 </template>
 
 <script setup>
-  import { useMediaDetailStore } from '../stores/MediaDetail'
+  import { useMediaDetailStore } from '@/composables/stores/MediaDetail'
+  import { useNavigationStore } from '@/composables/stores/navigation'
   import { storeToRefs } from 'pinia';
   import { ref, toRef, computed } from 'vue'
   import axios from 'axios'
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
+  import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
   const props = defineProps({
       mediaInfo: Object
   })
@@ -44,7 +46,10 @@
   const store = useMediaDetailStore()
   const { backDropPath } = storeToRefs(store)
   const hasWatched = ref(false)
-  const id = useRoute().query.id
+  const route = useRoute()
+  const id = route.query.id
+  const router = useRouter()
+  const navigationStore = useNavigationStore()
 
   // reference : https://stackoverflow.com/questions/69855836/props-gotten-directly-from-vue-3-setup-are-not-reactive
   const mediaInfo = toRef(props, 'mediaInfo')
@@ -57,9 +62,14 @@
     // console.log("==================title in computed end")
     return mediaInfo.value.name ? mediaInfo.value.name : mediaInfo.value.title
   })
-  
 
   async function getHasWatched() {
+    // 로그인이 되어있지 않으면 실행하지 않음
+    const isLogined = await useCheckAuthenticated(); // 결과를 기다림
+    if (!isLogined) {
+      return;
+    }
+
     let response = await axios.get(
       'http://localhost:8080/api/collection/watchList',
       {
@@ -82,6 +92,16 @@
   getHasWatched()
 
   async function addToWatchList() {
+    // 로그인이 되어있지 않으면 로그인 페이지로 보냄
+    const isLogined = await useCheckAuthenticated(); // 결과를 기다림
+    if (!isLogined) {
+      navigationStore.setPreviousPage(route.fullPath)
+      router.push({
+        path: '/login'
+      })
+      return
+    }
+
     let response = await axios.post(
       'http://localhost:8080/api/collection/watchList',
       null, // 본문
@@ -94,7 +114,7 @@
         params : {
           mediaType: "tv",
           mediaId: id,
-          mediaTitle: title()
+          mediaTitle: title.value
         }
       }
     )

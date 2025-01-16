@@ -31,7 +31,8 @@
         </otherwise>
     </choose>
     LIMIT #{startNo}, #{lastNo}
-  </select>
+	</select>
+
 
 
   <select id="selectAllRpls" resultType="com.pretender.myApp.model.CommentsDTO">

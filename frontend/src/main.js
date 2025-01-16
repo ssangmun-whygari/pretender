@@ -27,6 +27,7 @@ import SignUpView from './components/members/SignUpView.vue'
 import MyPageView from './components/members/myPage/MyPageView.vue'
 import Background3Dmodel from './components/members/myPage/Background3Dmodel.vue'
 import LoginView from './components/members/LoginView.vue'
+import LogoutView from './components/members/LogoutView.vue'
 
 const routes = [
     { path: '/', component: MainView },
@@ -37,6 +38,7 @@ const routes = [
     { path: '/detail', component: DetailView},
     { path: '/signUp', component: SignUpView},
     { path: '/login', component: LoginView},
+    { path: '/logout', component: LogoutView},
     { path: '/myPage', component: MyPageView}
 ]
 
