@@ -14,17 +14,21 @@
         r.post_date, 
         r.correct_date,
         r.is_deleted, 
+        r.stars,
         m.image, 
         m.nickname,
-        (SELECT COUNT(*) FROM review_likes WHERE reviews_no = r.no) AS likeCount,
+        (SELECT COUNT(*) FROM review_likes WHERE reviews_no = r.no AND media_id = #{id}) AS likeCount,
         (SELECT COUNT(*) FROM reviews WHERE media_id = #{id} AND is_parent = 'Y') AS count,
-        (SELECT COUNT(*) FROM reviews WHERE parent_no = r.no) AS replyCount
+        (SELECT COUNT(*) FROM reviews WHERE parent_no = r.no AND media_id = #{id}) AS replyCount
     FROM reviews r
     JOIN members m ON m.id = r.members_id
     WHERE r.media_id = #{id} AND r.is_parent = 'Y' 
     <choose>
         <when test="sortBy == 'no'">
             ORDER BY r.no DESC
+        </when>
+        <when test="sortBy == 'replyCount'">
+        	ORDER BY replyCount DESC
         </when>
         <otherwise>
             ORDER BY likeCount DESC
@@ -37,7 +41,7 @@
 
   <select id="selectAllRpls" resultType="com.pretender.myApp.model.CommentsDTO">
   	select r.no,r.members_id, r.parent_no, r.content, r.post_date, r.correct_date, r.is_deleted, m.image, m.nickname,
-	(select count(*) from review_likes where reviews_no = r.no) as likeCount
+	(select count(*) from review_likes where reviews_no = r.no AND media_id = #{id}) as likeCount
 	from reviews r join members m
 	on m.id = r.members_id
 	where r.media_id = #{ id } and r.is_parent='N' and parent_no = #{ parentId } 

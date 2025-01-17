@@ -190,6 +190,9 @@ public class CommentsController {
 		 if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
 			  return ResponseEntity.badRequest().body("로그인이 필요합니다.");
 	        }
+		 if(review.getIsDeleted() == 'Y') {
+			  return ResponseEntity.badRequest().body("이미 삭제한 글입니다.");
+		 	}
 		 
 		String userId = auth.getName();
 		String membersId = review.getMembersId();

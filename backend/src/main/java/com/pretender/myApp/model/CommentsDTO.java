@@ -24,7 +24,7 @@ public class CommentsDTO {
     private String content;      
     private LocalDateTime post_date;
     private LocalDateTime correct_date;
-    private boolean isDeleted;   
+    private char is_deleted;   
     private String image;        
     private String nickname;     
     private int likeCount; 

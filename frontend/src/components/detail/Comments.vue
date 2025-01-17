@@ -9,6 +9,7 @@
             <select id="sort" v-model="sortOrder" @change="updateComments">
               <option value="no">최신순</option>
               <option value="likeCount">좋아요순</option>
+              <option value="replyCount">댓글많은순</option>
             </select>
           </div>
       <ul class="comment-list">
@@ -16,25 +17,41 @@
           <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
-              <span class="nickname">{{ comment.nickname }}</span>
-              <span class="time">{{ formatDate(comment.post_date) }}</span>
-              <span v-if="comment.correct_date">
-                (수정됨: {{ formatDate(comment.correct_date) }})
-              </span>
-              <div class="dropdown-container">
-                <button class="dots-btn" @click="toggleDropdown(comment)">
-                  &#x22EE;
-                </button>
-                <div v-if="activeDropdown === comment.no" class="dropdown-menu">
-                  <button @click="enableEditMode(comment)" class="dropdown-item">
-                    ✏ 수정
+              <div class="nicknameTime">
+                <span class="nickname">{{ comment.nickname }}</span>
+                <span v-if="comment.correct_date">
+                  (수정됨: {{ formatDate(comment.correct_date) }})
+                </span>
+                <span v-else class="time">{{ formatDate(comment.post_date) }}</span>
+                </div>                
+                <div v-if="comment.stars" class="stars-container">
+                  <!-- 별점 표시 -->
+                <v-rating
+                  class="stars"
+                  :model-value="comment.stars"
+                  :length="5"
+                  half-increments
+                  hover
+                  active-color="orange"
+                  size="24"
+                  readonly
+                />
+              </div>
+                <div class="dropdown-container">
+                  <button class="dots-btn" @click="toggleDropdown(comment)">
+                    &#x22EE;
                   </button>
-                  <button @click="deleteComment(comment)" class="dropdown-item">
-                    🗑 삭제
-                  </button>
+                  <div v-if="activeDropdown === comment.no" class="dropdown-menu">
+                    <button @click="enableEditMode(comment)" class="dropdown-item">
+                      ✏ 수정
+                    </button>
+                    <button @click="deleteComment(comment)" class="dropdown-item">
+                      🗑 삭제
+                    </button>
                 </div>
               </div>
             </div>
+          
             <!-- 댓글 수정 가능 -->
             <div v-if="comment.isEditing">
               <textarea
@@ -50,8 +67,11 @@
 
             <!-- 댓글 읽기 모드 -->
             <div v-else>
-              <p class="content">
+              <p v-if="comment.is_deleted ==='N'" class="content">
                 {{ comment.content }}
+              </p>
+              <p v-else class="content_deleted">
+                삭제된 댓글입니다.
               </p>
             </div>
             <div class="comment-actions">
@@ -78,11 +98,14 @@
               <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
               <div class="comment-content">
                 <div class="comment-header">
-                  <span class="nickname">{{ reply.nickname }}</span>
-                  <span class="time">{{ formatDate(reply.post_date) }}</span>
-                    <span v-if="reply.correct_date">
+                  <div class="nicknameTime">
+                    <span class="nickname">{{ reply.nickname }}</span>
+                    <span v-if="reply.correct_date && reply.is_deleted =='N'">
                       (수정됨: {{ formatDate(reply.correct_date) }})
                     </span>
+                    <span v-if="reply.is_deleted =='N'" class="time">
+                      {{ formatDate(reply.post_date) }}</span>
+                  </div>
                   <div class="dropdown-container">
                     <button class="dots-btn" @click="toggleDropdown(reply)">
                       &#x22EE;
@@ -109,8 +132,11 @@
                     </div>
                   </div>
                   <div v-else>
-                    <p class="content">
+                    <p v-if="reply.is_deleted ==='N'" class="content">
                       {{ reply.content }}
+                    </p>
+                    <p v-else class="content_deleted">
+                      삭제된 댓글입니다.
                     </p>
                   </div>
                 <div class="comment-actions">
@@ -125,34 +151,29 @@
                 </div>
               </div>
             </li>
-    <!-- 대댓글 입력 창 -->
+       <!-- 대댓글 입력 창 -->
               <div class="reply-input-container">
                 <textarea
                 placeholder="답글을 입력하세요..."
                 class="reply-textarea"
-                v-model="newReply"
+                v-model="comment.replyText"
                 @input="handleInput"
               ></textarea>
               <div class="reply-actions">
                 <button
-                  @click="cancelReply"
-                  class="cancel-btn"
-                  :class="{ active: newReply.trim() !== '' }"
-                >
+                  @click="clearReplyText(comment)"
+                  class="cancel-btn">
                   취소
                 </button>
                 <button
-                  @click="submitReply(comment.no)"
+                  @click="submitReply(comment)"
                   class="submit-btn"
-                  :disabled="!newReply.trim()"
+                  :disabled="!comment.replyText.trim()"
                 >
                  답글</button>
                 </div>
               </div>
            </ul>
-
-
-           
             
           </div>
         </li>
@@ -169,7 +190,6 @@ import { useNavigationStore } from '../../composables/stores/navigation';
 
 const comments = ref([]);
 const replies = ref([]);
-const newReply = ref(''); // newReply 변수 초기화
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
 const totalComments = ref(0); // 전체 댓글 수
 const isLoading = ref(true); // 로딩 상태 관리
@@ -201,11 +221,13 @@ async function checkAuthenticated() {
 }
 
 const fetchLoggedInUserId = async () => {
+  console.log("fetchLoggedInUser함수실행")
   try {
     const response = await axios.get("http://localhost:8080/api/getLoggedInId", {
       withCredentials: true,
     });
-    loggedInUserId.value = response.data.userId; // 서버에서 반환된 로그인 사용자 ID
+    console.log(response.data);
+    loggedInUserId.value = response.data; // 서버에서 반환된 로그인 사용자 ID
   } catch (error) {
     console.error("사용자 정보를 가져오는 중 오류 발생:", error.response?.data || error.message);
   }
@@ -282,12 +304,14 @@ const toggleLike = async (commentId) => {
   }
 };
 
-
-
 // 드롭다운 토글 함수
 const toggleDropdown = (item) => {
-  if (item.members_Id === loggedInUserId.value) {
-  activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  console.log(item.members_id +":"+ loggedInUserId.value);
+  if (item.members_id === loggedInUserId.value) {
+    activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  }
+  if (item.is_deleted ==='Y'){
+    activeDropdown.value = null;
   }
 };
 
@@ -320,6 +344,7 @@ const saveEditComment = async (item) => {
         membersId: item.members_id,
         content: item.updatedContent, // 수정된 내용
         id: contentId.value, // 게시물 ID
+        isDeleted: item.is_deleted
       },
       { withCredentials: true }
     );
@@ -352,12 +377,18 @@ const deleteComment = async (item) => {
     if (response.status === 200) {
       console.log("댓글 삭제 성공:", response.data);
 
-      // UI에서 댓글 삭제
-      comments.value = comments.value.filter((comment) => comment.no !== item.no);
+       // UI에서 삭제된 댓글로 표시
+       const commentToDelete = comments.value.find((comment) => comment.no === item.no);
+      if (commentToDelete) {
+        commentToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로 표시
+      }
+
+      // 대댓글 처리
       for (const parentId in replies.value) {
-        replies.value[parentId] = replies.value[parentId].filter(
-          (reply) => reply.no !== item.no
-        );
+        const replyToDelete = replies.value[parentId].find((reply) => reply.no === item.no);
+        if (replyToDelete) {
+          replyToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로 표시
+        }
       }
       activeDropdown.value = null; // 드롭다운 닫기
     }
@@ -388,13 +419,9 @@ const formatDate = (date) => {
 
 // 좋아요 숫자 포맷 함수
 const formatLikeCount = (count) => {
-<<<<<<< HEAD
-  if (count == null || count === undefined) return "0"; 
-=======
   if (!count) {
     return null;
   }
->>>>>>> main
   if (count >= 10000) return `${(count / 10000).toFixed(1)}만`;
   return count.toString();
 };
@@ -407,6 +434,9 @@ const fetchComments = async (contentId, sortBy = "likeCount") => {
     });
 
     if (response.data && response.data.comments) {
+      response.data.comments.forEach((comment) => {
+        comment.replyText = ""; // 각 댓글에 replyText 추가
+      });
       comments.value = response.data.comments; // 댓글 목록 저장
       totalComments.value = response.data.comments[0]?.count || 0; // 전체 댓글 수 저장
     }
@@ -453,13 +483,12 @@ const toggleReplies = async (comment) => {
 };
 
 // 대댓글 입력 취소
-const cancelReply = () => {
-  const replyTextarea = document.querySelector('.reply-textarea');
-   newReply.value = '';
+const clearReplyText = (comment) => {
+  comment.replyText = ""; // 취소 시 텍스트 초기화
 };
 
 // 대댓글 제출
-const submitReply = async (parent_no) => {
+const submitReply = async (comment) => {
   const isAuthenticated = await checkAuthenticated(); // 로그인 상태 확인
 
   if (!isAuthenticated) {
@@ -469,24 +498,20 @@ const submitReply = async (parent_no) => {
     return;
   }
 
-  if (!newReply.value.trim()) {
-    console.error('대댓글 내용을 입력해주세요.');
-    return;
-  }
-
+  if (!comment.replyText.trim()) return;
   try {
     await axios.post('http://localhost:8080/api/insertReview', {
-      parent_no,
-      content: newReply.value,
+      parent_no: comment.no,
+      content: comment.replyText,
     },{
       params:{ id: contentId.value },
       withCredentials: true, // 인증 정보를 포함하도록 설정
     });
-    newReply.value = '';
-    if(parent_no == 0){
+    comment.replyText = '';
+    if(comment.no == 0){
       await fetchComments(contentId.value,sortOrder.value);
     }else{
-      await fetchReplies(parent_no); 
+      await fetchReplies(comment.no); 
     }
 
   } catch (err) {
@@ -591,8 +616,17 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px; /* 닉네임과 시간 사이의 간격 */
-  position: relative;
+}
+
+.nicknameTime{
+  display: flex;
+  gap: 16px;
+  padding-right: 16px;
+}
+
+.time{
+  color: #888;
+  font-size: 14px;
 }
 
 .reply-list {
@@ -678,6 +712,18 @@ onMounted(async () => {
 .sort-container select {
   padding: 5px;
   font-size: 14px;
+}
+
+.content_deleted {
+  padding-left: 20px;
+  font-style: italic;
+  color: #888;
+}
+
+.stars-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 </style>
