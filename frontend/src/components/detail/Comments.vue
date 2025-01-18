@@ -5,12 +5,17 @@
     <div v-else>
       <h2>댓글 {{ totalComments }}개</h2>
           <div class="sort-container">
-            <label for="sort">정렬:</label>
-            <select id="sort" v-model="sortOrder" @change="updateComments">
-              <option value="no">최신순</option>
-              <option value="likeCount">좋아요순</option>
-              <option value="replyCount">댓글많은순</option>
-            </select>
+              <v-select
+                id="sort"
+                v-model="sortOrder"
+                :items="sortOptions"
+                item-value="value"
+                item-title="label"
+                variant="outlined"
+                label="정렬"
+                class="select_option"
+                dense
+              ></v-select>
           </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" class="comment-item">
@@ -132,11 +137,11 @@
                     </div>
                   </div>
                   <div v-else>
-                    <p v-if="reply.is_deleted ==='N'" class="content">
-                      {{ reply.content }}
-                    </p>
-                    <p v-else class="content_deleted">
+                    <p v-if="reply.is_deleted ==='Y'" class="content_deleted">
                       삭제된 댓글입니다.
+                    </p>
+                    <p v-else class="content">
+                      {{ reply.content }}
                     </p>
                   </div>
                 <div class="comment-actions">
@@ -151,6 +156,13 @@
                 </div>
               </div>
             </li>
+            <v-btn
+              v-if="hasMoreReplies[comment.no]"
+              @click="loadMoreReplies(comment.no)"
+              class="load-more-btn"
+            >
+              더보기
+          </v-btn>
        <!-- 대댓글 입력 창 -->
               <div class="reply-input-container">
                 <textarea
@@ -158,19 +170,20 @@
                 class="reply-textarea"
                 v-model="comment.replyText"
                 @input="handleInput"
+                @keydown.enter="handleEnterKey(comment)"
               ></textarea>
               <div class="reply-actions">
-                <button
+                <v-btn
                   @click="clearReplyText(comment)"
                   class="cancel-btn">
                   취소
-                </button>
-                <button
+              </v-btn>
+                <v-btn
                   @click="submitReply(comment)"
                   class="submit-btn"
                   :disabled="!comment.replyText.trim()"
                 >
-                 답글</button>
+                 답글</v-btn>
                 </div>
               </div>
            </ul>
@@ -183,13 +196,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
 
 const comments = ref([]);
 const replies = ref([]);
+const repliesPage = ref({});
+const hasMoreReplies = ref({});
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
 const totalComments = ref(0); // 전체 댓글 수
 const isLoading = ref(true); // 로딩 상태 관리
@@ -203,6 +218,11 @@ const contentId = ref(route.query.id ||null);
 const router = useRouter();
 const navigationStore = useNavigationStore(); // Pinia 스토어 초기화
 const sortOrder = ref("likeCount");
+const sortOptions = [
+  { label: '좋아요순', value: 'likeCount' },
+  { label: '최신순', value: 'no' },
+  { label: '댓글많은순', value: 'replyCount' },
+];
 
 // 로그인 검증 함수
 async function checkAuthenticated() {
@@ -221,7 +241,6 @@ async function checkAuthenticated() {
 }
 
 const fetchLoggedInUserId = async () => {
-  console.log("fetchLoggedInUser함수실행")
   try {
     const response = await axios.get("http://localhost:8080/api/getLoggedInId", {
       withCredentials: true,
@@ -306,7 +325,6 @@ const toggleLike = async (commentId) => {
 
 // 드롭다운 토글 함수
 const toggleDropdown = (item) => {
-  console.log(item.members_id +":"+ loggedInUserId.value);
   if (item.members_id === loggedInUserId.value) {
     activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
   }
@@ -315,6 +333,21 @@ const toggleDropdown = (item) => {
   }
 };
 
+// 바깥쪽 클릭 감지 함수
+const handleOutsideClick = (event) => {
+  const dropdownContainers = document.querySelectorAll('.dropdown-container');
+  let isClickInsideDropdown = false;
+
+  dropdownContainers.forEach((container) => {
+    if (container.contains(event.target)) {
+      isClickInsideDropdown = true;
+    }
+  });
+
+  if (!isClickInsideDropdown) {
+    activeDropdown.value = null; // 드롭다운 닫기
+  }
+};
 // 수정 모드 활성화
 const enableEditMode = (item) => {
   item.isEditing = true;
@@ -427,7 +460,7 @@ const formatLikeCount = (count) => {
 };
 
 // 댓글 가져오기 함수
-const fetchComments = async (contentId, sortBy = "likeCount") => {
+const fetchComments = async (contentId, sortBy) => {
   try {
     const response = await axios.get(`http://localhost:8080/api/comments`, {
       params: { id: contentId, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
@@ -448,37 +481,47 @@ const fetchComments = async (contentId, sortBy = "likeCount") => {
   }
 };
 
-
-// 정렬 옵션 변경 시 호출되는 함수
-const updateComments = () => {
-  isLoading.value = true; // 로딩 상태 설정
-  fetchComments(contentId.value, sortOrder.value); // sortOrder를 기반으로 fetchComments 호출
-};
-
+watch(sortOrder, (newValue) => {
+  console.log(`정렬 옵션 변경: ${newValue}`);
+  replies.value = {};
+  fetchComments(contentId.value, newValue); // 새 정렬 옵션으로 댓글 갱신
+});
 
 
 // 대댓글 가져오기 함수
-const fetchReplies = async (parent_no) => {
+const fetchReplies = async (parentNo, page = 0) => {
   try {
     const response = await axios.post('http://localhost:8080/api/replies', null, {
-      params: { id: contentId.value, page: 0, parentId: parent_no },
+      params: { id: contentId.value, page, parentId: parentNo },
     });
-    if (response.data && response.data.replies) {
-      replies.value[parent_no] = response.data.replies;
+
+   const fetchedReplies = response.data.replies;
+
+    // Append new replies to the existing list
+    if (!replies.value[parentNo]) {
+      replies.value[parentNo] = [];
     }
+    replies.value[parentNo] = [...replies.value[parentNo], ...fetchedReplies];
+
+    // Update the page and "has more" status
+    repliesPage.value[parentNo] = page + 1;
+    hasMoreReplies.value[parentNo] = fetchedReplies.length === 20; // Assume 20 replies per page
   } catch (err) {
-    console.error('대댓글 정보를 불러오는 데 실패했습니다:', err);
-    error.value = '대댓글 정보를 불러오는 데 실패했습니다.';
+    console.error('대댓글 불러오기 실패:', err);
   }
+};
+
+const loadMoreReplies = async (parentNo) => {
+  const nextPage = repliesPage.value[parentNo] || 0;
+  await fetchReplies(parentNo, nextPage);
 };
 
 // 대댓글 토글 함수
 const toggleReplies = async (comment) => {
-  const parent_no = comment.no;
-  if (replies.value[parent_no]) {
-    delete replies.value[parent_no];
+  if (replies.value[comment.no]) {
+    delete replies.value[comment.no];
   } else {
-    await fetchReplies(parent_no);
+    await fetchReplies(comment.no);
   }
 };
 
@@ -499,20 +542,21 @@ const submitReply = async (comment) => {
   }
 
   if (!comment.replyText.trim()) return;
+
   try {
-    await axios.post('http://localhost:8080/api/insertReview', {
+    const response = await axios.post('http://localhost:8080/api/insertReview', {
       parent_no: comment.no,
       content: comment.replyText,
     },{
       params:{ id: contentId.value },
       withCredentials: true, // 인증 정보를 포함하도록 설정
     });
+    console.log('서버에서 반환된 데이터:', response.data);
+   
     comment.replyText = '';
-    if(comment.no == 0){
-      await fetchComments(contentId.value,sortOrder.value);
-    }else{
-      await fetchReplies(comment.no); 
-    }
+    
+    replies.value[comment.no] = [];
+    await fetchReplies(comment.no);
 
   } catch (err) {
     if (err.response) {
@@ -523,10 +567,17 @@ const submitReply = async (comment) => {
   }
 };
 
+const handleEnterKey = (comment) => {
+  if (comment.replyText.trim()) {
+    submitReply(comment); // 대댓글 제출
+  }
+};
+
 // 컴포넌트 마운트 시 API 호출
 onMounted(async () => {
 
-  console.log(`contentId: ${contentId.value}`);
+  document.addEventListener('click', handleOutsideClick);
+
     // 이전 페이지 설정
     const currentPath = router.currentRoute.value.fullPath;
     console.log('현재 페이지:', currentPath);
@@ -543,9 +594,22 @@ onMounted(async () => {
     console.error('contentId가 없습니다.');
   }
 
+     // 대댓글 초기화
+     comments.value.forEach((comment) => {
+      repliesPage.value[comment.no] = 0;
+      hasMoreReplies.value[comment.no] = true;
+    });
+
   await fetchLoggedInUserId();
  
 });
+
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideClick); // 이벤트 해제
+});
+
+
 </script>
 
 <style scoped>
@@ -697,21 +761,10 @@ onMounted(async () => {
   background: #f5f5f5;
 }
 
-.sort-container {
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sort-container label {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.sort-container select {
-  padding: 5px;
-  font-size: 14px;
+.select_option {
+  max-width: 150px; 
+  font-size: 14px; 
+  margin-top: 30px;
 }
 
 .content_deleted {
@@ -726,4 +779,17 @@ onMounted(async () => {
   gap: 4px;
 }
 
+.load-more-btn {
+  color: #555;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.load-more-btn:hover {
+  color: #666;
+}
 </style>
