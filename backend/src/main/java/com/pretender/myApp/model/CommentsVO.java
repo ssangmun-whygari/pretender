@@ -13,15 +13,16 @@ import lombok.NoArgsConstructor;
 public class CommentsVO {
 
 	private int no;
-	private String members_Id;
+	private String members_id;
 	private Character isParent;
 	private int parent_no;
 	private String content;
 	private LocalDateTime post_date;
+	private LocalDateTime correct_date;
 	private Character is_deleted;
 	private String image;
 	private String nickname;
 	private int likeCount;
-	private int count;
+	private float stars;
 	private int replyCount;
 }

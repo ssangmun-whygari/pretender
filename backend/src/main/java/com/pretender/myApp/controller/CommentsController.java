@@ -35,15 +35,19 @@ public class CommentsController {
 	@Autowired
 	private CommentsService cService;
 	
-	private static final int PAGE_SIZE_COMMENTS = 30;
+	private static final int PAGE_SIZE_COMMENTS = 5;
 	private static final int PAGE_SIZE_REPLIES = 20;
 	
 	// 모든 코멘트 가져오기 (페이지네이션)
-	@PostMapping("/api/comments")
+	@GetMapping("/api/comments")
 	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "likeCount") String sortBy){
 		int size = PAGE_SIZE_COMMENTS;
-		Map<String, Object> response = new HashMap<>();
+		int totalComments = cService.getTotalComments(id);
+		int totalPages = (int) Math.ceil((double) totalComments / size);
 		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy);
+		Map<String, Object> response = new HashMap<>();
+		response.put("totalComments", totalComments);
+		response.put("totalPages", totalPages);
 		response.put("page", page);
 		response.put("size", size);
 		response.put("comments", comments);
@@ -75,9 +79,8 @@ public class CommentsController {
 		 
 		String userId = auth.getName();
 		int id = likeEle.getMediaId();
-		String type = cService.getCollectionItem(id).getMediaType();
 		
-		likeEle.setMediaType(type);
+		likeEle.setMediaType("tv");
 		likeEle.setMembersId(userId);
 		
 		if(cService.insertReviewLike(likeEle) == 1) {
@@ -135,7 +138,6 @@ public class CommentsController {
 	        }
 		 
 		String membersId = auth.getName();
-		String type = cService.getCollectionItem(id).getMediaType();
 		int parentNo = comment.getParent_no();
 		String content = comment.getContent();
 		
@@ -144,7 +146,7 @@ public class CommentsController {
 		review.setParentNo(parentNo);
 		review.setContent(content);
 		review.setId(id);
-		review.setType(type);
+		review.setType("tv");
 		
 		if(parentNo == 0) {
 			review.setIsParent('Y');
@@ -160,7 +162,7 @@ public class CommentsController {
 	}
 	
 	//댓글 삭제
-	@DeleteMapping("api/deleteReview")
+	@PutMapping("api/deleteReview")
 	public ResponseEntity<Object> deleteReview(
 	    @RequestParam int id,
 	    @RequestParam int no,
@@ -192,6 +194,9 @@ public class CommentsController {
 		 if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
 			  return ResponseEntity.badRequest().body("로그인이 필요합니다.");
 	        }
+		 if(review.getIsDeleted() == 'Y') {
+			  return ResponseEntity.badRequest().body("이미 삭제한 글입니다.");
+		 	}
 		 
 		String userId = auth.getName();
 		String membersId = review.getMembersId();

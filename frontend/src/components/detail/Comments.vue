@@ -1,61 +1,59 @@
 <template>
   <div>
-    <h2 v-if="isLoading">로딩 중...</h2>
-    <h2 v-else-if="error">{{ error }}</h2>
-    <div v-else>
+    <div>
       <h2>댓글 {{ totalComments }}개</h2>
-      <div class="reply-input-container">
-                <textarea
-                placeholder="댓글 추가..."
-                class="reply-textarea"
-                v-model="newReply"
-                @input="handleInput"
-              ></textarea>
-              <div class="reply-actions">
-                <button
-                  @click="cancelReply"
-                  class="cancel-btn"
-                  :class="{ active: newReply.trim() !== '' }"
-                >
-                  취소
-                </button>
-                <button
-                  @click="submitReply(0)"
-                  class="submit-btn"
-                  :disabled="!newReply.trim()"
-                >
-                 댓글</button>
-                </div>
-              </div>
-
-              <div class="sort-container">
-                <label for="sort">정렬:</label>
-                <select id="sort" v-model="sortOrder" @change="updateComments">
-                  <option value="no">최신순</option>
-                  <option value="likeCount">좋아요순</option>
-                </select>
-              </div>
+          <div class="sort-container">
+              <v-select
+                id="sort"
+                v-model="sortOrder"
+                :items="sortOptions"
+                item-value="value"
+                item-title="label"
+                variant="outlined"
+                label="정렬"
+                class="select_option my-select"
+              ></v-select>
+          </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" class="comment-item">
           <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
-              <span class="nickname">{{ comment.nickname }}</span>
-              <span class="time">{{ formatDate(comment.post_date) }}</span>
-              <div class="dropdown-container">
-                <button class="dots-btn" @click="toggleDropdown(comment)">
-                  &#x22EE;
-                </button>
-                <div v-if="activeDropdown === comment.no" class="dropdown-menu">
-                  <button @click="enableEditMode(comment)" class="dropdown-item">
-                    ✏ 수정
+              <div class="nicknameTime">
+                <span class="nickname">{{ comment.nickname }}</span>
+                <span v-if="comment.correct_date">
+                  (수정됨: {{ formatDate(comment.correct_date) }})
+                </span>
+                <span v-else class="time">{{ formatDate(comment.post_date) }}</span>
+                </div>                
+                <div v-if="comment.stars" class="stars-container">
+                  <!-- 별점 표시 -->
+                <v-rating
+                  class="stars"
+                  :model-value="comment.stars"
+                  :length="5"
+                  half-increments
+                  hover
+                  active-color="orange"
+                  size="24"
+                  readonly
+                />
+              </div>
+                <div class="dropdown-container">
+                  <button class="dots-btn" @click="toggleDropdown(comment)">
+                    &#x22EE;
                   </button>
-                  <button @click="deleteComment(comment)" class="dropdown-item">
-                    🗑 삭제
-                  </button>
+                  <div v-if="activeDropdown === comment.no" class="dropdown-menu">
+                    <button @click="enableEditMode(comment)" class="dropdown-item">
+                      ✏ 수정
+                    </button>
+                    <button @click="deleteComment(comment)" class="dropdown-item">
+                      🗑 삭제
+                    </button>
                 </div>
               </div>
             </div>
+          
             <!-- 댓글 수정 가능 -->
             <div v-if="comment.isEditing">
               <textarea
@@ -71,8 +69,11 @@
 
             <!-- 댓글 읽기 모드 -->
             <div v-else>
-              <p class="content">
+              <p v-if="comment.is_deleted ==='N'" class="content">
                 {{ comment.content }}
+              </p>
+              <p v-else class="content_deleted">
+                삭제된 댓글입니다.
               </p>
             </div>
             <div class="comment-actions">
@@ -99,8 +100,14 @@
               <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
               <div class="comment-content">
                 <div class="comment-header">
-                  <span class="nickname">{{ reply.nickname }}</span>
-                  <span class="time">{{ formatDate(reply.post_date) }}</span>
+                  <div class="nicknameTime">
+                    <span class="nickname">{{ reply.nickname }}</span>
+                    <span v-if="reply.correct_date && reply.is_deleted =='N'">
+                      (수정됨: {{ formatDate(reply.correct_date) }})
+                    </span>
+                    <span v-if="reply.is_deleted =='N'" class="time">
+                      {{ formatDate(reply.post_date) }}</span>
+                  </div>
                   <div class="dropdown-container">
                     <button class="dots-btn" @click="toggleDropdown(reply)">
                       &#x22EE;
@@ -127,7 +134,10 @@
                     </div>
                   </div>
                   <div v-else>
-                    <p class="content">
+                    <p v-if="reply.is_deleted ==='Y'" class="content_deleted">
+                      삭제된 댓글입니다.
+                    </p>
+                    <p v-else class="content">
                       {{ reply.content }}
                     </p>
                   </div>
@@ -143,60 +153,64 @@
                 </div>
               </div>
             </li>
-    <!-- 대댓글 입력 창 -->
+            <v-btn
+              v-if="hasMoreReplies[comment.no]"
+              @click="loadMoreReplies(comment.no)"
+              class="load-more-btn"
+            >
+              더보기
+          </v-btn>
+       <!-- 대댓글 입력 창 -->
               <div class="reply-input-container">
                 <textarea
                 placeholder="답글을 입력하세요..."
                 class="reply-textarea"
-                v-model="newReply"
+                v-model="comment.replyText"
                 @input="handleInput"
+                @keydown.enter="handleEnterKey(comment)"
               ></textarea>
               <div class="reply-actions">
-                <button
-                  @click="cancelReply"
-                  class="cancel-btn"
-                  :class="{ active: newReply.trim() !== '' }"
-                >
+                <v-btn
+                  @click="clearReplyText(comment)"
+                  class="cancel-btn">
                   취소
-                </button>
-                <button
-                  @click="submitReply(comment.no)"
+              </v-btn>
+                <v-btn
+                  @click="submitReply(comment)"
                   class="submit-btn"
-                  :disabled="!newReply.trim()"
+                  :disabled="!comment.replyText.trim()"
                 >
-                 답글</button>
+                 답글</v-btn>
                 </div>
               </div>
            </ul>
-
-
-           
             
           </div>
         </li>
       </ul>
     </div>
+    <v-pagination 
+    v-model="currentPage"
+    :length="totalPages"
+    @update:modelValue="onPageChange"
+  />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
 
-const comments = ref([
-  { no: 1, content: "첫 번째 댓글", id: 123, isEditing: false, updatedContent: "" },
-  { no: 2, content: "두 번째 댓글", id: 123, isEditing: false, updatedContent: "" },
-]);
-const replies = ref({
-  1: [
-    { no: 11, content: "첫 번째 대댓글", id: 123, isEditing: false, updatedContent: "" },
-  ],
-});
-const newReply = ref(''); // newReply 변수 초기화
+const comments = ref([]);
+const replies = ref([]);
+const repliesPage = ref({});
+const hasMoreReplies = ref({});
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
 const totalComments = ref(0); // 전체 댓글 수
+const totalPages = ref(0);
+const currentPage = ref(1);
 const isLoading = ref(true); // 로딩 상태 관리
 const error = ref(null); // 오류 메시지 관리
 const activeDropdown = ref(null); // 활성화된 드롭다운 ID
@@ -208,6 +222,11 @@ const contentId = ref(route.query.id ||null);
 const router = useRouter();
 const navigationStore = useNavigationStore(); // Pinia 스토어 초기화
 const sortOrder = ref("likeCount");
+const sortOptions = [
+  { label: '좋아요순', value: 'likeCount' },
+  { label: '최신순', value: 'no' },
+  { label: '댓글많은순', value: 'replyCount' },
+];
 
 // 로그인 검증 함수
 async function checkAuthenticated() {
@@ -230,7 +249,8 @@ const fetchLoggedInUserId = async () => {
     const response = await axios.get("http://localhost:8080/api/getLoggedInId", {
       withCredentials: true,
     });
-    loggedInUserId.value = response.data.userId; // 서버에서 반환된 로그인 사용자 ID
+    console.log(response.data);
+    loggedInUserId.value = response.data; // 서버에서 반환된 로그인 사용자 ID
   } catch (error) {
     console.error("사용자 정보를 가져오는 중 오류 발생:", error.response?.data || error.message);
   }
@@ -272,11 +292,6 @@ const toggleLike = async (commentId) => {
       return;
     }
 
-    console.log("좋아요 요청 데이터:", {
-      mediaId: contentId.value,
-      reviewsNo: commentId,
-    });
-
     const isAuthenticated = await checkAuthenticated();
     if (!isAuthenticated) {
       navigationStore.setPreviousPage(router.currentRoute.value.fullPath);
@@ -312,15 +327,31 @@ const toggleLike = async (commentId) => {
   }
 };
 
-
-
 // 드롭다운 토글 함수
 const toggleDropdown = (item) => {
-  if (item.members_Id === loggedInUserId.value) {
-  activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  if (item.members_id === loggedInUserId.value) {
+    activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  }
+  if (item.is_deleted ==='Y'){
+    activeDropdown.value = null;
   }
 };
 
+// 바깥쪽 클릭 감지 함수
+const handleOutsideClick = (event) => {
+  const dropdownContainers = document.querySelectorAll('.dropdown-container');
+  let isClickInsideDropdown = false;
+
+  dropdownContainers.forEach((container) => {
+    if (container.contains(event.target)) {
+      isClickInsideDropdown = true;
+    }
+  });
+
+  if (!isClickInsideDropdown) {
+    activeDropdown.value = null; // 드롭다운 닫기
+  }
+};
 // 수정 모드 활성화
 const enableEditMode = (item) => {
   item.isEditing = true;
@@ -350,6 +381,7 @@ const saveEditComment = async (item) => {
         membersId: item.members_id,
         content: item.updatedContent, // 수정된 내용
         id: contentId.value, // 게시물 ID
+        isDeleted: item.is_deleted
       },
       { withCredentials: true }
     );
@@ -369,7 +401,7 @@ const saveEditComment = async (item) => {
 const deleteComment = async (item) => {
   try {
     // 삭제 확인 대화상자
-    const response = await axios.delete("http://localhost:8080/api/deleteReview", {
+    const response = await axios.put("http://localhost:8080/api/deleteReview", null, {
       params: {
         id: contentId.value, // 게시물 ID
         no: item.no, // 댓글 ID
@@ -382,12 +414,18 @@ const deleteComment = async (item) => {
     if (response.status === 200) {
       console.log("댓글 삭제 성공:", response.data);
 
-      // UI에서 댓글 삭제
-      comments.value = comments.value.filter((comment) => comment.no !== item.no);
+       // UI에서 삭제된 댓글로 표시
+       const commentToDelete = comments.value.find((comment) => comment.no === item.no);
+      if (commentToDelete) {
+        commentToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로 표시
+      }
+
+      // 대댓글 처리
       for (const parentId in replies.value) {
-        replies.value[parentId] = replies.value[parentId].filter(
-          (reply) => reply.no !== item.no
-        );
+        const replyToDelete = replies.value[parentId].find((reply) => reply.no === item.no);
+        if (replyToDelete) {
+          replyToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로 표시
+        }
       }
       activeDropdown.value = null; // 드롭다운 닫기
     }
@@ -400,15 +438,21 @@ const deleteComment = async (item) => {
   }
 };
 
-
 // 날짜 포맷 함수
 const formatDate = (date) => {
-  const diff = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
-  if (diff < 1) return "오늘";
-  if (diff < 30) return `${diff}일 전`;
-  if (diff < 365) return `${Math.floor(diff / 30)}개월 전`;
-  return `${Math.floor(diff / 365)}년 전`;
+  if (!date) return "";
+
+  const now = new Date();
+  const diff = Math.floor((now - new Date(date)) / 1000); // 차이를 초 단위로 계산
+
+  if (diff < 60) return `${diff}초 전`; // 1분 미만
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`; // 1시간 미만
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`; // 24시간 미만
+  if (diff < 30 * 86400) return `${Math.floor(diff / 86400)}일 전`; // 30일 미만
+  if (diff < 365 * 86400) return `${Math.floor(diff / (30 * 86400))}개월 전`; // 1년 미만
+  return `${Math.floor(diff / (365 * 86400))}년 전`; // 1년 이상
 };
+
 
 // 좋아요 숫자 포맷 함수
 const formatLikeCount = (count) => {
@@ -420,57 +464,84 @@ const formatLikeCount = (count) => {
 };
 
 // 댓글 가져오기 함수
-const fetchComments = async (contentId, sort = "likeCount") => {
+const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   try {
-    const response = await axios.post(`http://localhost:8080/api/comments`, null, {
-      params: { id: contentId, sortBy:sort  },
+    const response = await axios.get(`http://localhost:8080/api/comments`, {
+      params: { id: contentId, page, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
     });
+
     if (response.data && response.data.comments) {
+      response.data.comments.forEach((comment) => {
+        comment.replyText = ""; // 각 댓글에 replyText 추가
+      });
       comments.value = response.data.comments; // 댓글 목록 저장
-      totalComments.value = response.data.comments[0]?.count || 0; // 전체 댓글 수 저장
+      totalComments.value = response.data.totalComments || 0; // 전체 댓글 수 저장
+      totalPages.value = response.data.totalPages || 0;
     }
   } catch (err) {
-    console.error('API 호출 중 오류가 발생했습니다:', err);
-    error.value = '댓글 정보를 불러오는 데 실패했습니다.';
+    console.error("API 호출 중 오류가 발생했습니다:", err);
+    error.value = "댓글 정보를 불러오는 데 실패했습니다.";
   } finally {
     isLoading.value = false; // 로딩 상태 해제
   }
 };
 
+watch(sortOrder, (newValue) => {
+  console.log(`정렬 옵션 변경: ${newValue}`);
+  replies.value = {};
+  fetchComments(contentId.value,0, newValue); // 새 정렬 옵션으로 댓글 갱신
+  currentPage.value = 1;
+});
+
+const onPageChange = (page) => {
+  currentPage.value = page; // 페이지 업데이트
+  fetchComments(contentId.value, page - 1, sortOrder.value); // 서버에서 새 데이터 가져오기
+};
 
 // 대댓글 가져오기 함수
-const fetchReplies = async (parent_no) => {
+const fetchReplies = async (parentNo, page = 0) => {
   try {
     const response = await axios.post('http://localhost:8080/api/replies', null, {
-      params: { id: contentId.value, page: 0, parentId: parent_no },
+      params: { id: contentId.value, page, parentId: parentNo },
     });
-    if (response.data && response.data.replies) {
-      replies.value[parent_no] = response.data.replies;
+
+   const fetchedReplies = response.data.replies;
+
+    // Append new replies to the existing list
+    if (!replies.value[parentNo]) {
+      replies.value[parentNo] = [];
     }
+    replies.value[parentNo] = [...replies.value[parentNo], ...fetchedReplies];
+
+    // Update the page and "has more" status
+    repliesPage.value[parentNo] = page + 1;
+    hasMoreReplies.value[parentNo] = fetchedReplies.length === 20; // Assume 20 replies per page
   } catch (err) {
-    console.error('대댓글 정보를 불러오는 데 실패했습니다:', err);
-    error.value = '대댓글 정보를 불러오는 데 실패했습니다.';
+    console.error('대댓글 불러오기 실패:', err);
   }
+};
+
+const loadMoreReplies = async (parentNo) => {
+  const nextPage = repliesPage.value[parentNo] || 0;
+  await fetchReplies(parentNo, nextPage);
 };
 
 // 대댓글 토글 함수
 const toggleReplies = async (comment) => {
-  const parent_no = comment.no;
-  if (replies.value[parent_no]) {
-    delete replies.value[parent_no];
+  if (replies.value[comment.no]) {
+    delete replies.value[comment.no];
   } else {
-    await fetchReplies(parent_no);
+    await fetchReplies(comment.no);
   }
 };
 
 // 대댓글 입력 취소
-const cancelReply = () => {
-  const replyTextarea = document.querySelector('.reply-textarea');
-   newReply.value = '';
+const clearReplyText = (comment) => {
+  comment.replyText = ""; // 취소 시 텍스트 초기화
 };
 
 // 대댓글 제출
-const submitReply = async (parent_no) => {
+const submitReply = async (comment) => {
   const isAuthenticated = await checkAuthenticated(); // 로그인 상태 확인
 
   if (!isAuthenticated) {
@@ -480,25 +551,22 @@ const submitReply = async (parent_no) => {
     return;
   }
 
-  if (!newReply.value.trim()) {
-    console.error('대댓글 내용을 입력해주세요.');
-    return;
-  }
+  if (!comment.replyText.trim()) return;
 
   try {
-    await axios.post('http://localhost:8080/api/insertReview', {
-      parent_no,
-      content: newReply.value,
+    const response = await axios.post('http://localhost:8080/api/insertReview', {
+      parent_no: comment.no,
+      content: comment.replyText,
     },{
       params:{ id: contentId.value },
       withCredentials: true, // 인증 정보를 포함하도록 설정
     });
-    newReply.value = '';
-    if(parent_no == 0){
-      await fetchComments(contentId.value,sortOrder.value);
-    }else{
-      await fetchReplies(parent_no); 
-    }
+    console.log('서버에서 반환된 데이터:', response.data);
+   
+    comment.replyText = '';
+    
+    replies.value[comment.no] = [];
+    await fetchReplies(comment.no);
 
   } catch (err) {
     if (err.response) {
@@ -509,10 +577,17 @@ const submitReply = async (parent_no) => {
   }
 };
 
+const handleEnterKey = (comment) => {
+  if (comment.replyText.trim()) {
+    submitReply(comment); // 대댓글 제출
+  }
+};
+
 // 컴포넌트 마운트 시 API 호출
 onMounted(async () => {
 
-  console.log(`contentId: ${contentId.value}`);
+  document.addEventListener('click', handleOutsideClick);
+
     // 이전 페이지 설정
     const currentPath = router.currentRoute.value.fullPath;
     console.log('현재 페이지:', currentPath);
@@ -524,14 +599,27 @@ onMounted(async () => {
 
   if (contentId) {
     await fetchLikedCommentIds(contentId.value); // 좋아요한 댓글 ID 가져오기
-    await fetchComments(contentId.value,sortOrder.value); // 댓글 불러오기
+    await fetchComments(contentId.value,0,sortOrder.value); // 댓글 불러오기
   } else {
     console.error('contentId가 없습니다.');
   }
 
+     // 대댓글 초기화
+     comments.value.forEach((comment) => {
+      repliesPage.value[comment.no] = 0;
+      hasMoreReplies.value[comment.no] = true;
+    });
+
   await fetchLoggedInUserId();
  
 });
+
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideClick); // 이벤트 해제
+});
+
+
 </script>
 
 <style scoped>
@@ -602,8 +690,17 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px; /* 닉네임과 시간 사이의 간격 */
-  position: relative;
+}
+
+.nicknameTime{
+  display: flex;
+  gap: 16px;
+  padding-right: 16px;
+}
+
+.time{
+  color: #888;
+  font-size: 14px;
 }
 
 .reply-list {
@@ -674,21 +771,38 @@ onMounted(async () => {
   background: #f5f5f5;
 }
 
-.sort-container {
-  margin: 10px 0;
+.select_option {
+  max-width: 150px; 
+  font-size: 14px; 
+  margin-top: 30px;
+}
+
+.my-select .v-input__slot {
+  padding: 0 !important;
+}
+.content_deleted {
+  padding-left: 20px;
+  font-style: italic;
+  color: #888;
+}
+
+.stars-container {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
-.sort-container label {
-  font-size: 14px;
-  font-weight: bold;
+.load-more-btn {
+  color: #555;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  width: 100%;
 }
 
-.sort-container select {
-  padding: 5px;
-  font-size: 14px;
+.load-more-btn:hover {
+  color: #666;
 }
-
 </style>

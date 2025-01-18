@@ -19,5 +19,6 @@ public class ReviewDTO {
 	private int parentNo;
 	private String content;
 	private int id;
+	private char isDeleted; 
 	private String type;
 }

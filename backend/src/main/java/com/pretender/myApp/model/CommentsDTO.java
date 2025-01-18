@@ -22,8 +22,9 @@ public class CommentsDTO {
 	private String members_id;
     private Integer parent_no;    
     private String content;      
-    private LocalDateTime post_date; 
-    private boolean isDeleted;   
+    private LocalDateTime post_date;
+    private LocalDateTime correct_date;
+    private char is_deleted;   
     private String image;        
     private String nickname;     
     private int likeCount; 

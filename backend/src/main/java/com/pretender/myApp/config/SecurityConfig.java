@@ -50,9 +50,11 @@ public class SecurityConfig {
 				.requestMatchers("/api/myPage/**").authenticated()
 				.requestMatchers("/api/login").authenticated()
 				.requestMatchers("/api/collection/**").authenticated()
+
 				.requestMatchers("api/members/**").authenticated()
 				.requestMatchers("/api/reviewLike").authenticated()
 				.requestMatchers("/api/insertReview").authenticated() 
+
 				.anyRequest().permitAll();
 		});
 		return http.build();
