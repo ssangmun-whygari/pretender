@@ -23,7 +23,6 @@ public class CommentsVO {
 	private String image;
 	private String nickname;
 	private int likeCount;
-	private int count;
 	private float stars;
 	private int replyCount;
 }

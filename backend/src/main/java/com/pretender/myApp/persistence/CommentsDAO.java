@@ -20,13 +20,12 @@ public class CommentsDAO {
 	private SqlSession ses;
 	private String ns ="com.pretender.myApp.mapper.CommentsMapper.";
 
-	public List<CommentsVO> getAllTheComments(int id, int startNo, int lastNo, String sortBy) {
-		// 모든 댓글 가져오기
-		    
+	public List<CommentsVO> getAllTheComments(int id, int startNo, int size, String sortBy) {
+		// 모든 댓글 가져오기	    
 		HashMap<String, Object> paging = new HashMap<>();
 		paging.put("id",id);
 		paging.put("startNo",startNo);
-		paging.put("lastNo", lastNo);
+		paging.put("size", size);
 		paging.put("sortBy", sortBy); 
 		return ses.selectList(ns+"selectAllCmnts", paging);
 	}
@@ -75,6 +74,11 @@ public class CommentsDAO {
 		map.put("userId", userId);
 		map.put("contentId", contentId);
 		return ses.selectList(ns+"myReviewlikeList", map);
+	}
+
+	public int countAllTheComments(int id) {
+		// 댓글 개수 가져오기
+		return ses.selectOne(ns+"countAllCmnts", id);
 	}
 
 	

@@ -35,15 +35,19 @@ public class CommentsController {
 	@Autowired
 	private CommentsService cService;
 	
-	private static final int PAGE_SIZE_COMMENTS = 30;
+	private static final int PAGE_SIZE_COMMENTS = 5;
 	private static final int PAGE_SIZE_REPLIES = 20;
 	
 	// 모든 코멘트 가져오기 (페이지네이션)
 	@GetMapping("/api/comments")
 	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "likeCount") String sortBy){
 		int size = PAGE_SIZE_COMMENTS;
-		Map<String, Object> response = new HashMap<>();
+		int totalComments = cService.getTotalComments(id);
+		int totalPages = (int) Math.ceil((double) totalComments / size);
 		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy);
+		Map<String, Object> response = new HashMap<>();
+		response.put("totalComments", totalComments);
+		response.put("totalPages", totalPages);
 		response.put("page", page);
 		response.put("size", size);
 		response.put("comments", comments);

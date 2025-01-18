@@ -21,10 +21,7 @@ public class CommentsService {
 	public List<CommentsVO> getAllComments(int id, int page, int size, String sortBy) {
 		// 모든 댓글 최신순으로 불러오기
 		int startNo = page * size;
-		int lastNo = (page + 1) * size;
-		List<CommentsVO> comments = cDao.getAllTheComments(id,startNo,lastNo,sortBy);
-		return comments;
-		
+		return cDao.getAllTheComments(id,startNo,size,sortBy);
 	}
 	
 
@@ -71,6 +68,13 @@ public class CommentsService {
 		// 내가 좋아요한 댓글 목록
 		List<Integer> likeLists = cDao.selectAllMyReviewLikes(userId,contentId);
 		return likeLists;
+	}
+
+
+	public int getTotalComments(int id) {
+		// 댓글 총개수
+		int totalComments = cDao.countAllTheComments(id);
+		return totalComments;
 	}
 
 

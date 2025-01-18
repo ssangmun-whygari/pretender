@@ -4,6 +4,10 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
   
   <mapper namespace="com.pretender.myApp.mapper.CommentsMapper">
+  
+  	<select id="countAllCmnts" resultType="int">
+  		SELECT COUNT(*) FROM reviews WHERE media_id = #{id} AND is_parent = 'Y'
+  	</select>
 	
 	<select id="selectAllCmnts" resultType="com.pretender.myApp.model.CommentsVO">
     SELECT 
@@ -18,7 +22,6 @@
         m.image, 
         m.nickname,
         (SELECT COUNT(*) FROM review_likes WHERE reviews_no = r.no AND media_id = #{id}) AS likeCount,
-        (SELECT COUNT(*) FROM reviews WHERE media_id = #{id} AND is_parent = 'Y') AS count,
         (SELECT COUNT(*) FROM reviews WHERE parent_no = r.no AND media_id = #{id}) AS replyCount
     FROM reviews r
     JOIN members m ON m.id = r.members_id
@@ -28,13 +31,13 @@
             ORDER BY r.no DESC
         </when>
         <when test="sortBy == 'replyCount'">
-        	ORDER BY replyCount DESC
+        	ORDER BY replyCount DESC, r.no DESC
         </when>
         <otherwise>
-            ORDER BY likeCount DESC
+            ORDER BY likeCount DESC, r.no DESC
         </otherwise>
     </choose>
-    LIMIT #{startNo}, #{lastNo}
+    LIMIT #{startNo}, #{size}
 	</select>
 
 

@@ -1,8 +1,6 @@
 <template>
   <div>
-    <h2 v-if="isLoading">로딩 중...</h2>
-    <h2 v-else-if="error">{{ error }}</h2>
-    <div v-else>
+    <div>
       <h2>댓글 {{ totalComments }}개</h2>
           <div class="sort-container">
               <v-select
@@ -13,8 +11,7 @@
                 item-title="label"
                 variant="outlined"
                 label="정렬"
-                class="select_option"
-                dense
+                class="select_option my-select"
               ></v-select>
           </div>
       <ul class="comment-list">
@@ -192,6 +189,11 @@
         </li>
       </ul>
     </div>
+    <v-pagination 
+    v-model="currentPage"
+    :length="totalPages"
+    @update:modelValue="onPageChange"
+  />
   </div>
 </template>
 
@@ -207,6 +209,8 @@ const repliesPage = ref({});
 const hasMoreReplies = ref({});
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
 const totalComments = ref(0); // 전체 댓글 수
+const totalPages = ref(0);
+const currentPage = ref(1);
 const isLoading = ref(true); // 로딩 상태 관리
 const error = ref(null); // 오류 메시지 관리
 const activeDropdown = ref(null); // 활성화된 드롭다운 ID
@@ -460,10 +464,10 @@ const formatLikeCount = (count) => {
 };
 
 // 댓글 가져오기 함수
-const fetchComments = async (contentId, sortBy) => {
+const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   try {
     const response = await axios.get(`http://localhost:8080/api/comments`, {
-      params: { id: contentId, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
+      params: { id: contentId, page, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
     });
 
     if (response.data && response.data.comments) {
@@ -471,7 +475,8 @@ const fetchComments = async (contentId, sortBy) => {
         comment.replyText = ""; // 각 댓글에 replyText 추가
       });
       comments.value = response.data.comments; // 댓글 목록 저장
-      totalComments.value = response.data.comments[0]?.count || 0; // 전체 댓글 수 저장
+      totalComments.value = response.data.totalComments || 0; // 전체 댓글 수 저장
+      totalPages.value = response.data.totalPages || 0;
     }
   } catch (err) {
     console.error("API 호출 중 오류가 발생했습니다:", err);
@@ -484,9 +489,14 @@ const fetchComments = async (contentId, sortBy) => {
 watch(sortOrder, (newValue) => {
   console.log(`정렬 옵션 변경: ${newValue}`);
   replies.value = {};
-  fetchComments(contentId.value, newValue); // 새 정렬 옵션으로 댓글 갱신
+  fetchComments(contentId.value,0, newValue); // 새 정렬 옵션으로 댓글 갱신
+  currentPage.value = 1;
 });
 
+const onPageChange = (page) => {
+  currentPage.value = page; // 페이지 업데이트
+  fetchComments(contentId.value, page - 1, sortOrder.value); // 서버에서 새 데이터 가져오기
+};
 
 // 대댓글 가져오기 함수
 const fetchReplies = async (parentNo, page = 0) => {
@@ -589,7 +599,7 @@ onMounted(async () => {
 
   if (contentId) {
     await fetchLikedCommentIds(contentId.value); // 좋아요한 댓글 ID 가져오기
-    await fetchComments(contentId.value,sortOrder.value); // 댓글 불러오기
+    await fetchComments(contentId.value,0,sortOrder.value); // 댓글 불러오기
   } else {
     console.error('contentId가 없습니다.');
   }
@@ -767,6 +777,9 @@ onBeforeUnmount(() => {
   margin-top: 30px;
 }
 
+.my-select .v-input__slot {
+  padding: 0 !important;
+}
 .content_deleted {
   padding-left: 20px;
   font-style: italic;
