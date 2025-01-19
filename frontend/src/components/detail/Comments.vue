@@ -16,7 +16,7 @@
           </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" class="comment-item">
-          <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
+          <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
               <div class="nicknameTime">
@@ -96,8 +96,8 @@
 
           <!-- 대댓글 목록 -->
           <ul v-if="replies[comment.no]" class="reply-list">
-            <li v-for="reply in replies[comment.no]" :key="reply.no" class="comment-item">
-              <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_Id']" alt="프로필" class="comment-image" />
+            <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" class="comment-item">
+              {{index + 1}}<!-- to peachea27 : 테스트용, 이 숫자는 나중에 지워--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
               <div class="comment-content">
                 <div class="comment-header">
                   <div class="nicknameTime">
