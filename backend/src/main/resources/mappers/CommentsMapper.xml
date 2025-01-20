@@ -49,7 +49,7 @@
 	on m.id = r.members_id
 	where r.media_id = #{ id } and r.is_parent='N' and parent_no = #{ parentId } 
 	order by r.no asc 
-	limit #{ startNo },#{ lastNo }
+	limit #{ startNo },#{ size }
   </select>
   
   <insert id="insertReviewLk">

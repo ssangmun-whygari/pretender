@@ -30,13 +30,13 @@ public class CommentsDAO {
 		return ses.selectList(ns+"selectAllCmnts", paging);
 	}
 
-	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int lastNo) {
+	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int size) {
 		// 모든 대댓글 가져오기
 		HashMap<String, Integer> paging = new HashMap<>();
 		paging.put("id", id);
 		paging.put("parentId", parentId);
 		paging.put("startNo", startNo);
-		paging.put("lastNo", lastNo);
+		paging.put("size", size);
 		return ses.selectList(ns+"selectAllRpls",paging);
 	}
 

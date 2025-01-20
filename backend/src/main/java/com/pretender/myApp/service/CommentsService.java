@@ -28,8 +28,7 @@ public class CommentsService {
 	public List<CommentsDTO> getAllReplies(int id, int parentId, int page, int size) {
 		// 모든 대댓글 최신순으로 불러오기
 		int startNo = page * size;
-		int lastNo = (page + 1) * size;
-		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,lastNo);
+		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,size);
 		return replies;
 	}
 
