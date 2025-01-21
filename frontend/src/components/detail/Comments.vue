@@ -40,16 +40,23 @@
                 />
               </div>
                 <div class="dropdown-container">
-                  <button class="dots-btn" @click="toggleDropdown(comment)">
+                  <button v-if="loggedInUserId !='anonymousUser' && comment.is_deleted ==='N'"  class="dots-btn" @click="toggleDropdown(comment)">
                     &#x22EE;
                   </button>
                   <div v-if="activeDropdown === comment.no" class="dropdown-menu">
-                    <button @click="enableEditMode(comment)" class="dropdown-item">
-                      ✏ 수정
-                    </button>
-                    <button @click="deleteComment(comment)" class="dropdown-item">
-                      🗑 삭제
-                    </button>
+                    <template v-if="comment.members_id === loggedInUserId">
+                      <button @click="enableEditMode(comment)" class="dropdown-item">
+                        ✏ 수정
+                      </button>
+                      <button @click="deleteComment(comment)" class="dropdown-item">
+                        🗑 삭제
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button @click="reportModal = true" class="dropdown-item">
+                        신고하기
+                      </button>
+                    </template>
                 </div>
               </div>
             </div>
@@ -100,7 +107,7 @@
                   · · · 
                   </v-btn>
                   <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" class="comment-item">
-                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- to  peachea27 : 테스트용, 이 숫자는 나중에 지워--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
+                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
                     <div class="comment-content">
                       <div class="comment-header">
                         <div class="nicknameTime">
@@ -108,20 +115,27 @@
                           <span v-if="reply.correct_date && reply.is_deleted =='N'" class="time">
                             (수정됨: {{ formatDate(reply.correct_date) }})
                           </span>
-                          <span v-if="reply.is_deleted =='N'" class="time">
+                          <span v-if="!reply.correct_date && reply.is_deleted =='N'" class="time">
                             {{ formatDate(reply.post_date) }}</span>
                         </div>
                         <div class="dropdown-container">
-                          <button class="dots-btn" @click="toggleDropdown(reply)">
+                          <button v-if="loggedInUserId !='anonymousUser' && reply.is_deleted ==='N'" class="dots-btn" @click="toggleDropdown(reply)">
                             &#x22EE;
                           </button>
                           <div v-if="activeDropdown === reply.no" class="dropdown-menu">
-                            <button @click="enableEditMode(reply)" class="dropdown-item">
-                              ✏ 수정
-                            </button>
-                            <button @click="deleteComment(reply)" class="dropdown-item">
-                              🗑 삭제
-                            </button>
+                            <template v-if="comment.members_id === loggedInUserId">
+                              <button @click="enableEditMode(reply)" class="dropdown-item">
+                                ✏ 수정
+                              </button>
+                              <button @click="deleteComment(reply)" class="dropdown-item">
+                                🗑 삭제
+                              </button>
+                            </template>
+                            <template v-else>
+                              <button @click="reportModal = true" class="dropdown-item">
+                                신고하기
+                              </button>
+                          </template>
                           </div>
                         </div>
                       </div>
@@ -196,7 +210,74 @@
     @update:modelValue="onPageChange"
   />
   </div>
+
+  <template>
+  <div class="pa-4 text-center">
+    <v-dialog
+      v-model="reportModal"
+      max-width="600"
+    >
+      <template v-slot:activator="{ props: activatorProps }">
+        <v-btn
+          class="text-none font-weight-regular"
+          prepend-icon="mdi-account"
+          text="Edit Profile"
+          variant="tonal"
+          v-bind="activatorProps"
+        ></v-btn>
+      </template>
+
+      <v-card
+        prepend-icon="mdi-alert"
+        title="댓글 신고하기"
+      >
+        <v-card-text>
+          <v-row dense>    
+            <v-col>
+              <v-select
+                :items="['스팸홍보/도배글입니다.', '음란물입니다.', '불법정보를 포함하고 있습니다.', '청소년에게 유해한 내용입니다.','욕설/생명경시/혐오/차별적 표현입니다.','개인정보 노출 게시물입니다.','불쾌한 표현이 있습니다.','기타']"
+                label="신고 사유"
+                required
+              ></v-select>
+            </v-col> 
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-textarea
+                placeholder="신고 사유를 설명해주세요.(선택)"
+                rows="3"
+                auto-grow
+              ></v-textarea>
+            </v-col>
+          </v-row>
+
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+            text="닫기"
+            variant="plain"
+            @click="dialog = false"
+          ></v-btn>
+
+          <v-btn
+            color="primary"
+            text="제출"
+            variant="tonal"
+            @click="dialog = false"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
+  
+</template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
@@ -204,6 +285,7 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
 
+const reportModal = ref(false);
 const comments = ref([]);
 const replies = ref([]);
 const repliesPage = ref({});
@@ -331,9 +413,9 @@ const toggleLike = async (commentId) => {
 
 // 드롭다운 토글 함수
 const toggleDropdown = (item) => {
-  if (item.members_id === loggedInUserId.value) {
-    activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
-  }
+
+  activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  
   if (item.is_deleted ==='Y'){
     activeDropdown.value = null;
   }
