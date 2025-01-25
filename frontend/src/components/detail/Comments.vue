@@ -46,10 +46,10 @@
                   <div v-if="activeDropdown === comment.no" class="dropdown-menu">
                     <template v-if="comment.members_id === loggedInUserId">
                       <button @click="enableEditMode(comment)" class="dropdown-item">
-                        ✏ 수정
+                        <v-icon>mdi-pencil</v-icon> 수정
                       </button>
                       <button @click="deleteComment(comment)" class="dropdown-item">
-                        🗑 삭제
+                        <v-icon>mdi-delete</v-icon> 삭제
                       </button>
                     </template>
                     <template v-else>
@@ -125,10 +125,10 @@
                           <div v-if="activeDropdown === reply.no" class="dropdown-menu">
                             <template v-if="reply.members_id === loggedInUserId">
                               <button @click="enableEditMode(reply)" class="dropdown-item">
-                                ✏ 수정
+                                <v-icon>mdi-pencil</v-icon>수정
                               </button>
                               <button @click="deleteComment(reply)" class="dropdown-item">
-                                🗑 삭제
+                                <v-icon>mdi-delete</v-icon> 삭제
                               </button>
                             </template>
                             <template v-else>
@@ -169,7 +169,7 @@
                     </div>
                   </li>
                   <v-btn
-                    v-if="hasMoreReplies[comment.no]"
+                    v-if="hasMoreReplies[comment.no] && comment.replyCount > 0"
                     @click="loadMoreReplies(comment.no, comment.replyCount)"
                     class="load-more-btn"
                   >
@@ -656,7 +656,7 @@ const fetchReplies = async (parentNo, page = 0, replyCount) => {
 
     repliesPage.value[parentNo] = page + 1;
     hasMoreReplies.value[parentNo] =
-    replies.value[parentNo].length < replyCount;
+    (repliesPage.value[parentNo] * replySize) < replyCount;
   } catch (err) {
     console.error('대댓글 불러오기 실패:', err);
   }
@@ -719,12 +719,17 @@ const submitReply = async (comment) => {
     comment.replyText = '';
     
     let totalReplies = comment.replyCount; // 총 대댓글 수
-    let lastPageIndex = Math.max(0, (totalReplies % replySize === 0) 
-  ? Math.floor(totalReplies / replySize) - 1
-  : Math.floor(totalReplies / replySize));
-
+    let lastPageIndex = Math.max(
+      0, 
+      Math.ceil(totalReplies / replySize) - 1
+    );
     replies.value[comment.no] = [];
     await fetchReplies(comment.no , lastPageIndex, totalReplies);
+
+    // 대댓글 추가 후 카운트 증가
+    comment.replyCount += 1;
+    hasMoreReplies.value[comment.no] = 
+    (repliesPage.value[comment.no] * replySize) < comment.replyCount;
 
   } catch (err) {
     if (err.response) {
@@ -864,7 +869,7 @@ onBeforeUnmount(() => {
 .like-btn,
 .reply-btn {
   background: none;
-  border: none;
+  border: #007bff;
   color: #007bff;
   cursor: pointer;
 }
