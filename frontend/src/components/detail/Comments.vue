@@ -21,7 +21,7 @@
             <div class="comment-header">
               <div class="nicknameTime">
                 <span class="nickname">{{ comment.nickname }}</span>
-                <span v-if="comment.correct_date">
+                <span v-if="comment.correct_date" class="time">
                   (수정됨: {{ formatDate(comment.correct_date) }})
                 </span>
                 <span v-else class="time">{{ formatDate(comment.post_date) }}</span>
@@ -40,16 +40,23 @@
                 />
               </div>
                 <div class="dropdown-container">
-                  <button class="dots-btn" @click="toggleDropdown(comment)">
+                  <button v-if="loggedInUserId !='anonymousUser' && comment.is_deleted ==='N'"  class="dots-btn" @click="toggleDropdown(comment)">
                     &#x22EE;
                   </button>
                   <div v-if="activeDropdown === comment.no" class="dropdown-menu">
-                    <button @click="enableEditMode(comment)" class="dropdown-item">
-                      ✏ 수정
-                    </button>
-                    <button @click="deleteComment(comment)" class="dropdown-item">
-                      🗑 삭제
-                    </button>
+                    <template v-if="comment.members_id === loggedInUserId">
+                      <button @click="enableEditMode(comment)" class="dropdown-item">
+                        ✏ 수정
+                      </button>
+                      <button @click="deleteComment(comment)" class="dropdown-item">
+                        🗑 삭제
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button @click="openReportModal(comment)" class="dropdown-item">
+                        신고하기
+                      </button>
+                    </template>
                 </div>
               </div>
             </div>
@@ -69,120 +76,128 @@
 
             <!-- 댓글 읽기 모드 -->
             <div v-else>
-              <p v-if="comment.is_deleted ==='N'" class="content">
-                {{ comment.content }}
-              </p>
+              <p v-if="comment.is_deleted ==='N'" class="content" v-html="comment.content.replace(/\\n/g, '<br>')"></p>
               <p v-else class="content_deleted">
                 삭제된 댓글입니다.
               </p>
             </div>
             <div class="comment-actions">
             <!-- 좋아요 버튼 -->
-            <button
+            <button v-if="!comment.isEditing"
               class="like-btn"
               :class="{ liked: likedCommentIds.includes(comment.no) }"
               @click="toggleLike(comment.no)"
             >
-              👍 {{ formatLikeCount(comment.likeCount) }}
+            <v-icon>mdi-thumb-up</v-icon> {{ formatLikeCount(comment.likeCount) }}
             </button>
 
             <!-- 답글 버튼 -->
-            <button class="reply-btn" @click="toggleReplies(comment)">
+            <button v-if="!comment.isEditing" class="reply-btn" @click="toggleReplies(comment.no, comment.replyCount)">
               답글
               <span v-if="comment.replyCount > 0">{{ comment.replyCount }}개 보기</span>
             </button>
           </div>
-
-
           <!-- 대댓글 목록 -->
           <ul v-if="replies[comment.no]" class="reply-list">
-            <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" class="comment-item">
-              {{index + 1}}<!-- to peachea27 : 테스트용, 이 숫자는 나중에 지워--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
-              <div class="comment-content">
-                <div class="comment-header">
-                  <div class="nicknameTime">
-                    <span class="nickname">{{ reply.nickname }}</span>
-                    <span v-if="reply.correct_date && reply.is_deleted =='N'">
-                      (수정됨: {{ formatDate(reply.correct_date) }})
-                    </span>
-                    <span v-if="reply.is_deleted =='N'" class="time">
-                      {{ formatDate(reply.post_date) }}</span>
-                  </div>
-                  <div class="dropdown-container">
-                    <button class="dots-btn" @click="toggleDropdown(reply)">
-                      &#x22EE;
-                    </button>
-                    <div v-if="activeDropdown === reply.no" class="dropdown-menu">
-                      <button @click="enableEditMode(reply)" class="dropdown-item">
-                        ✏ 수정
-                      </button>
-                      <button @click="deleteComment(reply)" class="dropdown-item">
-                        🗑 삭제
-                      </button>
+                  <v-btn
+                    v-if="repliesPage[comment.no] > 1"
+                    @click="loadPreviousReplies(comment.no, comment.replyCount)"
+                    class="load-more-btn"
+                  >
+                  · · · 
+                  </v-btn>
+                  <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" class="comment-item">
+                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
+                    <div class="comment-content">
+                      <div class="comment-header">
+                        <div class="nicknameTime">
+                          <span class="nickname">{{ reply.nickname }}</span>
+                          <span v-if="reply.correct_date && reply.is_deleted =='N'" class="time">
+                            (수정됨: {{ formatDate(reply.correct_date) }})
+                          </span>
+                          <span v-if="!reply.correct_date && reply.is_deleted =='N'" class="time">
+                            {{ formatDate(reply.post_date) }}</span>
+                        </div>
+                        <div class="dropdown-container">
+                          <button v-if="loggedInUserId !='anonymousUser' && reply.is_deleted ==='N'" class="dots-btn" @click="toggleDropdown(reply)">
+                            &#x22EE;
+                          </button>
+                          <div v-if="activeDropdown === reply.no" class="dropdown-menu">
+                            <template v-if="reply.members_id === loggedInUserId">
+                              <button @click="enableEditMode(reply)" class="dropdown-item">
+                                ✏ 수정
+                              </button>
+                              <button @click="deleteComment(reply)" class="dropdown-item">
+                                🗑 삭제
+                              </button>
+                            </template>
+                            <template v-else>
+                              <button @click="openReportModal(reply)" class="dropdown-item">
+                                신고하기
+                              </button>
+                          </template>
+                          </div>
+                        </div>
+                      </div>
+                        <div v-if="reply.isEditing">
+                            <textarea
+                            v-model="reply.updatedContent"
+                            class="edit-textarea"
+                            :style="{ width: '100%' }"
+                          ></textarea>
+                          <div class="reply-actions">
+                            <button @click="cancelEditComment(reply)" class="cancel-btn">취소</button>
+                            <button @click="saveEditComment(reply)" class="submit-btn">저장</button>
+                          </div>
+                        </div>
+                        <div v-else>
+                          <p v-if="reply.is_deleted ==='Y'" class="content_deleted">
+                            삭제된 댓글입니다.
+                          </p>
+                          <p v-else class="content" v-html="reply.content.replace(/\\n/g, '<br>')"></p>
+                        </div>
+                      <div class="comment-actions">
+                        <!-- 좋아요 버튼 -->
+                        <button v-if="!reply.isEditing"
+                          class="like-btn"
+                          :class="{ liked: likedCommentIds.includes(reply.no) }"
+                          @click="toggleLike(reply.no)"
+                        >
+                        <v-icon>mdi-thumb-up</v-icon> {{ formatLikeCount(reply.likeCount) }}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                  <div v-if="reply.isEditing">
+                  </li>
+                  <v-btn
+                    v-if="hasMoreReplies[comment.no]"
+                    @click="loadMoreReplies(comment.no, comment.replyCount)"
+                    class="load-more-btn"
+                  >
+                    더보기
+                </v-btn>
+            <!-- 대댓글 입력 창 -->
+                    <div class="reply-input-container">
                       <textarea
-                      v-model="reply.updatedContent"
-                      class="edit-textarea"
-                      :style="{ width: '100%' }"
+                      placeholder="답글을 입력하세요..."
+                      class="reply-textarea"
+                      v-model="comment.replyText"
+                      @input="handleInput"
                     ></textarea>
                     <div class="reply-actions">
-                      <button @click="cancelEditComment(reply)" class="cancel-btn">취소</button>
-                      <button @click="saveEditComment(reply)" class="submit-btn">저장</button>
+                      <v-btn
+                        @click="clearReplyText(comment)"
+                        class="cancel-btn"
+                       >
+                        취소
+                    </v-btn>
+                      <v-btn
+                        @click="submitReply(comment)"
+                        class="submit-btn"
+                        :disabled="!comment.replyText.trim()"
+                      >
+                      답글</v-btn>
                     </div>
                   </div>
-                  <div v-else>
-                    <p v-if="reply.is_deleted ==='Y'" class="content_deleted">
-                      삭제된 댓글입니다.
-                    </p>
-                    <p v-else class="content">
-                      {{ reply.content }}
-                    </p>
-                  </div>
-                <div class="comment-actions">
-                  <!-- 좋아요 버튼 -->
-                  <button
-                    class="like-btn"
-                    :class="{ liked: likedCommentIds.includes(reply.no) }"
-                    @click="toggleLike(reply.no)"
-                  >
-                    👍 {{ formatLikeCount(reply.likeCount) }}
-                  </button>
-                </div>
-              </div>
-            </li>
-            <v-btn
-              v-if="hasMoreReplies[comment.no]"
-              @click="loadMoreReplies(comment.no)"
-              class="load-more-btn"
-            >
-              더보기
-          </v-btn>
-       <!-- 대댓글 입력 창 -->
-              <div class="reply-input-container">
-                <textarea
-                placeholder="답글을 입력하세요..."
-                class="reply-textarea"
-                v-model="comment.replyText"
-                @input="handleInput"
-                @keydown.enter="handleEnterKey(comment)"
-              ></textarea>
-              <div class="reply-actions">
-                <v-btn
-                  @click="clearReplyText(comment)"
-                  class="cancel-btn">
-                  취소
-              </v-btn>
-                <v-btn
-                  @click="submitReply(comment)"
-                  class="submit-btn"
-                  :disabled="!comment.replyText.trim()"
-                >
-                 답글</v-btn>
-                </div>
-              </div>
            </ul>
             
           </div>
@@ -195,7 +210,87 @@
     @update:modelValue="onPageChange"
   />
   </div>
+
+  <template>
+  <div class="pa-4 text-center">
+    <v-dialog
+      v-model="reportModal"
+      max-width="600"
+    >
+      <template v-slot:activator="{ props: activatorProps }">
+        <v-btn
+          class="text-none font-weight-regular"
+          prepend-icon="mdi-account"
+          text="Edit Profile"
+          variant="tonal"
+          v-bind="activatorProps"
+        ></v-btn>
+      </template>
+
+      <v-card
+        prepend-icon="mdi-alert"
+        title="댓글 신고하기"
+      >
+        <v-card-text>
+          <v-row dense>    
+            <v-col>
+              <v-select
+                v-model="reportReason"
+                :items="[
+                  { cause: '스팸홍보/도배글입니다.', value: 0 },
+                  { cause: '음란물입니다.', value: 1 },
+                  { cause: '불법정보를 포함하고 있습니다.', value: 2 },
+                  { cause: '청소년에게 유해한 내용입니다.', value: 3 },
+                  { cause: '욕설/생명경시/혐오/차별적 표현입니다.', value: 4 },
+                  { cause: '개인정보 노출 게시물입니다.', value: 5 },
+                  { cause: '불쾌한 표현이 있습니다.', value: 6 },
+                  { cause: '기타', value: 7 }
+                ]"
+                item-title="cause"
+                item-value="value"
+                label="신고 사유"
+                required
+              ></v-select>
+            </v-col> 
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-textarea
+                v-model="reportMessage"
+                placeholder="신고 사유를 설명해주세요.(선택)"
+                rows="3"
+                auto-grow
+              ></v-textarea>
+            </v-col>
+          </v-row>
+
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+            text="닫기"
+            variant="plain"
+            @click="reportModal = false"
+          ></v-btn>
+
+          <v-btn
+            color="primary"
+            text="제출"
+            variant="tonal"
+            @click="submitReport"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
+  
+</template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
@@ -203,30 +298,75 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
 
+const reportModal = ref(false);
+const selectedComment = ref(null); 
+const reportReason = ref(''); 
+const reportMessage = ref('');
+
 const comments = ref([]);
 const replies = ref([]);
 const repliesPage = ref({});
+const replySize = 10;
 const hasMoreReplies = ref({});
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
-const totalComments = ref(0); // 전체 댓글 수
+const totalComments = ref(0); 
 const totalPages = ref(0);
 const currentPage = ref(1);
-const isLoading = ref(true); // 로딩 상태 관리
-const error = ref(null); // 오류 메시지 관리
-const activeDropdown = ref(null); // 활성화된 드롭다운 ID
+const isLoading = ref(true); 
+const error = ref(null); 
+const activeDropdown = ref(null); 
 const loggedInUserId = ref(null);
 
 const route = useRoute();
 const contentId = ref(route.query.id ||null);
 
 const router = useRouter();
-const navigationStore = useNavigationStore(); // Pinia 스토어 초기화
+const navigationStore = useNavigationStore(); 
 const sortOrder = ref("likeCount");
 const sortOptions = [
   { label: '좋아요순', value: 'likeCount' },
   { label: '최신순', value: 'no' },
   { label: '댓글많은순', value: 'replyCount' },
 ];
+
+const openReportModal = (comment) => {
+  selectedComment.value = comment; 
+  reportModal.value = true;
+};
+// 신고하기
+const submitReport = async () => {
+   try {
+    if (!reportReason.value) {
+      alert('신고 사유를 선택해주세요.');
+      return;
+    }
+
+    const reportData = {
+      cause: reportReason.value,
+      message: reportMessage.value,
+      reviewsNo: selectedComment.value.no, // 신고 대상 댓글 번호
+      mediaId: contentId.value, // 콘텐츠 ID
+    };
+   
+    const response = await axios.post(
+      'http://localhost:8080/api/report',
+      reportData,
+      { withCredentials: true }
+    );
+
+    if (response.status === 200) {
+      alert('신고가 접수되었습니다.');
+      reportModal.value = false;
+      // 초기화
+      reportReason.value = '';
+      reportMessage.value = '';
+      selectedComment.value = null;
+    }
+  } catch (error) {
+    console.error('신고 처리 중 오류:', error.response?.data || error.message);
+    alert('신고 처리에 실패했습니다.');
+  }
+};
 
 // 로그인 검증 함수
 async function checkAuthenticated() {
@@ -329,9 +469,9 @@ const toggleLike = async (commentId) => {
 
 // 드롭다운 토글 함수
 const toggleDropdown = (item) => {
-  if (item.members_id === loggedInUserId.value) {
-    activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
-  }
+
+  activeDropdown.value = activeDropdown.value === item.no ? null : item.no;
+  
   if (item.is_deleted ==='Y'){
     activeDropdown.value = null;
   }
@@ -356,7 +496,10 @@ const handleOutsideClick = (event) => {
 const enableEditMode = (item) => {
   item.isEditing = true;
   activeDropdown.value = null; // 드롭다운 닫기
-  item.updatedContent = item.content; // 기존 내용을 수정 상태로 설정
+  item.updatedContent = item.content
+      .replace(/\\n/g, '\n')
+      .replace(/<br\s*\/?>/g, '\n'); // 기존 내용을 수정 상태로 설정
+ 
 };
 
 // 수정 취소
@@ -373,13 +516,15 @@ const saveEditComment = async (item) => {
       return;
     }
 
+    const formattedContent = item.updatedContent.replace(/\r?\n/g, '\\n');
+
     // 서버로 수정 요청
     const response = await axios.put(
       "http://localhost:8080/api/modifyReview",
       {
         no: item.no, // 댓글 또는 대댓글 ID
         membersId: item.members_id,
-        content: item.updatedContent, // 수정된 내용
+        content: formattedContent , // 수정된 내용
         id: contentId.value, // 게시물 ID
         isDeleted: item.is_deleted
       },
@@ -388,7 +533,7 @@ const saveEditComment = async (item) => {
 
     if (response.status === 200) {
       // 수정 성공 시 UI 업데이트
-      item.content = item.updatedContent;
+      item.content = item.updatedContent.replace(/\n/g, '<br>');
       item.isEditing = false;
     }
   } catch (error) {
@@ -499,39 +644,44 @@ const onPageChange = (page) => {
 };
 
 // 대댓글 가져오기 함수
-const fetchReplies = async (parentNo, page = 0) => {
+const fetchReplies = async (parentNo, page = 0, replyCount) => {
   try {
     const response = await axios.post('http://localhost:8080/api/replies', null, {
-      params: { id: contentId.value, page, parentId: parentNo },
+      params: { id: contentId.value, page, parentId: parentNo, total: replyCount },
     });
 
-   const fetchedReplies = response.data.replies;
+    const fetchedReplies = response.data.replies;
 
-    // Append new replies to the existing list
-    if (!replies.value[parentNo]) {
-      replies.value[parentNo] = [];
-    }
-    replies.value[parentNo] = [...replies.value[parentNo], ...fetchedReplies];
+    replies.value[parentNo] = fetchedReplies;
 
-    // Update the page and "has more" status
     repliesPage.value[parentNo] = page + 1;
-    hasMoreReplies.value[parentNo] = fetchedReplies.length === 20; // Assume 20 replies per page
+    hasMoreReplies.value[parentNo] =
+    replies.value[parentNo].length < replyCount;
   } catch (err) {
     console.error('대댓글 불러오기 실패:', err);
   }
 };
 
-const loadMoreReplies = async (parentNo) => {
-  const nextPage = repliesPage.value[parentNo] || 0;
-  await fetchReplies(parentNo, nextPage);
+const loadPreviousReplies = async (parentId, totalRs) => {
+  if (repliesPage.value[parentId] > 1) {
+    repliesPage.value[parentId] -= 1; // 이전 페이지로 이동
+    await fetchReplies(parentId, repliesPage.value[parentId] - 1, totalRs); // 이전 페이지 데이터 로드
+  }
+};
+
+
+const loadMoreReplies = async (parentId, totalRs) => {
+  const nextPage = repliesPage.value[parentId] || 0;
+  await fetchReplies(parentId, nextPage, totalRs);
 };
 
 // 대댓글 토글 함수
-const toggleReplies = async (comment) => {
-  if (replies.value[comment.no]) {
-    delete replies.value[comment.no];
+const toggleReplies = async (parentId, totalRs) => {
+  if (replies.value[parentId]) {
+    delete replies.value[parentId];
   } else {
-    await fetchReplies(comment.no);
+    repliesPage.value[parentId] = 1;
+    await fetchReplies(parentId, 0 , totalRs);
   }
 };
 
@@ -553,20 +703,28 @@ const submitReply = async (comment) => {
 
   if (!comment.replyText.trim()) return;
 
+  const formattedContent = comment.replyText.replace(/\r?\n/g, '\\n');
+
   try {
     const response = await axios.post('http://localhost:8080/api/insertReview', {
       parent_no: comment.no,
-      content: comment.replyText,
+      content: formattedContent,
     },{
       params:{ id: contentId.value },
       withCredentials: true, // 인증 정보를 포함하도록 설정
     });
     console.log('서버에서 반환된 데이터:', response.data);
+    console.log(comment.replyText);
    
     comment.replyText = '';
     
+    let totalReplies = comment.replyCount; // 총 대댓글 수
+    let lastPageIndex = Math.max(0, (totalReplies % replySize === 0) 
+  ? Math.floor(totalReplies / replySize) - 1
+  : Math.floor(totalReplies / replySize));
+
     replies.value[comment.no] = [];
-    await fetchReplies(comment.no);
+    await fetchReplies(comment.no , lastPageIndex, totalReplies);
 
   } catch (err) {
     if (err.response) {
@@ -577,15 +735,10 @@ const submitReply = async (comment) => {
   }
 };
 
-const handleEnterKey = (comment) => {
-  if (comment.replyText.trim()) {
-    submitReply(comment); // 대댓글 제출
-  }
-};
 
 // 컴포넌트 마운트 시 API 호출
 onMounted(async () => {
-
+ 
   document.addEventListener('click', handleOutsideClick);
 
     // 이전 페이지 설정
@@ -605,7 +758,7 @@ onMounted(async () => {
   }
 
      // 대댓글 초기화
-     comments.value.forEach((comment) => {
+      comments.value.forEach((comment) => {
       repliesPage.value[comment.no] = 0;
       hasMoreReplies.value[comment.no] = true;
     });
@@ -647,18 +800,9 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.cancel-btn {
-  background-color: #ccc;
-  color: #999;
-}
-
 .submit-btn {
   background-color: #007bff;
   color: #fff;
-}
-
-.cancel-btn.active {
-  color: #000;
 }
 
 .comment-list {
@@ -726,7 +870,7 @@ onBeforeUnmount(() => {
 }
 
 .like-btn.liked {
-  color: red; /* 좋아요된 버튼은 빨간색으로 표시 */
+  color: rgb(255, 111, 0); /* 좋아요된 버튼은 빨간색으로 표시 */
 }
 
 .like-btn:hover,
@@ -780,6 +924,7 @@ onBeforeUnmount(() => {
 .my-select .v-input__slot {
   padding: 0 !important;
 }
+
 .content_deleted {
   padding-left: 20px;
   font-style: italic;
@@ -804,5 +949,9 @@ onBeforeUnmount(() => {
 
 .load-more-btn:hover {
   color: #666;
+}
+
+.edit-textarea{
+  height: 70px;
 }
 </style>

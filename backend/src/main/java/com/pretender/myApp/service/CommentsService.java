@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 import com.pretender.myApp.persistence.CommentsDAO;
@@ -28,8 +29,7 @@ public class CommentsService {
 	public List<CommentsDTO> getAllReplies(int id, int parentId, int page, int size) {
 		// 모든 대댓글 최신순으로 불러오기
 		int startNo = page * size;
-		int lastNo = (page + 1) * size;
-		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,lastNo);
+		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,size);
 		return replies;
 	}
 
@@ -75,6 +75,12 @@ public class CommentsService {
 		// 댓글 총개수
 		int totalComments = cDao.countAllTheComments(id);
 		return totalComments;
+	}
+
+
+	public int reportAComment(ReportDTO report) {
+		// 댓글 신고
+		return cDao.insertTheReport(report);
 	}
 
 
