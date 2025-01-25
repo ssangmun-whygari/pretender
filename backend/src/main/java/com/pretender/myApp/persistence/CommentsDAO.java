@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 
@@ -30,13 +31,13 @@ public class CommentsDAO {
 		return ses.selectList(ns+"selectAllCmnts", paging);
 	}
 
-	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int lastNo) {
+	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int size) {
 		// 모든 대댓글 가져오기
 		HashMap<String, Integer> paging = new HashMap<>();
 		paging.put("id", id);
 		paging.put("parentId", parentId);
 		paging.put("startNo", startNo);
-		paging.put("lastNo", lastNo);
+		paging.put("size", size);
 		return ses.selectList(ns+"selectAllRpls",paging);
 	}
 
@@ -79,6 +80,11 @@ public class CommentsDAO {
 	public int countAllTheComments(int id) {
 		// 댓글 개수 가져오기
 		return ses.selectOne(ns+"countAllCmnts", id);
+	}
+
+	public int insertTheReport(ReportDTO report) {
+		// 신고하기
+		return ses.insert(ns+"insertRprt", report);
 	}
 
 	

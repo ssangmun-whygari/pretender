@@ -1,15 +1,14 @@
 package com.pretender.myApp.controller;
 
-import java.lang.System.Logger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,10 +16,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException.BadRequest;
 
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 import com.pretender.myApp.service.CommentsService;
@@ -36,7 +35,7 @@ public class CommentsController {
 	private CommentsService cService;
 	
 	private static final int PAGE_SIZE_COMMENTS = 5;
-	private static final int PAGE_SIZE_REPLIES = 20;
+	private static final int PAGE_SIZE_REPLIES = 10;
 	
 	// 모든 코멘트 가져오기 (페이지네이션)
 	@GetMapping("/api/comments")
@@ -56,10 +55,10 @@ public class CommentsController {
 	
 	// 대댓글 기져오기
 	@PostMapping("/api/replies")
-	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId){
+	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId, @RequestParam int total){
 		int size = PAGE_SIZE_REPLIES;
 		Map<String, Object> response = new HashMap<>();
-		List<CommentsDTO> replies = cService.getAllReplies(id,parentId, page,size);
+		List<CommentsDTO> replies = cService.getAllReplies(id,parentId,page,size);
 		response.put("page", page);
 		response.put("size", size);
 		response.put("parentId", parentId);
@@ -127,7 +126,7 @@ public class CommentsController {
         
         return ResponseEntity.ok(myLikes);
 	}
-	//댓글 작성
+	//댓글 작성 //setType부분은 다시 해줘야 함
 	@PostMapping("api/insertReview")
 	public ResponseEntity<Object> insertReview(int id, @RequestBody CommentsDTO comment){
 		
@@ -221,5 +220,30 @@ public class CommentsController {
 		return ResponseEntity.ok(userId);
 		
 	}
+	
+	
+	
+	//댓글 신고 //setType부분은 수정 예정
+	@PostMapping("api/report")
+	public ResponseEntity<Object> reportComment (@RequestBody ReportDTO report) {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	
+	        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+	        }
+	
+	        String userId = authentication.getName();
+	        report.setReporterId(userId);
+	        report.setMediaType("tv");
+	        
+			cService.reportAComment(report);
+			
+			return ResponseEntity.status(HttpStatus.OK).body("댓글이 신고되었습니다.");
+		}catch(DuplicateKeyException e) {
+			return ResponseEntity.badRequest().body("이미 신고한 댓글입니다."); // 테이블에 복합키 설정 후에 작동 예정
+		}
+	}
+	
 
 }
