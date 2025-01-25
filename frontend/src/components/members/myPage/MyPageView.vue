@@ -67,7 +67,31 @@
           ></v-progress-linear>
         </v-col>
       </v-row>
-      <MyList v-bind:watchList="watchList"/>
+      <v-row justify="center">
+        <v-col lg="8" cols="12">
+          <v-tabs v-model="tab" bg-color="transparent" color="primary" grow>
+            <v-tab
+              v-for="item in tabs"
+              :key="item"
+              :text="item"
+              :value="item"
+            ></v-tab>
+          </v-tabs>
+        </v-col>
+      </v-row>
+
+
+      <v-tabs-window v-model="tab">
+        <v-tabs-window-item value="알림">
+          알림
+        </v-tabs-window-item>
+        <v-tabs-window-item value="리스트">
+          <MyList v-bind:watchList="watchList"/>
+        </v-tabs-window-item>
+        <v-tabs-window-item value="내 활동">
+          <MyActivities/>
+        </v-tabs-window-item>
+      </v-tabs-window>
     </v-container>
     <Background3Dmodel class="background-model"/>
 </template>
@@ -175,6 +199,7 @@
   import AppHeader from '@/components/AppHeader.vue';
   import { reactive, ref, watch, computed, nextTick } from 'vue'
   import axios from 'axios'
+import MyActivities from './MyActivities.vue';
 
   let userId = ref('')
   let watchList = ref({data: [], loaded: false})
@@ -184,6 +209,8 @@
   let imageUploadMessageCardStyle = ref('display: none;') // ex) 'display: none;'
   let imageUploadProgressBarStyle = ref('display: none;')
   let successUpload = ref('before') // 'before' or 'complete'
+  let tabs = ["알림", "리스트", "내 활동"]
+  let tab = ref("알림")
 
   let showimageUploadProgressBar = ((bool) => {
     if (bool == true) {

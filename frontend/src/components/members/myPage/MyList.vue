@@ -68,7 +68,7 @@
 
   let optionStates = ref({})
 
-  // NOTE : props로 전달하면 ref로 전달해도 저절로 해제가 됨. 따라서 props.watchList.value가 아니라 props.watchList가 맞음음
+  // NOTE : props로 전달하면 ref로 전달해도 저절로 해제가 됨. 따라서 props.watchList.value가 아니라 props.watchList가 맞음
   watch(() => {return props.watchList.loaded}, (bool) => {
     if (bool == true) {
       (optionStates.value)["collection-primary"] = {
@@ -87,6 +87,17 @@
   // NOTE: props.watchList는 객체인데 내부 속성인 loaded의 변화를 감지하려면 {deep : true}를 붙여야 함
   // return props.watchList + {deep : true}를 써도 가능, 내부 속성 아무거나 바뀌어도 감지함
   // 근데 return props.watchList + {deep : false} 조합은 작동 안함. props.watchList의 포인터가 변하지 않으므로...
+
+  // 컴포넌트가 로드될 떄 검사홤
+  if (props.watchList.loaded == true) {
+    (optionStates.value)["collection-primary"] = {
+        "visible" : false,
+        "options" : {
+          "publicList" : true, // 리스트 공개하기의 기본값 : true
+          "allowReply" : false, // 댓글 허용의 기본값 : false
+        }
+    }
+  }
 
   const toggleShowOptions = (elementId) => {
     console.log("toggleShowOptions...")
