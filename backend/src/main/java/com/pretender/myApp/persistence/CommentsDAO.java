@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 
@@ -79,6 +80,11 @@ public class CommentsDAO {
 	public int countAllTheComments(int id) {
 		// 댓글 개수 가져오기
 		return ses.selectOne(ns+"countAllCmnts", id);
+	}
+
+	public int insertTheReport(ReportDTO report) {
+		// 신고하기
+		return ses.insert(ns+"insertRprt", report);
 	}
 
 	

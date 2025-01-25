@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 import com.pretender.myApp.service.CommentsService;
@@ -124,7 +126,7 @@ public class CommentsController {
         
         return ResponseEntity.ok(myLikes);
 	}
-	//댓글 작성
+	//댓글 작성 //setType부분은 다시 해줘야 함
 	@PostMapping("api/insertReview")
 	public ResponseEntity<Object> insertReview(int id, @RequestBody CommentsDTO comment){
 		
@@ -218,5 +220,30 @@ public class CommentsController {
 		return ResponseEntity.ok(userId);
 		
 	}
+	
+	
+	
+	//댓글 신고 //setType부분은 수정 예정
+	@PostMapping("api/report")
+	public ResponseEntity<Object> reportComment (@RequestBody ReportDTO report) {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	
+	        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+	        }
+	
+	        String userId = authentication.getName();
+	        report.setReporterId(userId);
+	        report.setMediaType("tv");
+	        
+			cService.reportAComment(report);
+			
+			return ResponseEntity.status(HttpStatus.OK).body("댓글이 신고되었습니다.");
+		}catch(DuplicateKeyException e) {
+			return ResponseEntity.badRequest().body("이미 신고한 댓글입니다."); // 테이블에 복합키 설정 후에 작동 예정
+		}
+	}
+	
 
 }

@@ -53,7 +53,7 @@
                       </button>
                     </template>
                     <template v-else>
-                      <button @click="reportModal = true" class="dropdown-item">
+                      <button @click="openReportModal(comment)" class="dropdown-item">
                         신고하기
                       </button>
                     </template>
@@ -88,7 +88,7 @@
               :class="{ liked: likedCommentIds.includes(comment.no) }"
               @click="toggleLike(comment.no)"
             >
-              👍 {{ formatLikeCount(comment.likeCount) }}
+            <v-icon>mdi-thumb-up</v-icon> {{ formatLikeCount(comment.likeCount) }}
             </button>
 
             <!-- 답글 버튼 -->
@@ -123,7 +123,7 @@
                             &#x22EE;
                           </button>
                           <div v-if="activeDropdown === reply.no" class="dropdown-menu">
-                            <template v-if="comment.members_id === loggedInUserId">
+                            <template v-if="reply.members_id === loggedInUserId">
                               <button @click="enableEditMode(reply)" class="dropdown-item">
                                 ✏ 수정
                               </button>
@@ -132,7 +132,7 @@
                               </button>
                             </template>
                             <template v-else>
-                              <button @click="reportModal = true" class="dropdown-item">
+                              <button @click="openReportModal(reply)" class="dropdown-item">
                                 신고하기
                               </button>
                           </template>
@@ -163,7 +163,7 @@
                           :class="{ liked: likedCommentIds.includes(reply.no) }"
                           @click="toggleLike(reply.no)"
                         >
-                          👍 {{ formatLikeCount(reply.likeCount) }}
+                        <v-icon>mdi-thumb-up</v-icon> {{ formatLikeCount(reply.likeCount) }}
                         </button>
                       </div>
                     </div>
@@ -235,7 +235,19 @@
           <v-row dense>    
             <v-col>
               <v-select
-                :items="['스팸홍보/도배글입니다.', '음란물입니다.', '불법정보를 포함하고 있습니다.', '청소년에게 유해한 내용입니다.','욕설/생명경시/혐오/차별적 표현입니다.','개인정보 노출 게시물입니다.','불쾌한 표현이 있습니다.','기타']"
+                v-model="reportReason"
+                :items="[
+                  { cause: '스팸홍보/도배글입니다.', value: 0 },
+                  { cause: '음란물입니다.', value: 1 },
+                  { cause: '불법정보를 포함하고 있습니다.', value: 2 },
+                  { cause: '청소년에게 유해한 내용입니다.', value: 3 },
+                  { cause: '욕설/생명경시/혐오/차별적 표현입니다.', value: 4 },
+                  { cause: '개인정보 노출 게시물입니다.', value: 5 },
+                  { cause: '불쾌한 표현이 있습니다.', value: 6 },
+                  { cause: '기타', value: 7 }
+                ]"
+                item-title="cause"
+                item-value="value"
                 label="신고 사유"
                 required
               ></v-select>
@@ -244,6 +256,7 @@
           <v-row dense>
             <v-col>
               <v-textarea
+                v-model="reportMessage"
                 placeholder="신고 사유를 설명해주세요.(선택)"
                 rows="3"
                 auto-grow
@@ -261,14 +274,14 @@
           <v-btn
             text="닫기"
             variant="plain"
-            @click="dialog = false"
+            @click="reportModal = false"
           ></v-btn>
 
           <v-btn
             color="primary"
             text="제출"
             variant="tonal"
-            @click="dialog = false"
+            @click="submitReport"
           ></v-btn>
         </v-card-actions>
       </v-card>
@@ -286,31 +299,74 @@ import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
 
 const reportModal = ref(false);
+const selectedComment = ref(null); 
+const reportReason = ref(''); 
+const reportMessage = ref('');
+
 const comments = ref([]);
 const replies = ref([]);
 const repliesPage = ref({});
 const replySize = 10;
 const hasMoreReplies = ref({});
 const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
-const totalComments = ref(0); // 전체 댓글 수
+const totalComments = ref(0); 
 const totalPages = ref(0);
 const currentPage = ref(1);
-const isLoading = ref(true); // 로딩 상태 관리
-const error = ref(null); // 오류 메시지 관리
-const activeDropdown = ref(null); // 활성화된 드롭다운 ID
+const isLoading = ref(true); 
+const error = ref(null); 
+const activeDropdown = ref(null); 
 const loggedInUserId = ref(null);
 
 const route = useRoute();
 const contentId = ref(route.query.id ||null);
 
 const router = useRouter();
-const navigationStore = useNavigationStore(); // Pinia 스토어 초기화
+const navigationStore = useNavigationStore(); 
 const sortOrder = ref("likeCount");
 const sortOptions = [
   { label: '좋아요순', value: 'likeCount' },
   { label: '최신순', value: 'no' },
   { label: '댓글많은순', value: 'replyCount' },
 ];
+
+const openReportModal = (comment) => {
+  selectedComment.value = comment; 
+  reportModal.value = true;
+};
+// 신고하기
+const submitReport = async () => {
+   try {
+    if (!reportReason.value) {
+      alert('신고 사유를 선택해주세요.');
+      return;
+    }
+
+    const reportData = {
+      cause: reportReason.value,
+      message: reportMessage.value,
+      reviewsNo: selectedComment.value.no, // 신고 대상 댓글 번호
+      mediaId: contentId.value, // 콘텐츠 ID
+    };
+   
+    const response = await axios.post(
+      'http://localhost:8080/api/report',
+      reportData,
+      { withCredentials: true }
+    );
+
+    if (response.status === 200) {
+      alert('신고가 접수되었습니다.');
+      reportModal.value = false;
+      // 초기화
+      reportReason.value = '';
+      reportMessage.value = '';
+      selectedComment.value = null;
+    }
+  } catch (error) {
+    console.error('신고 처리 중 오류:', error.response?.data || error.message);
+    alert('신고 처리에 실패했습니다.');
+  }
+};
 
 // 로그인 검증 함수
 async function checkAuthenticated() {
@@ -682,7 +738,7 @@ const submitReply = async (comment) => {
 
 // 컴포넌트 마운트 시 API 호출
 onMounted(async () => {
-
+ 
   document.addEventListener('click', handleOutsideClick);
 
     // 이전 페이지 설정
@@ -814,7 +870,7 @@ onBeforeUnmount(() => {
 }
 
 .like-btn.liked {
-  color: red; /* 좋아요된 버튼은 빨간색으로 표시 */
+  color: rgb(255, 111, 0); /* 좋아요된 버튼은 빨간색으로 표시 */
 }
 
 .like-btn:hover,

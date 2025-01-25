@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.model.CommentsDTO;
 import com.pretender.myApp.model.CommentsVO;
+import com.pretender.myApp.model.ReportDTO;
 import com.pretender.myApp.model.ReviewDTO;
 import com.pretender.myApp.model.ReviewLikesDTO;
 import com.pretender.myApp.persistence.CommentsDAO;
@@ -74,6 +75,12 @@ public class CommentsService {
 		// 댓글 총개수
 		int totalComments = cDao.countAllTheComments(id);
 		return totalComments;
+	}
+
+
+	public int reportAComment(ReportDTO report) {
+		// 댓글 신고
+		return cDao.insertTheReport(report);
 	}
 
 
