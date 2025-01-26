@@ -87,6 +87,11 @@ public class CommentsDAO {
 		return ses.insert(ns+"insertRprt", report);
 	}
 
+	public Object selectSameReportInfo(ReportDTO report) {
+		// 신고 중복 체크
+		return ses.selectOne(ns+"sameRprt", report);
+	}
+
 	
 
 

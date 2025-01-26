@@ -241,9 +241,29 @@ public class CommentsController {
 			
 			return ResponseEntity.status(HttpStatus.OK).body("댓글이 신고되었습니다.");
 		}catch(DuplicateKeyException e) {
-			return ResponseEntity.badRequest().body("이미 신고한 댓글입니다."); // 테이블에 복합키 설정 후에 작동 예정
+			return ResponseEntity.status(HttpStatus.OK).body("이미 신고한 댓글입니다."); // 테이블에 복합키 설정 후에 작동 예정
 		}
 	}
+	
+	//신고 중복 체크 //setType수정예정
+	@PostMapping("api/checkBeforeReport")
+	public ResponseEntity<Object> checkBeforeReport (@RequestBody ReportDTO report) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String userId = authentication.getName();
+        report.setReporterId(userId);
+        report.setMediaType("tv");
+        
+        if(cService.checkDupeBeforeReport(report) != null) {
+        	return ResponseEntity.status(HttpStatus.OK).body("이미 신고한 댓글입니다.");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body("신고폼을 작성해주세요.");
+	}
+	
 	
 
 }

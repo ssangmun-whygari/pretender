@@ -98,7 +98,8 @@
             </button>
           </div>
           <!-- 대댓글 목록 -->
-          <ul v-if="replies[comment.no]" class="reply-list">
+          <ul v-if="replies[comment.no]" 
+          class="reply-list">
                   <v-btn
                     v-if="repliesPage[comment.no] > 1"
                     @click="loadPreviousReplies(comment.no, comment.replyCount)"
@@ -178,6 +179,7 @@
             <!-- 대댓글 입력 창 -->
                     <div class="reply-input-container">
                       <textarea
+                      :id="`reply-textarea-${comment.no}`"
                       placeholder="답글을 입력하세요..."
                       class="reply-textarea"
                       v-model="comment.replyText"
@@ -237,14 +239,14 @@
               <v-select
                 v-model="reportReason"
                 :items="[
-                  { cause: '스팸홍보/도배글입니다.', value: 0 },
-                  { cause: '음란물입니다.', value: 1 },
-                  { cause: '불법정보를 포함하고 있습니다.', value: 2 },
-                  { cause: '청소년에게 유해한 내용입니다.', value: 3 },
-                  { cause: '욕설/생명경시/혐오/차별적 표현입니다.', value: 4 },
-                  { cause: '개인정보 노출 게시물입니다.', value: 5 },
-                  { cause: '불쾌한 표현이 있습니다.', value: 6 },
-                  { cause: '기타', value: 7 }
+                  { cause: '스팸홍보/도배글입니다.', value: 1},
+                  { cause: '음란물입니다.', value: 2 },
+                  { cause: '불법정보를 포함하고 있습니다.', value: 3},
+                  { cause: '청소년에게 유해한 내용입니다.', value: 4 },
+                  { cause: '욕설/생명경시/혐오/차별적 표현입니다.', value: 5 },
+                  { cause: '개인정보 노출 게시물입니다.', value: 6 },
+                  { cause: '불쾌한 표현이 있습니다.', value: 7 },
+                  { cause: '기타', value: 8 }
                 ]"
                 item-title="cause"
                 item-value="value"
@@ -288,6 +290,69 @@
     </v-dialog>
   </div>
 </template>
+<template>
+  <div class="text-center pa-4">
+    <v-dialog
+      v-model="reportDupe"
+      max-width="400"
+    >
+      <v-card
+        prepend-icon="mdi-alert"
+        text="이미 신고한 댓글입니다."
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="확인"
+            @click="reportDupe = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+<template>
+  <div class="text-center pa-4">
+    <v-dialog
+      v-model="reportCause"
+      max-width="400"
+    >
+      <v-card
+        prepend-icon="mdi-alert"
+        text="신고사유를 선택해주세요."
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="확인"
+            @click="reportCause = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+<template>
+  <div class="text-center pa-4">
+    <v-dialog
+      v-model="reportSuccess"
+      max-width="400"
+    >
+      <v-card
+        prepend-icon="mdi-check-circle"
+        text="신고가 접수되었습니다."
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="확인"
+            @click="reportSuccess = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
   
 </template>
 
@@ -297,8 +362,14 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
+import { defineStore } from 'pinia';
+import { nextTick } from 'vue';
+import { useCommentSaveStore } from '../../composables/stores/commentSave'
 
 const reportModal = ref(false);
+const reportDupe = ref(false);
+const reportCause = ref(false);
+const reportSuccess = ref(false);
 const selectedComment = ref(null); 
 const reportReason = ref(''); 
 const reportMessage = ref('');
@@ -308,7 +379,7 @@ const replies = ref([]);
 const repliesPage = ref({});
 const replySize = 10;
 const hasMoreReplies = ref({});
-const likedCommentIds = ref([]); // 사용자가 좋아요한 댓글 ID 목록
+const likedCommentIds = ref([]); //좋아요한 댓글들
 const totalComments = ref(0); 
 const totalPages = ref(0);
 const currentPage = ref(1);
@@ -329,23 +400,46 @@ const sortOptions = [
   { label: '댓글많은순', value: 'replyCount' },
 ];
 
-const openReportModal = (comment) => {
-  selectedComment.value = comment; 
-  reportModal.value = true;
+const openReportModal = async(comment) => {
+  //axios로 중복 검사하기
+  try {
+    const response = await axios.post('http://localhost:8080/api/checkBeforeReport', 
+      {
+        reviewsNo: comment.no, 
+        mediaId: contentId.value, 
+      },
+      {withCredentials: true,} 
+    );
+
+    if (response.status === 200) {
+      const message = response.data;
+
+      if (message.includes('이미 신고')) {
+        reportDupe.value = true; 
+      } else {
+        selectedComment.value = comment;
+        reportModal.value = true; 
+      }
+    }
+  } catch (error) {  
+      console.error('신고 중복 검사 실패:', error.response?.data || error.message);
+    
+  }
 };
+
 // 신고하기
 const submitReport = async () => {
    try {
-    if (!reportReason.value) {
-      alert('신고 사유를 선택해주세요.');
+    if (reportReason.value === null || reportReason.value === undefined) {
+      reportCause.value = true; //신고사유를 선택해주세요
       return;
     }
 
     const reportData = {
       cause: reportReason.value,
       message: reportMessage.value,
-      reviewsNo: selectedComment.value.no, // 신고 대상 댓글 번호
-      mediaId: contentId.value, // 콘텐츠 ID
+      reviewsNo: selectedComment.value.no, // 신고 당한 댓글
+      mediaId: contentId.value, 
     };
    
     const response = await axios.post(
@@ -355,10 +449,10 @@ const submitReport = async () => {
     );
 
     if (response.status === 200) {
-      alert('신고가 접수되었습니다.');
+      reportSuccess.value = true; //신고되었습니다
       reportModal.value = false;
       // 초기화
-      reportReason.value = '';
+      reportReason.value = null;
       reportMessage.value = '';
       selectedComment.value = null;
     }
@@ -390,7 +484,7 @@ const fetchLoggedInUserId = async () => {
       withCredentials: true,
     });
     console.log(response.data);
-    loggedInUserId.value = response.data; // 서버에서 반환된 로그인 사용자 ID
+    loggedInUserId.value = response.data;
   } catch (error) {
     console.error("사용자 정보를 가져오는 중 오류 발생:", error.response?.data || error.message);
   }
@@ -489,23 +583,23 @@ const handleOutsideClick = (event) => {
   });
 
   if (!isClickInsideDropdown) {
-    activeDropdown.value = null; // 드롭다운 닫기
+    activeDropdown.value = null; 
   }
 };
 // 수정 모드 활성화
 const enableEditMode = (item) => {
   item.isEditing = true;
-  activeDropdown.value = null; // 드롭다운 닫기
+  activeDropdown.value = null; 
   item.updatedContent = item.content
       .replace(/\\n/g, '\n')
-      .replace(/<br\s*\/?>/g, '\n'); // 기존 내용을 수정 상태로 설정
+      .replace(/<br\s*\/?>/g, '\n'); 
  
 };
 
 // 수정 취소
 const cancelEditComment = (item) => {
   item.isEditing = false;
-  item.updatedContent = ""; // 수정 내용을 초기화
+  item.updatedContent = ""; 
 };
 
 // 수정 저장
@@ -569,7 +663,7 @@ const deleteComment = async (item) => {
       for (const parentId in replies.value) {
         const replyToDelete = replies.value[parentId].find((reply) => reply.no === item.no);
         if (replyToDelete) {
-          replyToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로 표시
+          replyToDelete.is_deleted = "Y"; // 상태를 "삭제됨"으로
         }
       }
       activeDropdown.value = null; // 드롭다운 닫기
@@ -612,35 +706,37 @@ const formatLikeCount = (count) => {
 const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   try {
     const response = await axios.get(`http://localhost:8080/api/comments`, {
-      params: { id: contentId, page, sortBy }, // id와 sortBy를 쿼리 파라미터로 전달
+      params: { id: contentId, page, sortBy }, 
     });
 
     if (response.data && response.data.comments) {
       response.data.comments.forEach((comment) => {
-        comment.replyText = ""; // 각 댓글에 replyText 추가
+        comment.replyText = ""; 
       });
-      comments.value = response.data.comments; // 댓글 목록 저장
-      totalComments.value = response.data.totalComments || 0; // 전체 댓글 수 저장
+      comments.value = response.data.comments; 
+      totalComments.value = response.data.totalComments || 0; 
       totalPages.value = response.data.totalPages || 0;
+      console.log(`Fetched ${comments.value.length} comments on page ${page}`);
+      console.log(`Total pages: ${totalPages.value}`);
     }
   } catch (err) {
     console.error("API 호출 중 오류가 발생했습니다:", err);
     error.value = "댓글 정보를 불러오는 데 실패했습니다.";
   } finally {
-    isLoading.value = false; // 로딩 상태 해제
+    isLoading.value = false; 
   }
 };
 
 watch(sortOrder, (newValue) => {
   console.log(`정렬 옵션 변경: ${newValue}`);
   replies.value = {};
-  fetchComments(contentId.value,0, newValue); // 새 정렬 옵션으로 댓글 갱신
+  fetchComments(contentId.value,0, newValue); 
   currentPage.value = 1;
 });
 
 const onPageChange = (page) => {
-  currentPage.value = page; // 페이지 업데이트
-  fetchComments(contentId.value, page - 1, sortOrder.value); // 서버에서 새 데이터 가져오기
+  currentPage.value = page; 
+  fetchComments(contentId.value, page - 1, sortOrder.value); 
 };
 
 // 대댓글 가져오기 함수
@@ -687,7 +783,7 @@ const toggleReplies = async (parentId, totalRs) => {
 
 // 대댓글 입력 취소
 const clearReplyText = (comment) => {
-  comment.replyText = ""; // 취소 시 텍스트 초기화
+  comment.replyText = ""; // 텍스트 초기화
 };
 
 // 대댓글 제출
@@ -695,10 +791,22 @@ const submitReply = async (comment) => {
   const isAuthenticated = await checkAuthenticated(); // 로그인 상태 확인
 
   if (!isAuthenticated) {
-    // 로그인되지 않은 경우
-    navigationStore.setPreviousPage(router.currentRoute.value.fullPath); // 현재 페이지 저장
-    router.push('/login'); // 로그인 페이지로 이동
-    return;
+    const commentStore = useCommentSaveStore()
+    commentStore.setDraft(
+      comment.replyText,
+      comment.no,
+      contentId.value,
+      `reply-textarea-${comment.no}`,
+      currentPage.value -1, 
+      sortOrder.value 
+    )
+    console.log("commentStore",commentStore.draft)
+    
+    navigationStore.setPreviousPage(
+      `${router.currentRoute.value.path}?id=${contentId.value}#${commentStore.draft.targetElementId}`
+    )
+    router.push('/login')
+    return
   }
 
   if (!comment.replyText.trim()) return;
@@ -711,14 +819,14 @@ const submitReply = async (comment) => {
       content: formattedContent,
     },{
       params:{ id: contentId.value },
-      withCredentials: true, // 인증 정보를 포함하도록 설정
+      withCredentials: true, 
     });
     console.log('서버에서 반환된 데이터:', response.data);
     console.log(comment.replyText);
    
     comment.replyText = '';
     
-    let totalReplies = comment.replyCount; // 총 대댓글 수
+    let totalReplies = comment.replyCount; //총 대댓글 수
     let lastPageIndex = Math.max(
       0, 
       Math.ceil(totalReplies / replySize) - 1
@@ -741,9 +849,53 @@ const submitReply = async (comment) => {
 };
 
 
-// 컴포넌트 마운트 시 API 호출
 onMounted(async () => {
- 
+
+  const commentStore = useCommentSaveStore()
+  const hash = window.location.hash.replace('#', '')
+
+  const draftPage = commentStore.draft.page || 0; // 저장된 페이지 번호
+  const draftSortOrder = commentStore.draft.sortOrder || sortOrder.value;
+  sortOrder.value = draftSortOrder;
+
+  await fetchLikedCommentIds(contentId.value); 
+  await fetchComments(contentId.value, draftPage, draftSortOrder);
+  console.log("Fetched comments:", comments.value); 
+  
+  if (hash && commentStore.draft.content) {
+    const targetParentNo = parseInt(hash.split('-').pop())
+    const targetComment = comments.value.find((c) => c.no === targetParentNo);
+    console.log("타겟코멘트",targetParentNo,targetComment)
+  
+    if (targetComment) {
+      // 대댓글 펼치기
+      if (!replies.value[targetParentNo]) {
+        console.log("대댓글 영역 펼치기")
+        await toggleReplies(targetParentNo, targetComment.replyCount)
+      }
+    }
+
+      //내용 복원
+      nextTick(() => {
+        setTimeout(() => {
+        console.log('Hash:', hash);
+        const textarea = document.getElementById(hash)
+        console.log('Target Comment:', targetComment); 
+        console.log('Element ID:', `reply-textarea-${targetComment?.no}`);
+        console.log('Element exists:', !!document.getElementById(hash));
+
+        if (textarea) {
+          textarea.value = commentStore.draft.content
+          textarea.focus()
+          textarea.scrollIntoView({ behavior: 'smooth' })
+        }else{
+          console.error(`Element with ID ${hash} not found`);
+        }
+        commentStore.clearDraft()
+       }, 50);
+      })
+    }
+  
   document.addEventListener('click', handleOutsideClick);
 
     // 이전 페이지 설정
@@ -753,13 +905,6 @@ onMounted(async () => {
   if (!navigationStore.getPreviousPage() || navigationStore.getPreviousPage() === '/') {
     navigationStore.setPreviousPage(currentPath); // 현재 페이지를 이전 페이지로 설정
     console.log('리다이렉트할 이전 페이지 설정:', currentPath);
-  }
-
-  if (contentId) {
-    await fetchLikedCommentIds(contentId.value); // 좋아요한 댓글 ID 가져오기
-    await fetchComments(contentId.value,0,sortOrder.value); // 댓글 불러오기
-  } else {
-    console.error('contentId가 없습니다.');
   }
 
      // 대댓글 초기화

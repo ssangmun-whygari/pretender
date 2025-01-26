@@ -89,4 +89,8 @@
   	insert into report values(#{reporterId},#{reviewsNo},#{mediaId},#{mediaType},#{cause},#{message})
   </insert>
   
+  <select id="sameRprt" resultType="com.pretender.myApp.model.ReportDTO">
+  	select * from report where reporter_id = #{reporterId} and reviews_no = #{reviewsNo} and media_id = #{mediaId} and media_type = #{mediaType}
+  </select>
+  
   </mapper>
