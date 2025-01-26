@@ -209,7 +209,7 @@
     <v-pagination 
     v-model="currentPage"
     :length="totalPages"
-    @update:modelValue="onPageChange"
+    @update:modelValue="changePages"
   />
   </div>
 
@@ -716,7 +716,8 @@ const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
       comments.value = response.data.comments; 
       totalComments.value = response.data.totalComments || 0; 
       totalPages.value = response.data.totalPages || 0;
-      console.log(`Fetched ${comments.value.length} comments on page ${page}`);
+      currentPage.value = page + 1;
+      console.log( `${page}번 페이지에서 출발`);
       console.log(`Total pages: ${totalPages.value}`);
     }
   } catch (err) {
@@ -727,14 +728,13 @@ const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   }
 };
 
-watch(sortOrder, (newValue) => {
-  console.log(`정렬 옵션 변경: ${newValue}`);
+watch(sortOrder, async (newSort) => {
+  console.log(`정렬 옵션 변경: ${newSort}`);
   replies.value = {};
-  fetchComments(contentId.value,0, newValue); 
-  currentPage.value = 1;
+  await fetchComments(contentId.value,0, newSort); 
 });
 
-const onPageChange = (page) => {
+const changePages = (page) => {
   currentPage.value = page; 
   fetchComments(contentId.value, page - 1, sortOrder.value); 
 };
@@ -857,10 +857,16 @@ onMounted(async () => {
   const draftPage = commentStore.draft.page || 0; // 저장된 페이지 번호
   const draftSortOrder = commentStore.draft.sortOrder || sortOrder.value;
   sortOrder.value = draftSortOrder;
+  currentPage.value = draftPage + 1; 
+  console.log("currentPage"+currentPage.value);
 
   await fetchLikedCommentIds(contentId.value); 
   await fetchComments(contentId.value, draftPage, draftSortOrder);
-  console.log("Fetched comments:", comments.value); 
+  
+  comments.value.forEach((comment) => {
+      repliesPage.value[comment.no] = 0;
+      hasMoreReplies.value[comment.no] = (repliesPage.value[comment.no] * replySize) < comment.replyCount;
+    });
   
   if (hash && commentStore.draft.content) {
     const targetParentNo = parseInt(hash.split('-').pop())
@@ -878,18 +884,15 @@ onMounted(async () => {
       //내용 복원
       nextTick(() => {
         setTimeout(() => {
-        console.log('Hash:', hash);
         const textarea = document.getElementById(hash)
-        console.log('Target Comment:', targetComment); 
-        console.log('Element ID:', `reply-textarea-${targetComment?.no}`);
-        console.log('Element exists:', !!document.getElementById(hash));
 
         if (textarea) {
+          targetComment.replyText = commentStore.draft.content;
           textarea.value = commentStore.draft.content
           textarea.focus()
           textarea.scrollIntoView({ behavior: 'smooth' })
         }else{
-          console.error(`Element with ID ${hash} not found`);
+          console.error(`${hash}가 없습니다`);
         }
         commentStore.clearDraft()
        }, 50);
@@ -908,10 +911,10 @@ onMounted(async () => {
   }
 
      // 대댓글 초기화
-      comments.value.forEach((comment) => {
+      /*comments.value.forEach((comment) => {
       repliesPage.value[comment.no] = 0;
       hasMoreReplies.value[comment.no] = true;
-    });
+    });*/
 
   await fetchLoggedInUserId();
  
