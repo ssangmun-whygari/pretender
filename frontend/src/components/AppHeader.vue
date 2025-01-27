@@ -43,6 +43,15 @@
   #search-bar .v-input__details {
     display: none;
   }
+
+  a:link {
+    color:black;
+    text-decoration:none;
+  }
+  a:visited {
+    color:black;
+    text-decoration:none;
+  }
 </style>
 
 <script setup>

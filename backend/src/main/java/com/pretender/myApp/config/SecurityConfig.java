@@ -47,6 +47,8 @@ public class SecurityConfig {
 			authorizeHttpRequests
 				.requestMatchers(HttpMethod.OPTIONS).permitAll()
 				.requestMatchers(HttpMethod.GET, "api/members/profile/image").permitAll()
+				.requestMatchers(HttpMethod.GET, "/resource/image/**").permitAll()
+				.requestMatchers("/images/public/**").permitAll()
 				.requestMatchers("/api/myPage/**").authenticated()
 				.requestMatchers("/api/login").authenticated()
 				.requestMatchers("/api/collection/**").authenticated()
