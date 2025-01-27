@@ -53,16 +53,6 @@ const router = createRouter({
     routes,
 })
 
-router.beforeEach((to, from, next) => {
-    if (to.path === '/login') {
-        const navigationStore = useNavigationStore()
-        if (!navigationStore.previousPage) {
-            navigationStore.setPreviousPage(from.fullPath)
-        }
-    }
-    next()
-})
-
 const app = createApp(App)
 
 app.use(pinia)
