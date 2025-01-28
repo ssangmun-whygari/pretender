@@ -16,6 +16,10 @@ import { createApp } from 'vue'
 // router
 import { createWebHistory, createRouter } from 'vue-router'
 
+// 상태 관리
+import { createPinia } from 'pinia'
+import { useNavigationStore } from './composables/stores/navigation'
+
 import AppHeader from './components/AppHeader.vue'
 import MainView from './components/MainView.vue'
 import SearchView from './components/search/SearchView.vue'
@@ -28,6 +32,8 @@ import MyPageView from './components/members/myPage/MyPageView.vue'
 import Background3Dmodel from './components/members/myPage/Background3Dmodel.vue'
 import LoginView from './components/members/LoginView.vue'
 import LogoutView from './components/members/LogoutView.vue'
+
+const pinia = createPinia()
 
 const routes = [
     { path: '/', component: MainView },
@@ -47,12 +53,10 @@ const router = createRouter({
     routes,
 })
 
-// 상태 관리
-import { createPinia } from 'pinia'
-
 const app = createApp(App)
-registerPlugins(app)
-app.use(router)
-const pinia = createPinia()
+
 app.use(pinia)
+app.use(router)
+registerPlugins(app)
+
 app.mount('#app')

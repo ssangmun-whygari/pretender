@@ -84,5 +84,11 @@ public class CommentsService {
 	}
 
 
+	public Object checkDupeBeforeReport(ReportDTO report) {
+		// 신고 중복 체크
+		return cDao.selectSameReportInfo(report);
+	}
+
+
 	
 }
