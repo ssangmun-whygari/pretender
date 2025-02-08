@@ -18,8 +18,9 @@
         <v-list>
           <v-list-item v-for="activity in (isSearching ? searchActResults : myActivitiesData)" :key="activity.no" lines="two">
             <a @click.prevent="goToComment(activity)">
-              <v-list-item-title class="title_style" v-html="activity.content.replace(/\\n/g, '<br>')"></v-list-item-title>
-              <v-list-item-subtitle v-html="getSubtitle(activity)"></v-list-item-subtitle> 
+              <v-list-item-title class="title_style">{{ activity.content.length > 100 ? activity.content.replace(/\\n/g, '<br>').slice(0, 100) + '...' : activity.content.replace(/\\n/g, '<br>') }}</v-list-item-title>
+              <v-list-item-subtitle v-if="activity.correctDate" class="subtitle_span">{{activity.mediaTitle}} / {{formatDate(activity.correctDate)}} 수정</v-list-item-subtitle> 
+              <v-list-item-subtitle v-else class="subtitle_span">{{activity.mediaTitle}} / {{formatDate(activity.postDate)}}</v-list-item-subtitle> 
             </a>
             <v-divider class="border-opacity-50"></v-divider>
           </v-list-item>
@@ -55,14 +56,6 @@ const word =ref('');
 const totalPages = ref(0);
 const currentPage = ref(1);
 const isSearching = ref(false);
-
-const getSubtitle = (activity) => {
-  if (activity.correctDate) {
-    return `<span class="subtitle_span"> ${activity.mediaTitle} / ${formatDate(activity.correctDate)} 수정됨</span>`;
-  } else {
-    return `<span class="subtitle_span"> ${activity.mediaTitle} / ${formatDate(activity.postDate)} 작성</span>`;
-  }
-};
 
 async function checkAuthenticated() {
   try {
@@ -151,18 +144,15 @@ async function checkAuthenticated() {
   }
 
   // 날짜 포맷 함수
-const formatDate = (date) => {
-  if (!date) return "";
+const formatDate = (dateString) => {
+  if (!dateString) return ""; // 날짜가 없으면 빈 문자열 반환
 
-  const now = new Date();
-  const diff = Math.floor((now - new Date(date)) / 1000); // 차이를 초 단위로 계산
+const date = new Date(dateString);
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0"); // 월(0부터 시작) +1 후 2자리 유지
+const day = String(date.getDate()).padStart(2, "0"); // 2자리 유지
 
-  if (diff < 60) return `${diff}초 전`; // 1분 미만
-  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`; // 1시간 미만
-  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`; // 24시간 미만
-  if (diff < 30 * 86400) return `${Math.floor(diff / 86400)}일 전`; // 30일 미만
-  if (diff < 365 * 86400) return `${Math.floor(diff / (30 * 86400))}개월 전`; // 1년 미만
-  return `${Math.floor(diff / (365 * 86400))}년 전`; // 1년 이상
+return `${year}-${month}-${day}`;
 };
 
 const changePages = (page) => {
@@ -173,6 +163,12 @@ const changePages = (page) => {
   }else{
     fetchMyActivities(page - 1); 
   }
+};
+
+// 글자 생략 (100자)
+const truncateText = (text, length = 100) => {
+  if (!text) return "";
+  return text.length > length ? text.substring(0, length) + "..." : text;
 };
 
   onMounted(async() =>{
@@ -191,6 +187,8 @@ const changePages = (page) => {
 
   .title_style{
     color: #2c2b2b;
+    white-space: pre-wrap; 
+    overflow-wrap: break-word;
   }
   .subtitle_span{
     color: #888;
