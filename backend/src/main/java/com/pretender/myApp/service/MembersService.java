@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.pretender.myApp.model.MembersDTO;
+import com.pretender.myApp.model.MyActivitiesDTO;
 import com.pretender.myApp.persistence.MembersDAO;
 
 
@@ -103,4 +105,28 @@ public class MembersService {
     	Resource resource = new UrlResource(Paths.get(imageFile.getAbsolutePath()).normalize().toUri());
     	return resource;
     }
+
+	public List<MyActivitiesDTO> selectMyActivitiesInfo(String userId, int page, int size) {
+		// 내활동 불러오기
+		int startNo = page * size;
+		List<MyActivitiesDTO> actList = membersDAO.selectAllMyActivities(userId, startNo, size);
+		return actList;
+	}
+
+	public int getTotalActivities(String userId) {
+		// 내활동의 총개수 불러오기
+		return membersDAO.getMyTotalActivities(userId);
+	}
+
+	public int getTotalSearchAct(String userId, String word) {
+		// 검색 결과 개수
+		return membersDAO.getMyTotalSearchAct(userId, word);
+	}
+
+	public List<MyActivitiesDTO> searchMyAct(String userId, String word, int page, int size) {
+		// 검색결과 불러오기
+		int startNo = page * size;
+		List<MyActivitiesDTO> searchList = membersDAO.searchMyActivities(userId, word, startNo, size); 
+		return searchList;
+	}
 }

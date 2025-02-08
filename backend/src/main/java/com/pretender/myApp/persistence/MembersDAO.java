@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.pretender.myApp.model.MembersDTO;
+import com.pretender.myApp.model.MyActivitiesDTO;
 import com.pretender.myApp.model.PretenderUserDetails;
 
 @Component
@@ -48,6 +49,38 @@ public class MembersDAO {
 		params.put("memberId", memberId);
 		params.put("fileName", fileName);
 		return ses.update(ns + "updateProfileImageName", params);
+	}
+
+	public List<MyActivitiesDTO> selectAllMyActivities(String userId, int startNo, int size) {
+		// myActivities불러오기
+		Map<String, Object> map = new HashMap<>();
+		map.put("userId", userId);
+		map.put("startNo", startNo);
+		map.put("size", size);
+		return ses.selectList(ns +"selectMyActivities", map);
+	}
+
+	public int getMyTotalActivities(String userId) {
+		// myActivities의 총개수
+		return ses.selectOne(ns+"countMyActivities", userId);
+	}
+
+	public int getMyTotalSearchAct(String userId, String word) {
+		// 검색결과의 수
+		Map<String, Object> map = new HashMap<>();
+		map.put("userId", userId);
+		map.put("word", word);
+		return ses.selectOne(ns+"countSearchRst", map);
+	}
+
+	public List<MyActivitiesDTO> searchMyActivities(String userId, String word, int startNo, int size) {
+		// 검색결과
+		Map<String, Object> map = new HashMap<>();
+		map.put("userId", userId);
+		map.put("word", word);
+		map.put("startNo", startNo);
+		map.put("size", size);
+		return ses.selectList(ns+"searchMyActvt", map);
 	}
 
 }

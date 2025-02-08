@@ -48,4 +48,52 @@
     <select id="selectProfileImageName" resultType="String">
 		select image from members where id = #{memberId}
 	</select>
-</mapper>
+	
+	<select id="selectMyActivities" resultType="com.pretender.myApp.model.MyActivitiesDTO">
+		select distinct  
+		c.media_title as mediaTitle, 
+		r.content, 
+		r.post_date as postDate, 
+		r.correct_date as correctDate , 
+		r.is_deleted as isDeleted,
+		r.media_id as mediaId,
+		r.media_type as mediaType,
+		r.no,
+		r.parent_no as parentNo
+		from reviews r join collections c on r.media_id = c.media_id and r.media_type = c.media_type
+		where r.members_id = #{userId}
+		order By r.post_date desc
+		LIMIT #{startNo}, #{size}
+	</select>
+	
+	<select id="countMyActivities" resultType="int">
+		select count(*) from reviews where members_id = #{userId}
+	</select>
+	
+	<select id="searchMyActvt" resultType="com.pretender.myApp.model.MyActivitiesDTO">
+		select distinct  
+		c.media_title as mediaTitle, 
+		r.content, 
+		r.post_date as postDate, 
+		r.correct_date as correctDate, 
+		r.is_deleted as isDeleted,
+		r.media_id as mediaId,
+		r.media_type as mediaType,
+		r.no,
+		r.parent_no as parentNo
+		from reviews r join collections c on r.media_id = c.media_id and r.media_type = c.media_type
+		where r.members_id = #{userId} 
+        AND REPLACE(c.media_title, ' ', '') LIKE REPLACE(CONCAT('%',#{word},'%'), ' ', '')
+		order By r.post_date desc
+		LIMIT #{startNo}, #{size}
+	</select>
+	
+	<select id="countSearchRst" resultType="int">
+		select count(distinct r.no)  
+		from reviews r join collections c on r.media_id = c.media_id and r.media_type = c.media_type
+		where r.members_id = #{userId}
+        AND REPLACE(c.media_title, ' ', '') LIKE REPLACE(CONCAT('%',#{word},'%'), ' ', '')
+	</select>
+
+	
+	</mapper>

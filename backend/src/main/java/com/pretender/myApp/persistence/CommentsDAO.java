@@ -2,6 +2,7 @@ package com.pretender.myApp.persistence;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,23 +22,25 @@ public class CommentsDAO {
 	private SqlSession ses;
 	private String ns ="com.pretender.myApp.mapper.CommentsMapper.";
 
-	public List<CommentsVO> getAllTheComments(int id, int startNo, int size, String sortBy) {
+	public List<CommentsVO> getAllTheComments(int id, int startNo, int size, String sortBy, String type) {
 		// 모든 댓글 가져오기	    
 		HashMap<String, Object> paging = new HashMap<>();
 		paging.put("id",id);
 		paging.put("startNo",startNo);
 		paging.put("size", size);
 		paging.put("sortBy", sortBy); 
+		paging.put("type", type);
 		return ses.selectList(ns+"selectAllCmnts", paging);
 	}
 
-	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int size) {
+	public List<CommentsDTO> getAllTheReplies(int id, int parentId, int startNo, int size, String type) {
 		// 모든 대댓글 가져오기
-		HashMap<String, Integer> paging = new HashMap<>();
+		HashMap<String, Object> paging = new HashMap<>();
 		paging.put("id", id);
 		paging.put("parentId", parentId);
 		paging.put("startNo", startNo);
 		paging.put("size", size);
+		paging.put("type", type);
 		return ses.selectList(ns+"selectAllRpls",paging);
 	}
 
@@ -77,9 +80,12 @@ public class CommentsDAO {
 		return ses.selectList(ns+"myReviewlikeList", map);
 	}
 
-	public int countAllTheComments(int id) {
+	public int countAllTheComments(int id, String type) {
 		// 댓글 개수 가져오기
-		return ses.selectOne(ns+"countAllCmnts", id);
+		Map<String, Object> map = new HashMap<>();
+		map.put("id", id);
+		map.put("type", type);
+		return ses.selectOne(ns+"countAllCmnts",map);
 	}
 
 	public int insertTheReport(ReportDTO report) {
@@ -90,6 +96,25 @@ public class CommentsDAO {
 	public Object selectSameReportInfo(ReportDTO report) {
 		// 신고 중복 체크
 		return ses.selectOne(ns+"sameRprt", report);
+	}
+
+	public int selectCommentIndex(int contentId, int commentId, String type) {
+		// 댓글 인덱스 가져오기
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("contentId", contentId);
+		map.put("commentId", commentId);
+		map.put("type", type);
+		return ses.selectOne(ns+"commentIdx",map);
+	}
+
+	public int selectReplyIndex(int contentId, int commentId, Integer replyId, String type) {
+		// 대댓글 인덱스 가져오기
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("contentId", contentId);
+		map.put("commentId", commentId);
+		map.put("replyId", replyId);
+		map.put("type", type);
+		return ses.selectOne(ns+"replyIdx",map);
 	}
 
 	

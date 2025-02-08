@@ -37,13 +37,14 @@ public class CommentsController {
 	private static final int PAGE_SIZE_COMMENTS = 5;
 	private static final int PAGE_SIZE_REPLIES = 10;
 	
-	// 모든 코멘트 가져오기 (페이지네이션)
+	// 모든 코멘트 가져오기 (페이지네이션) //type수정
 	@GetMapping("/api/comments")
 	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "likeCount") String sortBy){
 		int size = PAGE_SIZE_COMMENTS;
-		int totalComments = cService.getTotalComments(id);
+		String type="tv";
+		int totalComments = cService.getTotalComments(id,type);
 		int totalPages = (int) Math.ceil((double) totalComments / size);
-		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy);
+		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy,type);
 		Map<String, Object> response = new HashMap<>();
 		response.put("totalComments", totalComments);
 		response.put("totalPages", totalPages);
@@ -53,12 +54,13 @@ public class CommentsController {
 		return ResponseEntity.ok(response);
 	}
 	
-	// 대댓글 기져오기
+	// 대댓글 기져오기 //type수정
 	@PostMapping("/api/replies")
 	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId, @RequestParam int total){
 		int size = PAGE_SIZE_REPLIES;
+		String type = "tv";
 		Map<String, Object> response = new HashMap<>();
-		List<CommentsDTO> replies = cService.getAllReplies(id,parentId,page,size);
+		List<CommentsDTO> replies = cService.getAllReplies(id,parentId,page,size,type);
 		response.put("page", page);
 		response.put("size", size);
 		response.put("parentId", parentId);
@@ -250,7 +252,7 @@ public class CommentsController {
 	public ResponseEntity<Object> checkBeforeReport (@RequestBody ReportDTO report) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof 			AnonymousAuthenticationToken) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
@@ -264,6 +266,33 @@ public class CommentsController {
         return ResponseEntity.status(HttpStatus.OK).body("신고폼을 작성해주세요.");
 	}
 	
+	//comment의 인덱스와 reply의 인덱스 가져오기/ type바꾸기
+	@GetMapping("/api/commentPage")
+	public ResponseEntity<Map<String, Integer>> getCommentPage(
+	    @RequestParam("id") int contentId,
+	    @RequestParam("commentId") int commentId,
+	    @RequestParam(value="replyId", required = false) Integer replyId ) {
+	    
+	    int pageSize = PAGE_SIZE_COMMENTS;
+	    String type = "tv";
+	    //댓글 인덱스
+	    int commentIndex = cService.findCommentIndex(contentId, commentId, type);
+	    int commentPage = Math.max(0, (commentIndex - 1) / pageSize);
+	    //대댓글 인엑스
+	    Integer replyPage = null;
+	    int replyPageSize =PAGE_SIZE_REPLIES;
+	    if (replyId != null) { 
+	        int replyIndex = cService.findReplyIndex(contentId, commentId, replyId, type);
+	        replyPage = ( replyIndex/ replyPageSize );
+	    }
+	    
+	    Map<String, Integer> response = new HashMap<>();
+	    response.put("index", commentIndex);
+	    response.put("commentPage", commentPage);
+	    response.put("replyPage", replyPage);
+
+	    return ResponseEntity.ok(response);
+	}
 	
 
 }

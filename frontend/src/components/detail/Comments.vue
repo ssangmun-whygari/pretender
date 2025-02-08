@@ -15,7 +15,7 @@
               ></v-select>
           </div>
       <ul class="comment-list">
-        <li v-for="comment in comments" :key="comment.no" class="comment-item">
+        <li v-for="comment in comments" :key="comment.no" :id="'comment-'+comment.no" class="comment-item">
           <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
@@ -107,7 +107,7 @@
                   >
                   · · · 
                   </v-btn>
-                  <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" class="comment-item">
+                  <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" :id="'reply-'+reply.no" class="comment-item">
                     {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
                     <div class="comment-content">
                       <div class="comment-header">
@@ -717,8 +717,6 @@ const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
       totalComments.value = response.data.totalComments || 0; 
       totalPages.value = response.data.totalPages || 0;
       currentPage.value = page + 1;
-      console.log( `${page}번 페이지에서 출발`);
-      console.log(`Total pages: ${totalPages.value}`);
     }
   } catch (err) {
     console.error("API 호출 중 오류가 발생했습니다:", err);
@@ -772,12 +770,12 @@ const loadMoreReplies = async (parentId, totalRs) => {
 };
 
 // 대댓글 토글 함수
-const toggleReplies = async (parentId, totalRs) => {
+const toggleReplies = async (parentId, totalRs, RTargetPage = 0) => {
   if (replies.value[parentId]) {
     delete replies.value[parentId];
   } else {
     repliesPage.value[parentId] = 1;
-    await fetchReplies(parentId, 0 , totalRs);
+    await fetchReplies(parentId, RTargetPage , totalRs);
   }
 };
 
@@ -853,20 +851,80 @@ onMounted(async () => {
 
   const commentStore = useCommentSaveStore()
   const hash = window.location.hash.replace('#', '')
-
+  const route = useRoute();//##
+  //##~
+  const commentId = route.query.comment ? parseInt(route.query.comment) : null;
+  const replyId = route.query.reply ? parseInt(route.query.reply) : null;
+  //~##
   const draftPage = commentStore.draft.page || 0; // 저장된 페이지 번호
   const draftSortOrder = commentStore.draft.sortOrder || sortOrder.value;
   sortOrder.value = draftSortOrder;
   currentPage.value = draftPage + 1; 
   console.log("currentPage"+currentPage.value);
 
+  //#~
+  let targetPage = draftPage;
+  let replyTargetPage = 0;
+  if (commentId) {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/commentPage`, {
+        params: { id:contentId.value, commentId, replyId },
+      });
+
+      if (response.data.commentPage !== undefined) {
+        targetPage = response.data.commentPage; 
+        console.log("★CommentpageIndx"+targetPage)
+      }
+
+      if (response.data.replyPage !== undefined) {
+        replyTargetPage = response.data.replyPage; 
+        console.log("★REPLYpageIndx: "+replyTargetPage)
+      }
+    } catch (err) {
+      console.error("댓글 페이지 찾기 실패, draftPage 유지:", err);
+    }
+  }
+  //~#
+
   await fetchLikedCommentIds(contentId.value); 
-  await fetchComments(contentId.value, draftPage, draftSortOrder);
+  await fetchComments(contentId.value, targetPage, draftSortOrder);//##draftPage에서 targetPage로 변경경
   
   comments.value.forEach((comment) => {
       repliesPage.value[comment.no] = 0;
       hasMoreReplies.value[comment.no] = (repliesPage.value[comment.no] * replySize) < comment.replyCount;
     });
+
+    //#~
+  if (commentId) {
+    await nextTick(); 
+
+    const targetComment = comments.value.find((c) => c.no === commentId);
+    if (targetComment) {
+
+      // 부모 댓글 펼치기
+      if (replyId) {
+        await toggleReplies(commentId, targetComment.replyCount, replyTargetPage);
+      }
+
+      await nextTick();
+
+      // 댓글/대댓글로 스크롤 이동
+      setTimeout(() => {
+        let targetElement = replyId
+          ? document.getElementById(`reply-${replyId}`) // 대댓글
+          : document.getElementById(`comment-${commentId}`); // 댓글
+
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetElement.focus();
+        } else {
+          console.error(`댓글 ${commentId} or 대댓글 ${replyId} 위치를 찾을 수 없음`);
+        }
+      }, 200);
+    }
+  }
+
+    //~#
   
   if (hash && commentStore.draft.content) {
     const targetParentNo = parseInt(hash.split('-').pop())
@@ -898,6 +956,7 @@ onMounted(async () => {
        }, 50);
       })
     }
+
   
   document.addEventListener('click', handleOutsideClick);
 
@@ -909,12 +968,6 @@ onMounted(async () => {
     navigationStore.setPreviousPage(currentPath); // 현재 페이지를 이전 페이지로 설정
     console.log('리다이렉트할 이전 페이지 설정:', currentPath);
   }
-
-     // 대댓글 초기화
-      /*comments.value.forEach((comment) => {
-      repliesPage.value[comment.no] = 0;
-      hasMoreReplies.value[comment.no] = true;
-    });*/
 
   await fetchLoggedInUserId();
  
