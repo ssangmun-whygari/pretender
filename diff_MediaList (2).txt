@@ -1,0 +1,285 @@
+diff --git a/frontend/src/components/search/MediaList.vue b/frontend/src/components/search/MediaList.vue
+index 6e537eb..36688b4 100644
+--- a/frontend/src/components/search/MediaList.vue
++++ b/frontend/src/components/search/MediaList.vue
+@@ -2,73 +2,102 @@
+   <h1 v-show="mediaInfo.length > 0">tv 쇼</h1> <!--v-if 어째선지 안됨...-->
+   <h2 v-if="showByIndividualYears == true">개별 연도로 표시</h2>
+   <v-container fluid>
++    <div v-if="imageUrls.allLoaded" class="progress-image-container">
++      <!-- TODO : 계절에 따른 변화 필요 -->
++      <img :src="imageCache['http://localhost:8080/resource/image/ladder.png']" class="progress-image">
++        <img :src="imageCache['http://localhost:8080/resource/image/bunny-l.png']" id="progress-image-child"/>
++      </img>
++    </div>
+     <div v-if="showByIndividualYears == true">
+-      <v-row justify="center">
+-        <v-col lg="8" cols="12" v-for="(item, _) in Object.values(mediaInfoRendered).sort((a, b) => b.year - a.year)">
+-          <div class="yearCategory"> {{ item.year }}</div>
+-          <swiper-container
+-            :key="item.year"
+-            :attr-year="item.year"
+-            class="mySwiper mb-3"
+-            centered-slides="true"
+-            :breakpoints="{
+-              '@0.75': {
+-                slidesPerView: 2,
+-                spaceBetween: 20,
+-              },
+-              '@1.00': {
+-                slidesPerView: 3,
+-                spaceBetween: 40,
+-              },
+-              '@1.50': {
+-                slidesPerView: 4,
+-                spaceBetween: 50,
+-              },
+-            }"
+-          >
+-            <swiper-slide 
+-              class="slide"
+-              v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
+-            >
+-              <v-sheet class="ma-3 py-3 w-100 h-100 border rounded"
+-                :elevation="5">
+-                <RouterLink 
+-                class="h-100 w-100 d-flex justify-center"
+-                :to="{path: '/detail', query: {id : innerItem['id']}}"
+-                v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
+-                <img 
+-                  :src="posterPath(innerItem['poster_path'])"
+-                  class="poster"
+-                ></img>
+-                </RouterLink>
+-              </v-sheet>
+-            </swiper-slide>
+-          </swiper-container>
+-          <v-sheet class="d-flex justify-center mb-3 py-3 w-100 border rounded"
+-            :elevation="5"
+-          >
+-            <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
+-          </v-sheet>
+-          <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
+-            <div class="marquee-content" :attr-year="item.year">
+-              {{ stripContent(item['data'][item.activeIndex.value].overview) }}
+-            </div>
+-          </v-sheet>
++      <v-row justify="center" class="background-container">
++        <v-col lg="8" cols="12">
++          <div v-for="(item, _) in Object.values(mediaInfoRendered).sort((a, b) => b.year - a.year)">
++            <div class="yearCategory"> {{ item.year }}</div>
++            <swiper-container
++              :key="item.year"
++              :attr-year="item.year"
++              class="mySwiper mb-3"
++              centered-slides="true"
++              :breakpoints="{
++                '@0.75': {
++                  slidesPerView: 2,
++                  spaceBetween: 20,
++                },
++                '@1.00': {
++                  slidesPerView: 3,
++                  spaceBetween: 40,
++                },
++                '@1.50': {
++                  slidesPerView: 4,
++                  spaceBetween: 50,
++                },
++              }"
++              >
++              <swiper-slide 
++                class="slide"
++                v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
++                >
++                <v-sheet class="ma-3 py-3 w-100 h-100 border rounded"
++                  :elevation="5">
++                  <RouterLink 
++                  class="h-100 w-100 d-flex justify-center"
++                  :to="{path: '/detail', query: {id : innerItem['id']}}"
++                  v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
++                  <img 
++                    :src="posterPath(innerItem['poster_path'])"
++                    class="poster"
++                  ></img>
++                  </RouterLink>
++                </v-sheet>
++              </swiper-slide>
++            </swiper-container>
++            <v-sheet class="d-flex justify-center mb-3 py-3 w-100 border rounded"
++              :elevation="5"
++              >
++              <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
++            </v-sheet>
++            <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
++              <div class="marquee-content" :attr-year="item.year">
++                {{ stripContent(item['data'][item.activeIndex.value].overview) }}
++              </div>
++            </v-sheet>
++          </div>
++        </v-col>
++        <v-col lg="1" class="d-none d-lg-block">
+         </v-col>
+       </v-row>
+     </div>
+   </v-container>
+ </template>
+ 
+-<style>
+-  a:link {
+-    color:black;
+-    text-decoration:none;
++<style scoped>
++  .background-container {
++    background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage');
++    background-size: cover;
++    background-position: top;
++    background-attachment: fixed;
+   }
+-  a:visited {
+-    color:black;
+-    text-decoration:none;
++
++  .progress-image-container {
++    position: fixed;
++    top: 60%;
++    left: 85%;
++    transform: translate(-50%, -50%);
++  }
++
++  .progress-image {
++    position: relative;
++    height: 70vh;
++  }
++
++  #progress-image-child {
++    position: absolute;
++    top: 0;
++    left: 50%; /* 부모 요소의 너비 기준으로 이미지의 위치를 중앙으로 이동.*/
++    height: 25%;
++    transform: translateX(-50%); /* 이미지의 기준점을 중앙으로 이동. */
+   }
++
+   .yearCategory {
+     color: rgb(170, 170, 170);
+     font-size: 250%;
+@@ -122,7 +151,7 @@
+ <script setup>
+   import { computed } from 'vue'
+   import { register } from 'swiper/element/bundle'
+-  import { ref, onMounted, watch, nextTick } from 'vue'
++  import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+   register();
+   const YEAR_CATEGORY_NUMBER = 7
+   const SCROLL_SPEED = 100
+@@ -132,6 +161,110 @@
+   const props = defineProps({
+       mediaInfo: Object
+     })
++  const imageCache = {};
++  // 이미지 미리 다운로드
++  async function preloadImage(url) {
++    const response = await fetch(url);
++    console.log(response)
++    if (!response.ok) throw new Error(`이미지 로드 실패: ${url}`);
++    const blob = await response.blob();
++    const objectUrl = URL.createObjectURL(blob); // Blob을 Object URL로 변환
++    imageCache[url] = objectUrl; // 캐시에 저장
++  }
++  // 여러 이미지를 사전 로드
++  async function preloadImages(imageUrls) {
++    for (const url of imageUrls.value.urls) {
++      await preloadImage(url);
++    }
++    imageUrls.value.allLoaded = true
++  }
++  // 사전 로드 실행
++  const imageUrls = ref({
++    urls : [
++      'http://localhost:8080/resource/image/bunny-f.png',
++      'http://localhost:8080/resource/image/bunny-l.png',
++      'http://localhost:8080/resource/image/bunny-r.png',
++      'http://localhost:8080/resource/image/ladder.png',
++    ],
++    allLoaded : false
++  })
++
++  // document.querySelector()를 여러 번 실행시키지 않기 위한 시도도
++  // const imageElements = {
++  //   progressImage: null,
++  //   progressImageChild: null
++  // }
++  // watch( () => {return imageUrls.allLoaded}, () => {
++  //   imageElements.progressImage = document.querySelector('.progress-image')
++  //   imageElements.progressImageChild = document.querySelector('#progress-image-child')
++  //   console.log("watch Activated")
++  //   console.log(imageElements)
++  //   console.log("watch Activated end")
++  // })
++
++  onMounted(() => {
++    preloadImages(imageUrls)
++    window.addEventListener('scroll', handleScroll)
++  });
++
++  onUnmounted(() => {
++    window.removeEventListener('scroll', handleScroll);
++  });
++
++  // TODO : 매끄러운 스크롤을 위한 해결과정 블로그에 적기
++  const handleScroll = (event) => { // event는 브라우저가 나중에 첨부해준다.
++    const progressImage = document.querySelector('.progress-image')
++    const progressImageChild = document.querySelector('#progress-image-child')
++    if (! (progressImage && progressImageChild)) {
++      return
++    }
++    const scrollTop = window.scrollY;
++    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
++    const scrollPercentage = Math.ceil((scrollTop / docHeight) * 100)
++
++    const height = progressImage.height - progressImageChild.height
++    progressImageChild.style.top = `${Math.ceil(scrollPercentage / 100 * height)}px`
++
++    if (scrollPercentage >= 97) {
++      progressImageChild.style.top = `${height}px`
++      progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-f.png']
++      return
++    }
++
++    // const ranges_1 = [
++    //   [0, 5], [10, 15],[20, 25],[30, 35],[40, 45],[50, 55],[60, 65],[70, 75],[80, 85],[90, 95],
++    // ]
++
++    // const ranges_2 = [
++    //   [5, 10],[15, 20],[25, 30],[35, 40],[45, 50],[55, 60],[65, 70],[75, 80],[85, 90],[95, 100],
++    // ]
++
++    const ranges_1 = [
++      [0, 10], [20, 30], [40, 50], [60, 70], [80, 90]
++    ]
++
++    const ranges_2 = [
++      [10, 20], [30, 40], [50, 60], [70, 80], [90, 100]
++    ]
++
++    console.log(scrollPercentage)
++
++    for (const [start, end] of ranges_1) {
++      if (scrollPercentage >= start && scrollPercentage < end) {
++        progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-l.png']
++        return
++      }
++    }
++
++    for (const [start, end] of ranges_2) {
++      if (scrollPercentage >= start && scrollPercentage < end) {
++        progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-r.png']
++        return
++      }
++    }
++
++  } // handleScroll end
++
+ 
+   const mediaInfo = computed(() => {
+     console.log("computed.....")

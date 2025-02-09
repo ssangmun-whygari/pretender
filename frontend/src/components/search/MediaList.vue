@@ -1,15 +1,15 @@
 <template>
-  <h1 v-show="mediaInfo.length > 0">tv 쇼</h1> <!--v-if 어째선지 안됨...-->
-  <h2 v-if="showByIndividualYears == true">개별 연도로 표시</h2>
+  <!-- <h1 v-show="mediaInfo.length > 0">tv 쇼</h1> v-if 어째선지 안됨... -->
+  <!-- <h2 v-if="showByIndividualYears == true">개별 연도로 표시</h2> -->
   <v-container fluid>
-    <div v-if="imageUrls.allLoaded" class="progress-image-container">
+    <div v-if="imageUrls.allLoaded && lgAndUp" class="progress-image-container">
       <!-- TODO : 계절에 따른 변화 필요 -->
       <img :src="imageCache['http://localhost:8080/resource/image/ladder.png']" class="progress-image">
         <img :src="imageCache['http://localhost:8080/resource/image/bunny-l.png']" id="progress-image-child"/>
       </img>
     </div>
     <div v-if="showByIndividualYears == true">
-      <v-row justify="center" class="background-container">
+      <v-row justify="center">
         <v-col lg="8" cols="12">
           <div v-for="(item, _) in Object.values(mediaInfoRendered).sort((a, b) => b.year - a.year)">
             <div class="yearCategory"> {{ item.year }}</div>
@@ -70,7 +70,7 @@
   </v-container>
 </template>
 
-<style scoped>
+<style>
   .background-container {
     background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage');
     background-size: cover;
@@ -152,7 +152,9 @@
   import { computed } from 'vue'
   import { register } from 'swiper/element/bundle'
   import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-  register();
+  import { useDisplay } from 'vuetify'
+  const { lgAndUp } = useDisplay()
+  register()
   const YEAR_CATEGORY_NUMBER = 7
   const SCROLL_SPEED = 100
   const itemsPerRow = 3
@@ -205,10 +207,13 @@
   onMounted(() => {
     preloadImages(imageUrls)
     window.addEventListener('scroll', handleScroll)
+    // 배경화면 지정
+    document.querySelector('.v-main')?.classList.add('background-container');
   });
 
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
+    document.querySelector('.v-main')?.classList.remove('background-container');
   });
 
   // TODO : 매끄러운 스크롤을 위한 해결과정 블로그에 적기
@@ -246,8 +251,6 @@
     const ranges_2 = [
       [10, 20], [30, 40], [50, 60], [70, 80], [90, 100]
     ]
-
-    console.log(scrollPercentage)
 
     for (const [start, end] of ranges_1) {
       if (scrollPercentage >= start && scrollPercentage < end) {
@@ -330,6 +333,7 @@
           // 어쩔 수 없이 자바스크립트로 처리함
           const translateEnd = getTranslateEnd(yearCategory)
           const duration = calculateAnimDuration(-translateEnd)
+          // getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', 300 + 'px')
           getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', translateEnd + 'px')
           getMarqueeContentElement(yearCategory).style.animation = `marquee ${duration}s linear infinite`;
           getMarqueeContentElement(yearCategory).style.animationDelay = '0s'; // 처음 시간으로 이동
@@ -413,11 +417,11 @@
     return mediaInfoRendered[yearCategory].renderedOverviewContainerWidth
   }
   const getTranslateEnd = (yearCategory) => {
-    // console.log("===============getTranslateEnd...")
-    // console.log(`yearCategory : ${yearCategory}`)
-    // console.log(getRednderedOverviewTextWidth(yearCategory))
-    // console.log(getRenderedOverviewContainerWidth(yearCategory))
-    // console.log("===============getTranslateEnd...")
+    console.log("===============getTranslateEnd...")
+    console.log(`yearCategory : ${yearCategory}`)
+    console.log(getRednderedOverviewTextWidth(yearCategory))
+    console.log(getRenderedOverviewContainerWidth(yearCategory))
+    console.log("===============getTranslateEnd...")
     let px = -(getRednderedOverviewTextWidth(yearCategory) - getRenderedOverviewContainerWidth(yearCategory)) - 24 // padding : 12px
     return px >= 0 ? 0 : px
   }

@@ -22,6 +22,7 @@
       />
       <div id="errorMessage">{{ errorMessage }}</div>
       <v-btn class="button" color="primary" block outlined @click="requestAuth">로그인</v-btn>
+      <v-btn class="button" block outlined @click="naverLogin">네이버 로그인</v-btn>
     </v-card>
   </v-container>
 </template>
@@ -44,7 +45,7 @@
 </style>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import { ref } from 'vue';
 import { useNavigationStore } from '../../composables/stores/navigation';
@@ -52,6 +53,8 @@ import { useNavigationStore } from '../../composables/stores/navigation';
 // Vue Router와 Pinia Store 초기화
 const router = useRouter();
 const navigationStore = useNavigationStore();
+
+const route = useRoute();
 
 // 상태 변수
 const userId = ref('');
@@ -97,5 +100,10 @@ async function requestAuth() {
       errorMessage.value = '로그인 중 오류가 발생했습니다.';
     }
   }
+}
+
+async function naverLogin() {
+  navigationStore.setPreviousPage(route.fullPath);
+  window.location.href = 'http://localhost:8080/api/login/naver'
 }
 </script>
