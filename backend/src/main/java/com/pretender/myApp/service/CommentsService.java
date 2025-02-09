@@ -19,17 +19,17 @@ public class CommentsService {
 	@Autowired
 	private CommentsDAO cDao;
 
-	public List<CommentsVO> getAllComments(int id, int page, int size, String sortBy) {
+	public List<CommentsVO> getAllComments(int id, int page, int size, String sortBy, String type) {
 		// 모든 댓글 최신순으로 불러오기
 		int startNo = page * size;
-		return cDao.getAllTheComments(id,startNo,size,sortBy);
+		return cDao.getAllTheComments(id,startNo,size,sortBy, type);
 	}
 	
 
-	public List<CommentsDTO> getAllReplies(int id, int parentId, int page, int size) {
+	public List<CommentsDTO> getAllReplies(int id, int parentId, int page, int size, String type) {
 		// 모든 대댓글 최신순으로 불러오기
 		int startNo = page * size;
-		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,size);
+		List<CommentsDTO> replies = cDao.getAllTheReplies(id,parentId,startNo,size, type);
 		return replies;
 	}
 
@@ -71,9 +71,9 @@ public class CommentsService {
 	}
 
 
-	public int getTotalComments(int id) {
+	public int getTotalComments(int id, String type) {
 		// 댓글 총개수
-		int totalComments = cDao.countAllTheComments(id);
+		int totalComments = cDao.countAllTheComments(id, type);
 		return totalComments;
 	}
 
@@ -87,6 +87,18 @@ public class CommentsService {
 	public Object checkDupeBeforeReport(ReportDTO report) {
 		// 신고 중복 체크
 		return cDao.selectSameReportInfo(report);
+	}
+
+
+	public int findCommentIndex(int contentId, int commentId, String type) {
+		// 댓글의 인덱스 가져오기(좋아요순)
+		return cDao.selectCommentIndex(contentId, commentId, type);
+	}
+
+
+	public int findReplyIndex(int contentId, int commentId, Integer replyId, String type) {
+		// 대댓글의 인덱스 가져오기
+		return cDao.selectReplyIndex(contentId, commentId, replyId, type);
 	}
 
 

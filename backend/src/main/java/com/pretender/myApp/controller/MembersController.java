@@ -3,6 +3,7 @@ package com.pretender.myApp.controller;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.pretender.myApp.model.MembersDTO;
+import com.pretender.myApp.model.MyActivitiesDTO;
 import com.pretender.myApp.service.MembersService;
 
 
@@ -27,6 +31,7 @@ import com.pretender.myApp.service.MembersService;
 public class MembersController {
   @Autowired
   private MembersService membersService;
+  private static final int PAGE_SIZE_MyActivities = 10;
 
   @PostMapping("/api/signup")
   public ResponseEntity<String> registerUser(@RequestBody MembersDTO signUpRequest) {
@@ -117,4 +122,48 @@ public class MembersController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 조회 중 오류가 발생했습니다.");
 		}
 	}
+	
+	@GetMapping("api/members/myActivites")
+	public ResponseEntity<Object> getMyActivities (@RequestParam(defaultValue = "0") int page){
+		Authentication auth =SecurityContextHolder.getContext().getAuthentication();	
+		 if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+			  return ResponseEntity.badRequest().body("로그인이 필요합니다.");
+	        }
+		 
+		String userId = auth.getName();
+		
+		int size = PAGE_SIZE_MyActivities;
+		int totalActCount = membersService.getTotalActivities(userId);
+		int totalPages = (int)Math.ceil((double)totalActCount/size);
+		List<MyActivitiesDTO> myActivities = membersService.selectMyActivitiesInfo(userId,page,size);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("totalPages", totalPages);
+		response.put("page", page);
+		response.put("size", size);
+		response.put("myActivities", myActivities);
+		return ResponseEntity.ok(response);
+	}
+	
+	@GetMapping("api/members/searchMyAct")
+	public ResponseEntity<Object> searchMyActivities (@RequestParam(defaultValue = "0") int page, String word){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+			return ResponseEntity.badRequest().body("로그인이 필요합니다.");
+		}
+		String userId = auth.getName();
+		
+		int size = PAGE_SIZE_MyActivities;
+		int totalSearchCount = membersService.getTotalSearchAct(userId,word);
+		int totalPages =(int)Math.ceil((double)totalSearchCount/size);
+		List<MyActivitiesDTO> searchMyActResults = membersService.searchMyAct(userId,word,page,size);
+		Map<String, Object> response = new HashMap<>();
+		response.put("totalPages", totalPages);
+		response.put("page", page);
+		response.put("size", size);
+		response.put("searchMyActResults", searchMyActResults);
+		return ResponseEntity.ok(response);
+	}
+	
+	
 }
