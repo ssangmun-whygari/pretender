@@ -14,6 +14,7 @@
   let mediaInfo = ref({"tv": [], "movie": []}) // 자식 컴포넌트가 length로 접근하기 때문에 에러 방지
   let mediaListComponentKey = 'initial'
 
+  // working...
   // axios 요청
   async function getResponse(word) {
     let response = await axios.get(
