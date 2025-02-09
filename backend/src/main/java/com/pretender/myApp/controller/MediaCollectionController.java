@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pretender.myApp.model.CollectionItemDTO;
 import com.pretender.myApp.service.MediaCollectionService;
+import com.pretender.myApp.util.SecurityUtil;
 
 @RestController
 public class MediaCollectionController {
@@ -23,7 +25,7 @@ public class MediaCollectionController {
 	
 	@GetMapping("/api/collection/watchList")
 	public ResponseEntity<Object> getWatchList(
-			UsernamePasswordAuthenticationToken token,
+			Authentication token,
 			@RequestParam(required = false) String mediaId,
 			@RequestParam(required = false) String mediaType
 		) {
@@ -47,7 +49,7 @@ public class MediaCollectionController {
 	
 	@PostMapping("/api/collection/watchList")
 	public ResponseEntity<String> addItemInWatchList(
-			UsernamePasswordAuthenticationToken token,
+			Authentication token,
 			@RequestParam String mediaId,
 			@RequestParam String mediaType,
 			@RequestParam String mediaTitle
