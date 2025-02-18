@@ -24,6 +24,7 @@
       <v-btn class="button" color="primary" block outlined @click="requestAuth">로그인</v-btn>
       <v-btn class="button" block outlined @click="naverLogin">네이버 로그인</v-btn>
       <v-btn class="button" block outlined @click="kakaoLogin">카카오 로그인</v-btn>
+      <v-btn class="button" block outlined @click="googleLogin">구글 로그인</v-btn>
     </v-card>
   </v-container>
 </template>
@@ -112,4 +113,10 @@ async function kakaoLogin() {
   navigationStore.setPreviousPage(route.fullPath);
   window.location.href = 'http://localhost:8080/api/login/kakao'
 }
+
+async function googleLogin() {
+  navigationStore.setPreviousPage(route.fullPath);
+  window.location.href = 'http://localhost:8080/api/login/google'
+}
+
 </script>

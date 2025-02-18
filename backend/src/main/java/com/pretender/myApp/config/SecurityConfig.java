@@ -45,6 +45,12 @@ public class SecurityConfig {
 	@Value("${kakaoClientSecret}")
 	private String kakaoClientSecret;
 	
+	@Value("${googleClientId}")
+	private String googleClientId;
+	
+	@Value("${googleClientSecret}")
+	private String googleClientSecret;
+	
 	@Bean
 	MyBatisUserDetailsService userDetailsService() {
 		return new MyBatisUserDetailsService();
@@ -113,6 +119,7 @@ public class SecurityConfig {
 		return new InMemoryClientRegistrationRepository(
 				this.naverClientRegistration()
 				,this.kakaoClientRegistration()
+				,this.googleClientRegistration()
 			);
 	}
 	
@@ -137,7 +144,7 @@ public class SecurityConfig {
 		return ClientRegistration.withRegistrationId("kakao")
 	            .clientId(kakaoClientId) 
 	            .clientSecret(kakaoClientSecret) 
-	            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+	            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)//카카오는 PostBody로 전송
 	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 	            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
 	            .scope("profile_nickname", "account_email")
@@ -147,6 +154,26 @@ public class SecurityConfig {
 	            .userNameAttributeName("id") //카카오는 id가 유니크 값임
 	            .clientName("Kakao")
 	            .build();
+	}
+	
+	private ClientRegistration googleClientRegistration() {
+		
+		System.out.println("client_id: " + googleClientId);
+		System.out.println("client_secret: " + googleClientSecret);
+		
+		return ClientRegistration.withRegistrationId("google")
+				.clientId(googleClientId)
+				.clientSecret(googleClientSecret)
+				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+				.scope("profile","email")
+				.authorizationUri("https://accounts.google.com/o/oauth2/auth")
+				.tokenUri("https://oauth2.googleapis.com/token")
+				.userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+				.userNameAttributeName("sub") //google
+				.clientName("Google")
+				.build();
 	}
 	
 }
