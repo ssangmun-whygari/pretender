@@ -8,8 +8,30 @@
         cover
       ></v-img>
     </div>
-    <div class="position-absolute bottom-0 w-100 d-flex justify-space-between align-center">
-      <h1 class="mb-3 ml-3 text-white">
+    <div class="position-absolute bottom-0 w-100 d-flex justify-space-between align-center pt-5" id="backdropInfo">
+      <v-row>
+        <v-col lg="6" cols="12" class="pa-0 pl-3 pb-3">
+          <h1 class="ml-3 text-white">{{ title }}</h1>
+        </v-col>
+        <v-col lg="6" cols="12" class="pa-0 pr-3 pb-3">
+          <div class="mb-3 mr-3 d-flex align-center justify-end">
+            <p class="text-white">평균별점 : </p>
+              <v-rating
+              active-color="amber-accent-4"
+              color="amber-accent-4"
+              density="compact"
+              size="x-large"
+              model-value="3.5"
+              disabled="true"
+              half-increments
+            />
+            <h1 class="text-white">3.5</h1>
+            <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
+            <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
+          </div>
+        </v-col>
+      </v-row>
+      <!-- <h1 class="mb-3 ml-3 text-white">
         {{ title }}
       </h1>
       <div class="mb-3 mr-3 d-flex align-center">
@@ -26,10 +48,16 @@
         <h1 class="text-white">3.5</h1>
         <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
         <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
-      </div>
+      </div> -->
     </div>
   </v-sheet>
 </template>
+
+<style>
+  #backdropInfo {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5) 90%, rgba(0, 0, 0, 0) 100%);
+  }
+</style>
 
 <script setup>
   import { useMediaDetailStore } from '@/composables/stores/MediaDetail'

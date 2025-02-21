@@ -16,6 +16,9 @@ import { createApp } from 'vue'
 // router
 import { createWebHistory, createRouter } from 'vue-router'
 
+// css
+import './assets/styles.css'
+
 // 상태 관리
 import { createPinia } from 'pinia'
 import { useNavigationStore } from './composables/stores/navigation'

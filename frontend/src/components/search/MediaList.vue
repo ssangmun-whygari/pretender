@@ -8,6 +8,7 @@
         <img :src="imageCache['http://localhost:8080/resource/image/bunny-l.png']" id="progress-image-child"/>
       </img>
     </div>
+    <!-- <button @click="onExpButtonClick">실험용 버튼</button> -->
     <div v-if="showByIndividualYears == true">
       <v-row justify="center">
         <v-col lg="8" cols="12">
@@ -37,30 +38,53 @@
                 class="slide"
                 v-for="(innerItem, index) in mediaInfoRendered[item.year]['data']"
                 >
-                <v-sheet class="ma-3 py-3 w-100 h-100 border rounded"
-                  :elevation="5">
-                  <RouterLink 
-                  class="h-100 w-100 d-flex justify-center"
-                  :to="{path: '/detail', query: {id : innerItem['id']}}"
-                  v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
-                  <img 
-                    :src="posterPath(innerItem['poster_path'])"
-                    class="poster"
-                  ></img>
-                  </RouterLink>
-                </v-sheet>
+                <v-skeleton-loader
+                  :loading="loading"
+                  height="300"
+                  type="image"
+                  color="transparent"
+                >
+                  <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg"
+                    :elevation="2">
+                    <RouterLink 
+                    class="h-100 w-100 d-flex justify-center"
+                    :to="{path: '/detail', query: {id : innerItem['id']}}"
+                    v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
+                    <img 
+                      :src="posterPath(innerItem['poster_path'])"
+                      class="poster"
+                      @load="onPosterImageLoad"
+                    ></img>
+                    </RouterLink>
+                  </v-sheet>
+                </v-skeleton-loader>
               </swiper-slide>
             </swiper-container>
-            <v-sheet class="d-flex justify-center mb-3 py-3 w-100 border rounded"
-              :elevation="5"
-              >
-              <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
-            </v-sheet>
-            <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
-              <div class="marquee-content" :attr-year="item.year">
-                {{ stripContent(item['data'][item.activeIndex.value].overview) }}
-              </div>
-            </v-sheet>
+
+            <v-skeleton-loader
+                  :loading="loading"
+                  height="50"
+                  type="list-item"
+                  color="transparent"
+            >
+              <v-sheet class="d-flex justify-center mb-3 py-3 w-100 border rounded-lg"
+                :elevation="2"
+                >
+                <h2>{{ item['data'][item.activeIndex.value].name }}</h2>
+              </v-sheet>
+            </v-skeleton-loader>
+            <v-skeleton-loader
+                  :loading="loading"
+                  height="50"
+                  type="list-item"
+                  color="transparent"
+            >
+              <v-sheet class="marquee-container pa-3 border" :attr-year="item.year">
+                <div class="marquee-content" :attr-year="item.year">
+                  {{ stripContent(item['data'][item.activeIndex.value].overview) }}
+                </div>
+              </v-sheet>
+            </v-skeleton-loader>
           </div>
         </v-col>
         <v-col lg="1" class="d-none d-lg-block">
@@ -71,6 +95,10 @@
 </template>
 
 <style>
+  .v-skeleton-loader__image {
+    height: 300px !important;
+  }
+
   .background-container {
     background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage');
     background-size: cover;
@@ -122,11 +150,16 @@
     object-fit: contain;
   }
 
+  .hidden {
+    display: none;
+  }
+
   .marquee-container {
     overflow: hidden;
     white-space: nowrap;
     position: relative;
     height: 50px;
+    width: 100%;
   }
 
   .marquee-content {
@@ -163,7 +196,22 @@
   const props = defineProps({
       mediaInfo: Object
     })
-  const imageCache = {};
+  const imageCache = {}; // 스크롤 표시 이미지용(토끼, 사다리...)
+  let posterImageSources = [] // 이 주소로 GET 요청을 보내 이미지 파일을 받아옴옴
+
+  let loading = ref(true)
+
+  const onExpButtonClick = () => {
+    loading.value = !(loading.value)
+    console.log(`${loading.value} : loading.value`)
+  }
+
+  // NOTE : 삭제 가능
+  // const onPosterImageLoad = function() {
+  //   posterImageCount++
+  //   console.log(`posterImageCount : ${posterImageCount}`)
+  // }
+
   // 이미지 미리 다운로드
   async function preloadImage(url) {
     const response = await fetch(url);
@@ -178,8 +226,9 @@
     for (const url of imageUrls.value.urls) {
       await preloadImage(url);
     }
-    imageUrls.value.allLoaded = true
+    imageUrls.value.allLoaded = true // NOTE : 스크롤를 위한 이미지만 포함. 영화등의 포스터 이미지는 추적하지 않음
   }
+
   // 사전 로드 실행
   const imageUrls = ref({
     urls : [
@@ -190,19 +239,6 @@
     ],
     allLoaded : false
   })
-
-  // document.querySelector()를 여러 번 실행시키지 않기 위한 시도도
-  // const imageElements = {
-  //   progressImage: null,
-  //   progressImageChild: null
-  // }
-  // watch( () => {return imageUrls.allLoaded}, () => {
-  //   imageElements.progressImage = document.querySelector('.progress-image')
-  //   imageElements.progressImageChild = document.querySelector('#progress-image-child')
-  //   console.log("watch Activated")
-  //   console.log(imageElements)
-  //   console.log("watch Activated end")
-  // })
 
   onMounted(() => {
     preloadImages(imageUrls)
@@ -236,14 +272,6 @@
       return
     }
 
-    // const ranges_1 = [
-    //   [0, 5], [10, 15],[20, 25],[30, 35],[40, 45],[50, 55],[60, 65],[70, 75],[80, 85],[90, 95],
-    // ]
-
-    // const ranges_2 = [
-    //   [5, 10],[15, 20],[25, 30],[35, 40],[45, 50],[55, 60],[65, 70],[75, 80],[85, 90],[95, 100],
-    // ]
-
     const ranges_1 = [
       [0, 10], [20, 30], [40, 50], [60, 70], [80, 90]
     ]
@@ -268,7 +296,6 @@
 
   } // handleScroll end
 
-
   const mediaInfo = computed(() => {
     console.log("computed.....")
     console.log(props.mediaInfo)
@@ -278,9 +305,72 @@
   })
   let showByIndividualYears = ref(false)
   let mediaInfoRendered = {}
+  let preloadPosterPromises = ref(null)
+
+  function preloadPosterImages(sources) {
+    return Promise.all(
+      sources.map(src => new Promise(resolve => {
+        const img = new Image()
+        img.src = src
+        img.onload = () => {
+        console.log(`${src} 로드 완료`);
+        resolve(src);
+        };
+
+        img.onerror = () => {
+          console.error(`${src} 로드 실패`);
+          resolve(src);
+        };
+      }))
+    )
+  }
+
+  watch(() => {return preloadPosterPromises.value}, (promises) => {
+    (promises)?.then(() => {
+
+      // console.log(`이미지 : ${posterImageSources.length}개, 모든 포스터 이미지 다운로드 완료`)
+      loading.value = false;
+
+      // DOM이 렌더링될떄까지 기다린 다음 swiperslidechange에 이벤트 리스너를 붙인다.
+      nextTick(async () => {
+        const swipers = document.querySelectorAll('swiper-container')
+        // reference : https://inpa.tistory.com/entry/JS-%F0%9F%93%9A-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EC%A0%9C%EA%B1%B0-%ED%95%9C%EB%B2%88%EB%A7%8C-%EC%8B%A4%ED%96%89%EB%90%98%EA%B2%8C-%ED%95%98%EA%B8%B0-removeEventListener-once
+        console.log("swipers : ")
+        console.log(swipers)
+        console.log("swipers end")
+
+        nextTick(() => {
+          for (let swiper of swipers) {
+            const yearCategory = swiper.getAttribute('attr-year')
+            setRenderedOverviewContainerWidth(yearCategory)
+            setRenderedOverviewTextWidth(yearCategory)
+            // NOTE : <div ... :style="{'--translate-end': getTranslateEnd(item.year) + 'px'}">로 하면  getTranslateEnd()가 setRenderedOverview...보다 빨리 계산되서 안됨
+            // 어쩔 수 없이 자바스크립트로 처리함
+            const translateEnd = getTranslateEnd(yearCategory)
+            const duration = calculateAnimDuration(-translateEnd)
+            // getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', 300 + 'px')
+            getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', translateEnd + 'px')
+            getMarqueeContentElement(yearCategory).style.animation = `marquee ${duration}s linear infinite`;
+            getMarqueeContentElement(yearCategory).style.animationDelay = '0s'; // 처음 시간으로 이동
+            getMarqueeContentElement(yearCategory).style.animationPlayState = 'running'; // 애니메이션 시작
+            swiper.removeEventListener('swiperslidechange', onSwiperslidechange)
+            swiper.addEventListener('swiperslidechange', onSwiperslidechange)
+          }
+          window.addEventListener("resize", onWindowResize)
+        }) // nextTick end
+      }) // nextTick end
+    }) // promises.then() end
+  })
 
   watch(() => {return mediaInfo.value.length}, (length) => {
+    posterImageSources = (mediaInfo.value).map((e) => {return posterPath(e.poster_path)})
+    console.log("posterImageSources : ")
+    console.log(posterImageSources)
+    console.log("posterImageSources end")
+    preloadPosterPromises.value = preloadPosterImages(posterImageSources)
+
     // mediaInfo에 값이 채워지면 mediaInfoRendered의 값을 만든다.
+    // NOTE : mediaInfo에 한번에 값이 채워진다고 가정함(예 : 20개)
     if (length > 0) {
       mediaInfo.value = mediaInfo.value.sort((a, b) => {
         let a_date = new Date(a.first_air_date)
@@ -317,33 +407,35 @@
         console.log("=====================mediaInfoRendered end")
       }
 
-      // DOM이 렌더링될떄까지 기다린 다음 swiperslidechange에 이벤트 리스너를 붙인다.
-      nextTick(() => {
-        const swipers = document.querySelectorAll('swiper-container')
-        // reference : https://inpa.tistory.com/entry/JS-%F0%9F%93%9A-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EC%A0%9C%EA%B1%B0-%ED%95%9C%EB%B2%88%EB%A7%8C-%EC%8B%A4%ED%96%89%EB%90%98%EA%B2%8C-%ED%95%98%EA%B8%B0-removeEventListener-once
-        console.log("swipers : ")
-        console.log(swipers)
-        console.log("swipers end")
+      // // DOM이 렌더링될떄까지 기다린 다음 swiperslidechange에 이벤트 리스너를 붙인다.
+      // nextTick(async () => {
 
-        for (let swiper of swipers) {
-          const yearCategory = swiper.getAttribute('attr-year')
-          setRenderedOverviewContainerWidth(yearCategory)
-          setRenderedOverviewTextWidth(yearCategory)
-          // NOTE : <div ... :style="{'--translate-end': getTranslateEnd(item.year) + 'px'}">로 하면  getTranslateEnd()가 setRenderedOverview...보다 빨리 계산되서 안됨
-          // 어쩔 수 없이 자바스크립트로 처리함
-          const translateEnd = getTranslateEnd(yearCategory)
-          const duration = calculateAnimDuration(-translateEnd)
-          // getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', 300 + 'px')
-          getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', translateEnd + 'px')
-          getMarqueeContentElement(yearCategory).style.animation = `marquee ${duration}s linear infinite`;
-          getMarqueeContentElement(yearCategory).style.animationDelay = '0s'; // 처음 시간으로 이동
-          getMarqueeContentElement(yearCategory).style.animationPlayState = 'running'; // 애니메이션 시작
-          swiper.removeEventListener('swiperslidechange', onSwiperslidechange)
-          swiper.addEventListener('swiperslidechange', onSwiperslidechange)
-        }
+      //   const swipers = document.querySelectorAll('swiper-container')
+      //   // reference : https://inpa.tistory.com/entry/JS-%F0%9F%93%9A-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EC%A0%9C%EA%B1%B0-%ED%95%9C%EB%B2%88%EB%A7%8C-%EC%8B%A4%ED%96%89%EB%90%98%EA%B2%8C-%ED%95%98%EA%B8%B0-removeEventListener-once
+      //   console.log("swipers : ")
+      //   console.log(swipers)
+      //   console.log("swipers end")
 
-        window.addEventListener("resize", onWindowResize)
-      })
+      //   nextTick(() => {
+      //     for (let swiper of swipers) {
+      //       const yearCategory = swiper.getAttribute('attr-year')
+      //       setRenderedOverviewContainerWidth(yearCategory)
+      //       setRenderedOverviewTextWidth(yearCategory)
+      //       // NOTE : <div ... :style="{'--translate-end': getTranslateEnd(item.year) + 'px'}">로 하면  getTranslateEnd()가 setRenderedOverview...보다 빨리 계산되서 안됨
+      //       // 어쩔 수 없이 자바스크립트로 처리함
+      //       const translateEnd = getTranslateEnd(yearCategory)
+      //       const duration = calculateAnimDuration(-translateEnd)
+      //       // getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', 300 + 'px')
+      //       getMarqueeContentElement(yearCategory).style.setProperty('--translate-end', translateEnd + 'px')
+      //       getMarqueeContentElement(yearCategory).style.animation = `marquee ${duration}s linear infinite`;
+      //       getMarqueeContentElement(yearCategory).style.animationDelay = '0s'; // 처음 시간으로 이동
+      //       getMarqueeContentElement(yearCategory).style.animationPlayState = 'running'; // 애니메이션 시작
+      //       swiper.removeEventListener('swiperslidechange', onSwiperslidechange)
+      //       swiper.addEventListener('swiperslidechange', onSwiperslidechange)
+      //     }
+      //     window.addEventListener("resize", onWindowResize)
+      //   }) // nextTick end
+      // }) // nextTick end
     }
   })
 
