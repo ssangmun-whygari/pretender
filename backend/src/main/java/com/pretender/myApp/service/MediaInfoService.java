@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.pretender.myApp.component.TMDBclient;
 import com.pretender.myApp.model.CastLikeCategoryDTO;
+import com.pretender.myApp.model.CastVotesDTO;
+import com.pretender.myApp.model.VoteReasonsDTO;
 import com.pretender.myApp.persistence.MediaInfoDAO;
 
 @Service
@@ -104,6 +106,16 @@ public class MediaInfoService {
 
 	public List<CastLikeCategoryDTO> getLikeCategory() {
 		return mediaInfoDAO.getCastLikeCategory();
+	}
+
+	public List<CastVotesDTO> requestCastVotes(String mediaId, String type) {
+		// 캐릭터 이름, 배우 이름, 투표수 가져오기
+		return mediaInfoDAO.getCastVotesInfo(mediaId, type);
+	}
+
+	public List<VoteReasonsDTO> requestVoteReasons(String mediaId, String type, String characterId) {
+		// 투표 이유와 투표 수 가져오기
+		return mediaInfoDAO.getVotesResons(mediaId, type, characterId);
 	}
 	
 	

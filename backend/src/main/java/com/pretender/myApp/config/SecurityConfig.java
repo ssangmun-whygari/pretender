@@ -156,11 +156,7 @@ public class SecurityConfig {
 	            .build();
 	}
 	
-	private ClientRegistration googleClientRegistration() {
-		
-		System.out.println("client_id: " + googleClientId);
-		System.out.println("client_secret: " + googleClientSecret);
-		
+	private ClientRegistration googleClientRegistration() {		
 		return ClientRegistration.withRegistrationId("google")
 				.clientId(googleClientId)
 				.clientSecret(googleClientSecret)
