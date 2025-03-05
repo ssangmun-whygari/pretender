@@ -27,6 +27,10 @@ export default defineConfig({
     }),
   ],
   define: { 'process.env': {} },
+  optimizeDeps: {
+    exclude: ["vue"], //Vue 중복최적화 방지
+    include: ["chart.js", "vuetify"], //필요한 것만 최적화
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

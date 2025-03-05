@@ -2,6 +2,7 @@ package com.pretender.myApp.config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,17 +23,33 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.pretender.myApp.component.CustomOAuth2FailureHandler;
+import com.pretender.myApp.component.KakaoAccessTokenResponseClient;
 import com.pretender.myApp.service.MyBatisUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 	
+	@Autowired
+	private KakaoAccessTokenResponseClient kakaoAccessTokenResponseClient;
+	
 	@Value("${whygari.naverClientId}")
 	private String naverClientId;
 	
 	@Value("${whygari.naverClientPassword}")
 	private String naverClientPassword;
+	
+	@Value("${kakaoClientId}")
+	private String kakaoClientId;
+	
+	@Value("${kakaoClientSecret}")
+	private String kakaoClientSecret;
+	
+	@Value("${googleClientId}")
+	private String googleClientId;
+	
+	@Value("${googleClientSecret}")
+	private String googleClientSecret;
 	
 	@Bean
 	MyBatisUserDetailsService userDetailsService() {
@@ -71,17 +88,14 @@ public class SecurityConfig {
 				.requestMatchers("/api/login/**").permitAll()
 				.anyRequest().permitAll();
 		});
-//		http.oauth2Login(oauth2 -> oauth2
-//	        .authorizationEndpoint(authEndpoint -> authEndpoint.baseUri("/api/login"))
-//	        .failureHandler(new CustomOAuth2FailureHandler())
-//	        .defaultSuccessUrl("http://localhost:3000/socialLogin/success", true) // 리다이렉트 주소
-//	        .failureUrl("http://localhost:3000/socialLogin/fail")
-//	            ); // oauth2Login end
 		http.oauth2Login(oauth2 -> oauth2
 			    .authorizationEndpoint(authEndpoint -> authEndpoint.baseUri("/api/login"))
-			    .failureHandler(new CustomOAuth2FailureHandler()) // ✅ 실패 핸들러만 남김
+			    .tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenResponseClient(kakaoAccessTokenResponseClient))
+			    .failureHandler(new CustomOAuth2FailureHandler())
 			    .defaultSuccessUrl("http://localhost:3000/socialLogin/success", true)
+			    .failureUrl("http://localhost:3000/socialLogin/fail")
 			);
+	
 		return http.build();
 	}
 	
@@ -104,8 +118,8 @@ public class SecurityConfig {
 	public ClientRegistrationRepository clientRegistrationRepository() {
 		return new InMemoryClientRegistrationRepository(
 				this.naverClientRegistration()
-	// to peachea27 : 다 구현했으면 주석 풀기  
-	//			,this.kakaoClientRegistration()
+				,this.kakaoClientRegistration()
+				,this.googleClientRegistration()
 			);
 	}
 	
@@ -127,7 +141,35 @@ public class SecurityConfig {
 	}
 	
 	private ClientRegistration kakaoClientRegistration() {
-		return null;
+		return ClientRegistration.withRegistrationId("kakao")
+	            .clientId(kakaoClientId) 
+	            .clientSecret(kakaoClientSecret) 
+	            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)//카카오는 PostBody로 전송
+	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+	            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+	            .scope("profile_nickname", "account_email")
+	            .authorizationUri("https://kauth.kakao.com/oauth/authorize")
+	            .tokenUri("https://kauth.kakao.com/oauth/token")
+	            .userInfoUri("https://kapi.kakao.com/v2/user/me")
+	            .userNameAttributeName("id") //카카오는 id가 유니크 값임
+	            .clientName("Kakao")
+	            .build();
+	}
+	
+	private ClientRegistration googleClientRegistration() {		
+		return ClientRegistration.withRegistrationId("google")
+				.clientId(googleClientId)
+				.clientSecret(googleClientSecret)
+				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+				.scope("profile","email")
+				.authorizationUri("https://accounts.google.com/o/oauth2/auth")
+				.tokenUri("https://oauth2.googleapis.com/token")
+				.userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+				.userNameAttributeName("sub") //google
+				.clientName("Google")
+				.build();
 	}
 	
 }
