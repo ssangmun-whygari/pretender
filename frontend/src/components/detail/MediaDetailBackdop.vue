@@ -76,6 +76,7 @@
   const hasWatched = ref(false)
   const route = useRoute()
   const id = route.query.id
+  const type = route.query.type
   const router = useRouter()
   const navigationStore = useNavigationStore()
 
@@ -105,9 +106,8 @@
         headers: {
           "X-Requested-With": "XMLHttpRequest"
         },
-        // TODO : 바꿔야 함
         params : {
-          mediaType: "tv",
+          mediaType: type,
           mediaId: id
         }
       }
@@ -140,7 +140,7 @@
         },
         // TODO : 바꿔야 함
         params : {
-          mediaType: "tv",
+          mediaType: type,
           mediaId: id,
           mediaTitle: title.value
         }

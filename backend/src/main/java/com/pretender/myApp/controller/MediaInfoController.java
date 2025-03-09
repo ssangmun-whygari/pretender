@@ -20,8 +20,9 @@ public class MediaInfoController {
 	@GetMapping("/api/search")
 	public ResponseEntity<Map> searchMediaByWord(
 			@RequestParam String type,
-			@RequestParam String query) {
-		ResponseEntity<Map> result = mediaInfoService.requestSearch(type, query);
+			@RequestParam String query,
+			@RequestParam(required = false) Integer page) {
+		ResponseEntity<Map> result = mediaInfoService.requestSearch(type, query, page);
 		return result;
 	}
 	

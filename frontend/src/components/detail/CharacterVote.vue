@@ -129,9 +129,11 @@
 
   const profileBaseUrl = "http://image.tmdb.org/t/p/w185"
   const props = defineProps({
-      id: String
+      id: String,
+      type: String
   })
   const id = toRef(props, 'id')
+  const type = toRef(props, 'type')
   const media_type = ref("tv") // TODO : 고쳐야 함
   const character_id = ref(0)
 
@@ -186,9 +188,8 @@
     let response = await axios.get(
       'http://localhost:8080/api/detail/cast',
       {
-        // TODO : 바꿔야 함
         params : {
-          type: "tv",
+          type: type.value,
           mediaId: id.value,
         }
       }

@@ -20,8 +20,8 @@ public class MediaInfoService {
 	@Autowired
 	private MediaInfoDAO mediaInfoDAO;
 	
-	public ResponseEntity<Map> requestSearch(String type, String query) {
-		System.out.println("검색 요청 type : " + type + ", query : " + query);
+	public ResponseEntity<Map> requestSearch(String type, String query, Integer page) {
+		System.out.println("검색 요청 type : " + type + ", query : " + query + ", page : " + page);
 		return client
 			.getRestClient()
 			.get()
@@ -29,8 +29,8 @@ public class MediaInfoService {
 				.path("/3/search/" + type)
 				.queryParam("query", query)
 				.queryParam("language", "ko-KR")
-				.queryParam("include_adult", true)
-				.queryParam("page", 1)
+				.queryParam("include_adult", false)
+				.queryParam("page", (page == null) ? 1 : page)
 				.build()
 				)
 			.retrieve()
@@ -48,17 +48,34 @@ public class MediaInfoService {
 				.uri(uriBuilder -> uriBuilder
 					.path("/3/tv/" + mediaId)
 					.queryParam("language", "ko-KR")
+					.queryParam("append_to_response", "watch/providers")
 					.build()
 					)
 				.retrieve()
 				.toEntity(Map.class)
 				.getBody()).entrySet().stream()
 				.filter(entry -> {
-					return Set.of("name", "title", "networks", "overview", "genres", "poster_path").contains(entry.getKey());
+					return Set.of("name", "title", "overview", "genres", "poster_path", "watch/providers").contains(entry.getKey());
 				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 			return result;
 		} else if (type.equals("movie")) {
-			// TODO
+		// TODO
+		result = 
+			((Map<String, Object>) client.getRestClient()
+				.get()
+				.uri(uriBuilder -> uriBuilder
+					.path("/3/movie/" + mediaId)
+					.queryParam("language", "ko-KR")
+					.queryParam("append_to_response", "watch/providers")
+					.build()
+					)
+				.retrieve()
+				.toEntity(Map.class)
+				.getBody()).entrySet().stream()
+				.filter(entry -> {
+					return Set.of("name", "title", "overview", "genres", "poster_path", "watch/providers").contains(entry.getKey());
+				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		return result;
 		}
 		return result;
 	}
@@ -97,7 +114,18 @@ public class MediaInfoService {
 				.getBody());
 			return result;
 		} else if (type.equals("movie")) {
-			// TODO
+			result = 
+			((Map<String, Object>) client.getRestClient()
+				.get()
+				.uri(uriBuilder -> uriBuilder
+					.path("/3/movie/" + mediaId + "/credits")
+					.queryParam("language", "ko-KR")
+					.build()
+					)
+				.retrieve()
+				.toEntity(Map.class)
+				.getBody());
+			return result;
 		}
 		return result;
 	}
