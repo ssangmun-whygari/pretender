@@ -3,9 +3,9 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.pretender.myApp.mapper.mediaInfoMapper">
-	<select id="selectCastLikeCategory" resultType="com.pretender.myApp.model.CastLikeCategoryDTO">
-		select * from cast_like_category
+<mapper namespace="com.pretender.myApp.mapper.mediaCollectionMapper">
+	<select id="countWatchListById" resultType="int">
+		select count(*) from collection_infos where owner = #{memberId} and is_default = 'Y'
 	</select>
 	
 	<select id="selCastVotes" resultType="com.pretender.myApp.model.CastVotesDTO">

@@ -25,6 +25,15 @@ public class CommentsService {
 		return cDao.getAllTheComments(id,startNo,size,sortBy, type);
 	}
 	
+	public boolean postReview(String userId, String mediaId, String mediaType, String text, Float stars) throws Exception {
+		int no = cDao.getAvailableNoFromReviewsTable(mediaId, mediaType);
+		int result = cDao.postReview(no, userId, mediaId, mediaType, text, stars);
+		if (result != 1) { // 삽입된 행의 개수는 1이어야 함
+			throw new Exception("reviews 테이블에 행이 제대로 업데이트되지 않았습니다.");
+		}
+		return true;
+	}
+	
 
 	public List<CommentsDTO> getAllReplies(int id, int parentId, int page, int size, String type) {
 		// 모든 대댓글 최신순으로 불러오기

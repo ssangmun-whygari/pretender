@@ -54,6 +54,37 @@ public class CommentsController {
 		return ResponseEntity.ok(response);
 	}
 	
+	// 단일 리뷰 DB에 삽입
+	@PostMapping("/api/review")
+	ResponseEntity<Object> postReview(
+			Authentication token,
+			@RequestParam String mediaId,
+			@RequestParam String mediaType,
+			@RequestParam String text,
+			@RequestParam Float stars
+			) {
+		System.out.println("POST /api/review");
+		System.out.println("token : " + token);
+		System.out.println("token.getName() : " + token.getName());
+		System.out.println("mediaId : " + mediaId);
+		System.out.println("mediaType : " + mediaType);
+		System.out.println("text : " + text);
+		System.out.println("stars : " + stars);
+		String userId = token.getName();
+		
+		Map<String, Object> response = new HashMap<>();
+		try {
+			cService.postReview(userId, mediaId, mediaType, text, stars);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+			response.put("result", "fail");
+			return ResponseEntity.internalServerError().body(response);
+		}
+		response.put("result", "success");
+		return ResponseEntity.ok(response);
+	}
+	
 	// 대댓글 기져오기 //type수정
 	@PostMapping("/api/replies")
 	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId, @RequestParam int total){

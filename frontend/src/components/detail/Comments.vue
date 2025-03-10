@@ -358,7 +358,7 @@
 
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, defineExpose } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';
@@ -704,6 +704,7 @@ const formatLikeCount = (count) => {
 
 // 댓글 가져오기 함수
 const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
+  console.log("fetchComments 실행됨...")
   try {
     const response = await axios.get(`http://localhost:8080/api/comments`, {
       params: { id: contentId, page, sortBy }, 
@@ -978,7 +979,8 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick); // 이벤트 해제
 });
 
-
+// 부모 컴포넌트에 자신의 함수를 노출
+defineExpose({ fetchComments });
 </script>
 
 <style scoped>

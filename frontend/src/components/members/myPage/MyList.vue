@@ -4,8 +4,8 @@
       <div class="d-flex align-center">
         <div class="d-flex align-center" v-if="watchList.loaded == true && watchList.data.length > 0">
           <h1 class="mr-3">내가 본 작품 리스트</h1>
-          <v-btn class="mr-3" color="primary">펼쳐보기</v-btn>
-          <v-icon icon="mdi-cog" size="large" @click="toggleShowOptions('collection-primary')"/>
+          <!-- TODO : 나중에 구현 <v-btn class="mr-3" color="primary">펼쳐보기</v-btn>
+          <v-icon icon="mdi-cog" size="large" @click="toggleShowOptions('collection-primary')"/> -->
         </div>
         <div v-else>
           <h1>내가 본 작품 리스트</h1>
