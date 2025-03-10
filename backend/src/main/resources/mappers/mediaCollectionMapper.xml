@@ -8,39 +8,21 @@
 		select count(*) from collection_infos where owner = #{memberId} and is_default = 'Y'
 	</select>
 	
-	<insert id="insertWatchListOfMember">
-		insert into collection_infos (owner, is_default) values (#{memberId}, 'Y')
-	</insert>
-	
-	<select id="selectWatchListById" resultType="com.pretender.myApp.model.CollectionItemDTO">
-		select
-			media_id as mediaId,
-			media_type as mediaType,
-			media_title as mediaTitle,
-			added_date as addedDate,
-			poster_path as posterPath
-		from collections 
-		where collection_id = (select id from collection_infos where owner = #{memberId} and is_default = 'Y')
+	<select id="selCastVotes" resultType="com.pretender.myApp.model.CastVotesDTO">
+		SELECT c.character_id, c.character_name, c.actor_name, count(l.character_id) as votes
+		FROM cast_likes l LEFT JOIN casts c
+		ON c.character_id = l.character_id
+		where c.media_id = #{mediaId} and c.media_type= #{type}
+		GROUP BY c.character_id, c.character_name, c.actor_name
+		ORDER BY votes DESC
 	</select>
 	
-	<select id="countMediaInWatchList" resultType="int">
-		select count(*) 
-		from collections 
-		where 
-			collection_id = (select id from collection_infos where owner = #{memberId} and is_default = 'Y') and
-			media_id = #{mediaId} and
-			media_type = #{mediaType}
+	<select id="selVoteReasons" resultType="com.pretender.myApp.model.VoteReasonsDTO">
+		SELECT y.content, count(l.why) as votes
+		FROM cast_likes l LEFT JOIN cast_like_category y
+		ON l.why = y.why
+		WHERE l.media_id = #{mediaId} AND l.media_type= #{type} AND l.character_id =#{characterId}
+		GROUP BY l.character_id, l.why
+		ORDER BY votes DESC
 	</select>
-	
-	<insert id="insertItemInWatchList">
-		insert into collections (collection_id, media_id, media_type, media_title, poster_path)
-		select
-			id,
-			#{mediaId},
-			#{mediaType},
-			#{mediaTitle},
-			#{posterPath}
-		from collection_infos
-		where owner = #{memberId}
-	</insert>
 </mapper>

@@ -150,7 +150,7 @@
   let slicedCastInfo = (array, lineNum) => {
     // lineNum은 0부터 시작
     if (mdAndUp.value) {
-      return array.slice(lineNum * 3, Math.min(totalItemLength.value - 1, (lineNum * 3) + 3))
+      return array.slice(lineNum * 3, Math.min(totalItemLength.value, (lineNum * 3) + 3))
     } else {
       return [array[lineNum]]
     }

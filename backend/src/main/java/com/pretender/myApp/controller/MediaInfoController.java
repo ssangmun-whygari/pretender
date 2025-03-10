@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pretender.myApp.model.CastLikeCategoryDTO;
+import com.pretender.myApp.model.CastVotesDTO;
+import com.pretender.myApp.model.VoteReasonsDTO;
 import com.pretender.myApp.service.MediaInfoService;
 
 @RestController
@@ -64,5 +66,19 @@ public class MediaInfoController {
 			return ResponseEntity.badRequest().build();
 		}
 		return ResponseEntity.ok(result);
+	}
+	
+	@GetMapping("api/detail/castVotes")
+	public ResponseEntity<List<CastVotesDTO>> getCastVotes(@RequestParam String mediaId, @RequestParam String type) {
+		System.out.println("it's working!"+mediaId+" : "+type);
+		List<CastVotesDTO> castVotes = mediaInfoService.requestCastVotes(mediaId,type);
+		return ResponseEntity.ok(castVotes);
+	}
+	
+	@GetMapping("api/detail/votesReasons")
+	public ResponseEntity<List<VoteReasonsDTO>> getVotesReasons(@RequestParam String mediaId, 
+			@RequestParam String type, @RequestParam String characterId) {
+		List<VoteReasonsDTO> reasons = mediaInfoService.requestVoteReasons(mediaId, type, characterId);
+		return ResponseEntity.ok(reasons);
 	}
 }
