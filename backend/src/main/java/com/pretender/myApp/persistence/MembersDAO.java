@@ -18,6 +18,10 @@ public class MembersDAO {
 	private SqlSession ses;
 	private String ns = "com.pretender.myApp.mapper.membersMapper.";
 	
+	public String getNickname(String membersId) {
+		return ses.selectOne(ns + "selectNicknameById", membersId);
+	}
+	
 	// 이메일 중복 체크
 	public int countById(String id) {
 		return ses.selectOne(ns +"countById", id);

@@ -5,7 +5,12 @@
 
 <mapper namespace="com.pretender.myApp.mapper.membersMapper">
 
-   <select id="countById" resultType="int">
+	<select id="selectNicknameById" resultType="String">
+		select nickname from members
+		where id = #{membersId}
+	</select>
+
+	<select id="countById" resultType="int">
         select count(*) from members 
         where id = #{id}
     </select>

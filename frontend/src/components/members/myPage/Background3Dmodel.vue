@@ -3,14 +3,27 @@
   </div>
 </template>
 
-<style>
-
+<style scoped>
+  .hide {
+    visibility: hidden;
+  }
 </style>
 
 <script setup>
   import * as THREE from 'three'
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
+  import { useDisplay } from 'vuetify'
+  const { lgAndUp } = useDisplay()
+
+  watch(() => { return lgAndUp.value }, (bool) => {
+    let _3dmodel = document.getElementById("3dModel")
+    if (bool === false) {
+      _3dmodel.classList.add("hide")
+    } else {
+      _3dmodel.classList.remove("hide")
+    }
+  })
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera( 30, 500 / 500, 0.1, 1000 ); // 시야각, 종횡비, 절단면(near), 절단면(far)

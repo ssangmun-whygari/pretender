@@ -15,7 +15,7 @@
                   <v-icon icon="mdi-camera-image" size="large" @click="openUpdateProfileSection"/>
                 </div>
               </div>
-              <h2 class="align-self-end ml-3 mb-3">쌍문동 왜가리</h2>
+              <h2 class="align-self-end ml-3 mb-3">{{ userNickname }}</h2>
             </div>
           </div>
         </v-col>
@@ -82,9 +82,9 @@
 
 
       <v-tabs-window v-model="tab">
-        <v-tabs-window-item value="알림">
+        <!-- TODO : 나중에 구현 <v-tabs-window-item value="알림">
           알림
-        </v-tabs-window-item>
+        </v-tabs-window-item> -->
         <v-tabs-window-item value="리스트">
           <MyList v-bind:watchList="watchList"/>
         </v-tabs-window-item>
@@ -199,9 +199,11 @@
   import AppHeader from '@/components/AppHeader.vue';
   import { reactive, ref, watch, computed, nextTick } from 'vue'
   import axios from 'axios'
-import MyActivities from './MyActivities.vue';
+  import MyActivities from './MyActivities.vue';
+  import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
 
   let userId = ref('')
+  let userNickname = ref('')
   let watchList = ref({data: [], loaded: false})
   let imageUploadCardStyle = ref('bg-yellow-lighten-5') // ex) 'bg-grey-lighten-2 pa-3'
   let imageUploadMessage = ref('')
@@ -209,8 +211,9 @@ import MyActivities from './MyActivities.vue';
   let imageUploadMessageCardStyle = ref('display: none;') // ex) 'display: none;'
   let imageUploadProgressBarStyle = ref('display: none;')
   let successUpload = ref('before') // 'before' or 'complete'
-  let tabs = ["알림", "리스트", "내 활동"]
-  let tab = ref("알림")
+  let tabs = ["리스트", "내 활동"]
+  // let tabs = ["알림", "리스트", "내 활동"] TODO : 알림 탭은 나중에 구현
+  let tab = ref("리스트")
 
   let showimageUploadProgressBar = ((bool) => {
     if (bool == true) {
@@ -237,6 +240,28 @@ import MyActivities from './MyActivities.vue';
     userId.value = response.data.principal.username
   }
   getUser()
+
+  async function getUserNickname() {
+    const isLogined = await useCheckAuthenticated(); // 결과를 기다림
+    if (!isLogined) {
+      return
+    }
+    let response = await axios.get(
+      'http://localhost:8080/api/members/nickname',
+      {
+        withCredentials: true,
+
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      }
+    ) // axios.get end
+    console.log("============getUserNickName() ... ============")
+    console.log(response)
+    console.log("============getUserNickName() end ============")
+    userNickname.value = response.data
+  }
+  getUserNickname()
 
   async function getWatchList() {
     let response = await axios.get(

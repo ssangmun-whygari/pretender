@@ -57,9 +57,7 @@ public class MediaInfoService {
 				.filter(entry -> {
 					return Set.of("name", "title", "overview", "genres", "poster_path", "watch/providers").contains(entry.getKey());
 				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-			return result;
 		} else if (type.equals("movie")) {
-		// TODO
 		result = 
 			((Map<String, Object>) client.getRestClient()
 				.get()
@@ -75,8 +73,12 @@ public class MediaInfoService {
 				.filter(entry -> {
 					return Set.of("name", "title", "overview", "genres", "poster_path", "watch/providers").contains(entry.getKey());
 				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		return result;
 		}
+		// TODO : 평균 별점 DB에서 조회
+		// working...
+		Float averageStars = mediaInfoDAO.getAverageStars(mediaId, type);
+		System.out.println("평균별점 : " + averageStars);
+		result.put("average_stars", averageStars);
 		return result;
 	}
 
@@ -84,23 +86,7 @@ public class MediaInfoService {
 		System.out.println("type : " + type);
 		System.out.println("mediaId : " + mediaId);
 		Map<String, Object> result = null;
-		if (type.equals("tv")) { 
-//		result = 
-//			((Map<String, Object>) client.getRestClient()
-//				.get()
-//				.uri(uriBuilder -> uriBuilder
-//					.path("/3/tv/" + mediaId + "/credits")
-//					.queryParam("language", "ko-KR")
-//					.build()
-//					)
-//				.retrieve()
-//				.toEntity(Map.class)
-//				.getBody()).entrySet().stream()
-//				.filter(entry -> {
-//					return Set.of("cast").contains(entry.getKey());
-//				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-//			return result;
-			
+		if (type.equals("tv")) { 			
 			result = 
 			((Map<String, Object>) client.getRestClient()
 				.get()

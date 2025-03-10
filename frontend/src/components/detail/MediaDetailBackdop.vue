@@ -21,34 +21,16 @@
               color="amber-accent-4"
               density="compact"
               size="x-large"
-              model-value="3.5"
+              :model-value="cutTo05Unit(averageStars)"
               disabled="true"
               half-increments
             />
-            <h1 class="text-white">3.5</h1>
+            <h1 class="text-white">{{ averageStars }}</h1>
             <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
             <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
           </div>
         </v-col>
       </v-row>
-      <!-- <h1 class="mb-3 ml-3 text-white">
-        {{ title }}
-      </h1>
-      <div class="mb-3 mr-3 d-flex align-center">
-        <p class="text-white">평균별점 : </p>
-        <v-rating
-        active-color="amber-accent-4"
-        color="amber-accent-4"
-        density="compact"
-        size="x-large"
-        model-value="3.5"
-        disabled="true"
-        half-increments
-        />
-        <h1 class="text-white">3.5</h1>
-        <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
-        <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
-      </div> -->
     </div>
   </v-sheet>
 </template>
@@ -91,6 +73,19 @@
     // console.log("==================title in computed end")
     return mediaInfo.value.name ? mediaInfo.value.name : mediaInfo.value.title
   })
+  const averageStars = computed(() => {
+    if (mediaInfo.value.average_stars) {
+      let averageStars = mediaInfo.value.average_stars
+      return Math.round(averageStars * 10) / 10
+    } else {
+      return 0.0
+    }
+    // return mediaInfo.value.average_stars ? mediaInfo.value.average_stars : 0.0
+  })
+  // 예 : 2.5 ~ 2.9면 2.5로, 3,0이면 3.0으로 계산됨
+  const cutTo05Unit = (floatNum) => {
+    return ((floatNum * 10) - (floatNum * 10 % 5)) / 10
+  }
 
   async function getHasWatched() {
     // 로그인이 되어있지 않으면 실행하지 않음
@@ -122,6 +117,7 @@
   async function addToWatchList() {
     // 로그인이 되어있지 않으면 로그인 페이지로 보냄
     const isLogined = await useCheckAuthenticated(); // 결과를 기다림
+
     if (!isLogined) {
       navigationStore.setPreviousPage(route.fullPath)
       router.push({
@@ -138,7 +134,6 @@
         headers: {
           "X-Requested-With": "XMLHttpRequest"
         },
-        // TODO : 바꿔야 함
         params : {
           mediaType: type,
           mediaId: id,

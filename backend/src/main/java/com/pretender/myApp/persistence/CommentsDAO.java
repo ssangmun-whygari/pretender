@@ -117,11 +117,24 @@ public class CommentsDAO {
 		return ses.selectOne(ns+"replyIdx",map);
 	}
 
+	public int postReview(int no, String userId, String mediaId, String mediaType, String text, Float stars) {
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("no", no);
+		map.put("membersId", userId);
+		map.put("mediaId", Integer.valueOf(mediaId));
+		map.put("mediaType", mediaType);
+		map.put("text", text);
+		map.put("stars", stars);
+		return ses.insert(ns + "insertReview", map);
+	}
 	
+	public int getAvailableNoFromReviewsTable(String mediaId, String mediaType) {
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("mediaId", Integer.valueOf(mediaId));
+		map.put("mediaType", mediaType);
+		return ses.selectOne(ns + "selectAvailableNoFromReviewsTable", map);
+	}
 
-
-	
-	
 	
 
 }

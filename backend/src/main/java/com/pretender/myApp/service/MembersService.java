@@ -29,6 +29,10 @@ public class MembersService {
 
     //비밀번호 검증 패턴 (6~15자, 대문자, 소문자, 숫자, 특수문자 포함)
     private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{6,15}$";
+    
+    public String getNickname(String membersId) {
+    	return membersDAO.getNickname(membersId);
+    }
 
     public int registerUser(MembersDTO membersDTO) {
         if (!isValidEmail(membersDTO.getId())) {

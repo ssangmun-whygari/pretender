@@ -129,4 +129,16 @@
 	 ]]>
   </select>
   
+  <insert id="insertReview">
+  	insert into reviews(
+		no, members_id, content, media_id, media_type, stars
+	) select #{no}, #{membersId}, #{text}, #{mediaId}, #{mediaType}, #{stars}
+  </insert>
+  
+  <select id="selectAvailableNoFromReviewsTable" resultType="int">
+  	select coalesce(max(no), 0) + 1 
+  	from reviews
+  	where media_id = #{mediaId} and media_type = #{mediaType}
+  </select>
+  
   </mapper>

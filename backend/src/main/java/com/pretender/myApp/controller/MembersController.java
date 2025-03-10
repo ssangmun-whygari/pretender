@@ -123,6 +123,22 @@ public class MembersController {
 		}
 	}
 	
+	@GetMapping("api/members/nickname") 
+	public ResponseEntity<Object> getNickname (
+			Authentication token
+		){
+		System.out.println("GET api/members/nickname");
+		Map<String, Object> response = new HashMap<>();
+		String nickname = membersService.getNickname(token.getName());
+		if (nickname != null) {
+			response.put("nickname", nickname);
+			return ResponseEntity.ok(nickname);
+		} else {
+			return ResponseEntity.badRequest().body("닉네임이 존재하지 않습니다.");
+		}
+	}
+	
+	
 	@GetMapping("api/members/myActivites")
 	public ResponseEntity<Object> getMyActivities (@RequestParam(defaultValue = "0") int page){
 		Authentication auth =SecurityContextHolder.getContext().getAuthentication();	
