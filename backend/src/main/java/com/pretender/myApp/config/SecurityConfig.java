@@ -86,6 +86,7 @@ public class SecurityConfig {
 				.requestMatchers("/api/reviewLike").authenticated()
 				.requestMatchers("/api/insertReview").authenticated()
 				.requestMatchers("/api/login/**").permitAll()
+				.requestMatchers("/api/popularMovies").permitAll()
 				.anyRequest().permitAll();
 		});
 		http.oauth2Login(oauth2 -> oauth2

@@ -21,6 +21,7 @@
   <!-- flex와 grid 함께 사용하지 말기 (어째선지 제대로 정렬이 안됨)-->
   <v-container class="d-flex flex-column justify-center position-relative" style="height:100%">
       <h1 style="text-align: center;" class="mb-5">pretender</h1>
+      <PopularMovieCarousel/>
       <div>
         <v-text-field
           class="mx-auto main-search-bar"
@@ -63,6 +64,7 @@
   import axios from 'axios'
   import { ref, onMounted } from 'vue'
   import { useNavigationStore } from '../composables/stores/navigation';
+import PopularMovieCarousel from './PopularMovieCarousel.vue';
 
   const { lgAndUp } = useDisplay();
   const router = useRouter();

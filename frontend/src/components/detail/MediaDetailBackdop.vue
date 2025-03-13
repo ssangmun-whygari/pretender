@@ -2,7 +2,7 @@
   <v-sheet class="position-relative">
     <div>
       <v-img
-        :src="backDropPath"
+        :src="backDropFullPath(mediaInfo.backdrop_path)"
         height="600px"
         class="mx-auto"
         cover
@@ -53,8 +53,19 @@
       mediaInfo: Object
   })
   // pinia의 store에서 값 꺼내온다
-  const store = useMediaDetailStore()
-  const { backDropPath } = storeToRefs(store)
+  // const store = useMediaDetailStore() // deprecated
+  // const { backDropPath } = storeToRefs(store) // deprecated
+
+  const backDropPathBaseUrl = "http://image.tmdb.org/t/p/w1280"
+  const noImageUrl = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930"
+  const backDropFullPath = (string) => {
+    if (string) {
+      return backDropPathBaseUrl + string
+    } else {
+      return noImageUrl
+    }
+  }
+
   const hasWatched = ref(false)
   const route = useRoute()
   const id = route.query.id
@@ -80,7 +91,6 @@
     } else {
       return 0.0
     }
-    // return mediaInfo.value.average_stars ? mediaInfo.value.average_stars : 0.0
   })
   // 예 : 2.5 ~ 2.9면 2.5로, 3,0이면 3.0으로 계산됨
   const cutTo05Unit = (floatNum) => {

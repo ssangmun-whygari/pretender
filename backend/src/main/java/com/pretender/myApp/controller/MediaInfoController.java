@@ -19,6 +19,12 @@ public class MediaInfoController {
 	@Autowired
 	private MediaInfoService mediaInfoService;
 	
+	@GetMapping("/api/popularMovies")
+	public ResponseEntity<Map> getPopularMovies() {
+		ResponseEntity<Map> result = mediaInfoService.requestPopularMovies();
+		return result;
+	}
+	
 	@GetMapping("/api/search")
 	public ResponseEntity<Map> searchMediaByWord(
 			@RequestParam String type,

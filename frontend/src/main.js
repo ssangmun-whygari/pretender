@@ -25,6 +25,7 @@ import { useNavigationStore } from './composables/stores/navigation'
 
 import AppHeader from './components/AppHeader.vue'
 import MainView from './components/MainView.vue'
+import PopularMovieCarousel from './components/PopularMovieCarousel.vue'
 import SearchView from './components/search/SearchView.vue'
 import DetailView from './components/detail/DetailView.vue'
 import Test from './components/test/Test.vue'

@@ -14,8 +14,6 @@
   let mediaListComponentKey = 'initial'
   let showMode = "primary" // primary or more
 
-
-  // working...
   // axios 요청
   async function requestMediaList(word) {
     let tvResponse = await axios.get(
