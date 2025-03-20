@@ -7,4 +7,40 @@
 	<select id="countWatchListById" resultType="int">
 		select count(*) from collection_infos where owner = #{memberId} and is_default = 'Y'
 	</select>
+	
+	<insert id="insertWatchListOfMember">
+		insert into collection_infos (owner, is_default) values (#{memberId}, 'Y')
+	</insert>
+	
+	<select id="selectWatchListById" resultType="com.pretender.myApp.model.CollectionItemDTO">
+		select
+			media_id as mediaId,
+			media_type as mediaType,
+			media_title as mediaTitle,
+			added_date as addedDate,
+			poster_path as posterPath
+		from collections 
+		where collection_id = (select id from collection_infos where owner = #{memberId} and is_default = 'Y')
+	</select>
+	
+	<select id="countMediaInWatchList" resultType="int">
+		select count(*) 
+		from collections 
+		where 
+			collection_id = (select id from collection_infos where owner = #{memberId} and is_default = 'Y') and
+			media_id = #{mediaId} and
+			media_type = #{mediaType}
+	</select>
+	
+	<insert id="insertItemInWatchList">
+		insert into collections (collection_id, media_id, media_type, media_title, poster_path)
+		select
+			id,
+			#{mediaId},
+			#{mediaType},
+			#{mediaTitle},
+			#{posterPath}
+		from collection_infos
+		where owner = #{memberId}
+	</insert>
 </mapper>

@@ -7,6 +7,7 @@ import axios from 'axios';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router'
 import { useNavigationStore } from '@/composables/stores/navigation';
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
 let navigationStore = useNavigationStore()
 let router = useRouter()
@@ -14,7 +15,7 @@ let router = useRouter()
 async function logout() {
   try {
     let response = await axios.post(
-      'http://localhost:8080/logout',
+      apiBaseUrl + '/logout',
       null, // 본문
       {
           withCredentials: true,

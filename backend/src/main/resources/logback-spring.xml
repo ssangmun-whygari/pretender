@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<timestamp key="BY_DATE" datePattern="yyyy-MM-dd"/>
+	<property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n%ex{short}"/>
+  	<property name="LOG_PATTERN_WITH_EXCEPTION_TRACE"
+              value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n%ex{full}"/>
+	
+	<springProfile name="!prod"> <!-- 로컬 개발 환경 -->
+		<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        	<encoder>
+            	<pattern>${LOG_PATTERN}</pattern>
+            </encoder>
+		</appender>
+
+		<root level="INFO">
+			<appender-ref ref="STDOUT" />
+		</root>
+	</springProfile>
+	
+	<springProfile name="!dev">
+		 <appender name="ERROR-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>./logs/error/error.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            	<fileNamePattern>./logs/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+	        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+	            <level>ERROR</level>
+	        </filter>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+        
+        <appender name="ERROR_DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>./logs/error/error-debug.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            	<fileNamePattern>./logs/error-debug.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+	        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+	            <level>ERROR</level>
+	        </filter>
+            <encoder>
+                <pattern>${LOG_PATTERN_WITH_LONG_TRACE}</pattern>
+            </encoder>
+        </appender>
+        
+        <appender name="INFO-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>./logs/info/info.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            	<fileNamePattern>./logs/info.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>3GB</totalSizeCap>
+            </rollingPolicy>
+	        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+	            <level>INFO</level>
+	        </filter>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+        
+		<root level="INFO">
+			<appender-ref ref="INFO-FILE" />
+			<appender-ref ref="ERROR_DEBUG_FILE"/>
+			<appender-ref ref="ERROR-FILE" />
+		</root>
+	</springProfile>
+</configuration>

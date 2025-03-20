@@ -41,7 +41,7 @@
     left: 0;
     width: 100vw; /* 화면 너비 100% */
     height: 100vh; /* 화면 높이 100% */
-    background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage');
+    /* background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage'); */
     background-size: cover;
     background-position: top;
     background-attachment: fixed;
@@ -62,9 +62,22 @@
   import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, nextTick } from 'vue'
   import { useNavigationStore } from '../composables/stores/navigation';
-import PopularMovieCarousel from './PopularMovieCarousel.vue';
+  import PopularMovieCarousel from './PopularMovieCarousel.vue';
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
+
+  onMounted(() => {
+    // console.log("+++++++++++++++++++++onMounted()...")
+    // console.log(backgroundImageUrl)
+    // console.log(`linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.205)), url('${backgroundImageUrl}');`)
+    // console.log(document.querySelector('.background-container'))
+    // console.log("+++++++++++++++++++++onMounted()end")
+    document.querySelector('.background-container').style.backgroundImage = 
+    `linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.205)), url('${backgroundImageUrl}')`
+  })
+
 
   const { lgAndUp } = useDisplay();
   const router = useRouter();
@@ -85,8 +98,9 @@ import PopularMovieCarousel from './PopularMovieCarousel.vue';
   }
 
   async function checkAuthenticated() {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     let response = await axios.get(
-      'http://localhost:8080/api/authenticated',
+      apiBaseUrl + '/api/authenticated',
       {
         withCredentials: true,
 

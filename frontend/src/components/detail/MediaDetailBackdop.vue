@@ -49,6 +49,8 @@
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
   const props = defineProps({
       mediaInfo: Object
   })
@@ -105,7 +107,7 @@
     }
 
     let response = await axios.get(
-      'http://localhost:8080/api/collection/watchList',
+      apiBaseUrl + '/api/collection/watchList',
       {
         withCredentials: true,
         headers: {
@@ -137,7 +139,7 @@
     }
 
     let response = await axios.post(
-      'http://localhost:8080/api/collection/watchList',
+      apiBaseUrl + '/api/collection/watchList',
       null, // 본문
       {
         withCredentials: true,

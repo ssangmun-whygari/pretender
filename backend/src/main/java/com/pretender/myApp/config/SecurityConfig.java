@@ -19,12 +19,17 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.pretender.myApp.component.CustomOAuth2FailureHandler;
 import com.pretender.myApp.component.KakaoAccessTokenResponseClient;
 import com.pretender.myApp.service.MyBatisUserDetailsService;
+import com.pretender.myApp.util.HttpsSchemeFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +37,9 @@ public class SecurityConfig {
 	
 	@Autowired
 	private KakaoAccessTokenResponseClient kakaoAccessTokenResponseClient;
+	
+	@Value("${frontEndBaseUrl}")
+	private String frontEndBaseUrl;
 	
 	@Value("${whygari.naverClientId}")
 	private String naverClientId;
@@ -61,15 +69,17 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 	
+    
 	@Bean
 	// reference : https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/config/annotation/web/builders/HttpSecurity.html
-	SecurityFilterChain configure(HttpSecurity http) throws Exception {
+	SecurityFilterChain configure(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+		http.addFilterBefore(new HttpsSchemeFilter(), WebAsyncManagerIntegrationFilter.class);
 		// reference : https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
 		// TODO : 블로그에 적기...
 		http.sessionManagement((session) -> {
-			session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+			session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
 		});
-		http.cors(Customizer.withDefaults());
+		http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 		http.httpBasic(Customizer.withDefaults());
 		// CSRF 비활성화
 		http.csrf(csrf -> csrf.disable());
@@ -89,22 +99,29 @@ public class SecurityConfig {
 				.requestMatchers("/api/popularMovies").permitAll()
 				.anyRequest().permitAll();
 		});
+		
+//		// reference : https://github.com/spring-projects/spring-security/issues/13061
+//        http.securityContext((securityContext) -> securityContext
+//                .securityContextRepository(new HttpSessionSecurityContextRepository()) // SecurityContext 저장소 설정
+//            );
+        
+		String defaultSuccessUrl = frontEndBaseUrl + "/socialLogin/success";
+		String failureUrl = frontEndBaseUrl + "/socialLogin/fail";
+		
 		http.oauth2Login(oauth2 -> oauth2
 			    .authorizationEndpoint(authEndpoint -> authEndpoint.baseUri("/api/login"))
 			    .tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenResponseClient(kakaoAccessTokenResponseClient))
 			    .failureHandler(new CustomOAuth2FailureHandler())
-			    .defaultSuccessUrl("http://localhost:3000/socialLogin/success", true)
-			    .failureUrl("http://localhost:3000/socialLogin/fail")
+			    .defaultSuccessUrl(defaultSuccessUrl, true)
+			    .failureUrl(failureUrl)
 			);
-	
 		return http.build();
 	}
-	
 	
 	@Bean
 	UrlBasedCorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+		configuration.setAllowedOrigins(Arrays.asList(frontEndBaseUrl));
 		configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT", "DELETE","OPTIONS"));
 		configuration.setAllowCredentials(true);
 		configuration.addAllowedHeader("*");
@@ -112,6 +129,15 @@ public class SecurityConfig {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
+	}
+	
+	// reference : https://issuemaker99.tistory.com/172
+	@Bean
+	public CookieSerializer cookieSerializer() {
+        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+        serializer.setSameSite("None"); // 'Strict', 'Lax', 'None' 중 선택
+        serializer.setUseSecureCookie(true); // none 사용시 필수 설정
+        return serializer;
 	}
 	
 	// OAuth2.0 관련 configuration

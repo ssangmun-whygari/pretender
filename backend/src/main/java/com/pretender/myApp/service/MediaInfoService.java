@@ -23,6 +23,7 @@ public class MediaInfoService {
 	private MediaInfoDAO mediaInfoDAO;
 	
 	public ResponseEntity<Map> requestPopularMovies() {
+//		throw new RuntimeException("일부러 에러 테트려보기");
 		System.out.println("인기있는 영화 요청");
 		return client
 				.getRestClient()
@@ -74,7 +75,9 @@ public class MediaInfoService {
 				.getBody()).entrySet().stream()
 				.filter(entry -> {
 					return Set.of("name", "title", "overview", "genres", "poster_path", "backdrop_path", "watch/providers").contains(entry.getKey());
-				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				})
+				.filter(entry -> entry.getValue() != null)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		} else if (type.equals("movie")) {
 		result = 
 			((Map<String, Object>) client.getRestClient()
@@ -90,7 +93,9 @@ public class MediaInfoService {
 				.getBody()).entrySet().stream()
 				.filter(entry -> {
 					return Set.of("name", "title", "overview", "genres", "poster_path", "backdrop_path", "watch/providers").contains(entry.getKey());
-				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				})
+				.filter(entry -> entry.getValue() != null)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 		// TODO : 평균 별점 DB에서 조회
 		// working...

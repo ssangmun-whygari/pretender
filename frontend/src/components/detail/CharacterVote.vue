@@ -127,6 +127,7 @@
   import LikePerCharacterGraphPanel from './LikePerCharacterGraphPanel.vue'
   import LikeGraphPanel from './LikeGraphPanel.vue'
 
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL;
   const profileBaseUrl = "http://image.tmdb.org/t/p/w185"
   const props = defineProps({
       id: String,
@@ -186,7 +187,7 @@
 
   async function requestCastInfo() {
     let response = await axios.get(
-      'http://localhost:8080/api/detail/cast',
+      apiBaseUrl + '/api/detail/cast',
       {
         params : {
           type: type.value,
@@ -206,7 +207,7 @@
 
   async function requestCharacterLikeCategory() {
     let response = await axios.get(
-      'http://localhost:8080/api/detail/cast/likeCategory',
+      apiBaseUrl + '/api/detail/cast/likeCategory',
     ) // axios.get end
     console.log("########## requestCharacterLikeCategory() ##########")
     console.log(response)

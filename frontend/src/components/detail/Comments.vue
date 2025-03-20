@@ -16,7 +16,7 @@
           </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" :id="'comment-'+comment.no" class="comment-item">
-          <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
+          <img :src="apiBaseUrl + '/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
               <div class="nicknameTime">
@@ -108,7 +108,7 @@
                   · · · 
                   </v-btn>
                   <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" :id="'reply-'+reply.no" class="comment-item">
-                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
+                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="apiBaseUrl + '/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
                     <div class="comment-content">
                       <div class="comment-header">
                         <div class="nicknameTime">
@@ -366,6 +366,8 @@ import { defineStore } from 'pinia';
 import { nextTick } from 'vue';
 import { useCommentSaveStore } from '../../composables/stores/commentSave'
 
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
 const reportModal = ref(false);
 const reportDupe = ref(false);
 const reportCause = ref(false);
@@ -403,7 +405,7 @@ const sortOptions = [
 const openReportModal = async(comment) => {
   //axios로 중복 검사하기
   try {
-    const response = await axios.post('http://localhost:8080/api/checkBeforeReport', 
+    const response = await axios.post(apiBaseUrl + '/api/checkBeforeReport', 
       {
         reviewsNo: comment.no, 
         mediaId: contentId.value, 
@@ -443,7 +445,7 @@ const submitReport = async () => {
     };
    
     const response = await axios.post(
-      'http://localhost:8080/api/report',
+      apiBaseUrl + '/api/report',
       reportData,
       { withCredentials: true }
     );
@@ -465,7 +467,7 @@ const submitReport = async () => {
 // 로그인 검증 함수
 async function checkAuthenticated() {
   try {
-    let response = await axios.get('http://localhost:8080/api/authenticated', {
+    let response = await axios.get(apiBaseUrl + '/api/authenticated', {
       withCredentials: true,
       headers: {
         "X-Requested-With": "XMLHttpRequest",
@@ -480,7 +482,7 @@ async function checkAuthenticated() {
 
 const fetchLoggedInUserId = async () => {
   try {
-    const response = await axios.get("http://localhost:8080/api/getLoggedInId", {
+    const response = await axios.get(apiBaseUrl + "/api/getLoggedInId", {
       withCredentials: true,
     });
     console.log(response.data);
@@ -497,7 +499,7 @@ const fetchLikedCommentIds = async (contentId) => {
     if (!isAuthenticated) {
       return;
     }    
-    const response = await axios.get('http://localhost:8080/api/myReviewLikes', {
+    const response = await axios.get(apiBaseUrl + '/api/myReviewLikes', {
       params: { contentId },
       withCredentials: true,
     });
@@ -535,7 +537,7 @@ const toggleLike = async (commentId) => {
 
     if (likedCommentIds.value.includes(commentId)) {
       // 좋아요 취소
-      const response = await axios.delete('http://localhost:8080/api/reviewUnlike', {
+      const response = await axios.delete(apiBaseUrl + '/api/reviewUnlike', {
         params: { id: contentId.value, no: commentId },
         withCredentials: true,
       });
@@ -546,7 +548,7 @@ const toggleLike = async (commentId) => {
       }
     } else {
       // 좋아요 추가
-      const response = await axios.post('http://localhost:8080/api/reviewLike', {
+      const response = await axios.post(apiBaseUrl + '/api/reviewLike', {
         mediaId: contentId.value,
         reviewsNo: commentId,
       }, { withCredentials: true });
@@ -614,7 +616,7 @@ const saveEditComment = async (item) => {
 
     // 서버로 수정 요청
     const response = await axios.put(
-      "http://localhost:8080/api/modifyReview",
+      apiBaseUrl + "/api/modifyReview",
       {
         no: item.no, // 댓글 또는 대댓글 ID
         membersId: item.members_id,
@@ -640,7 +642,7 @@ const saveEditComment = async (item) => {
 const deleteComment = async (item) => {
   try {
     // 삭제 확인 대화상자
-    const response = await axios.put("http://localhost:8080/api/deleteReview", null, {
+    const response = await axios.put(apiBaseUrl + "/api/deleteReview", null, {
       params: {
         id: contentId.value, // 게시물 ID
         no: item.no, // 댓글 ID
@@ -706,7 +708,7 @@ const formatLikeCount = (count) => {
 const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   console.log("fetchComments 실행됨...")
   try {
-    const response = await axios.get(`http://localhost:8080/api/comments`, {
+    const response = await axios.get(apiBaseUrl + `/api/comments`, {
       params: { id: contentId, page, sortBy }, 
     });
 
@@ -741,7 +743,7 @@ const changePages = (page) => {
 // 대댓글 가져오기 함수
 const fetchReplies = async (parentNo, page = 0, replyCount) => {
   try {
-    const response = await axios.post('http://localhost:8080/api/replies', null, {
+    const response = await axios.post(apiBaseUrl + '/api/replies', null, {
       params: { id: contentId.value, page, parentId: parentNo, total: replyCount },
     });
 
@@ -813,7 +815,7 @@ const submitReply = async (comment) => {
   const formattedContent = comment.replyText.replace(/\r?\n/g, '\\n');
 
   try {
-    const response = await axios.post('http://localhost:8080/api/insertReview', {
+    const response = await axios.post(apiBaseUrl + '/api/insertReview', {
       parent_no: comment.no,
       content: formattedContent,
     },{
@@ -868,7 +870,7 @@ onMounted(async () => {
   let replyTargetPage = 0;
   if (commentId) {
     try {
-      const response = await axios.get(`http://localhost:8080/api/commentPage`, {
+      const response = await axios.get(apiBaseUrl + `/api/commentPage`, {
         params: { id:contentId.value, commentId, replyId },
       });
 

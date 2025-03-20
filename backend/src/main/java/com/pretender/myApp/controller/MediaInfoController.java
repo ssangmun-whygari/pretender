@@ -14,14 +14,23 @@ import com.pretender.myApp.model.CastVotesDTO;
 import com.pretender.myApp.model.VoteReasonsDTO;
 import com.pretender.myApp.service.MediaInfoService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
+@Slf4j
 public class MediaInfoController {
 	@Autowired
 	private MediaInfoService mediaInfoService;
 	
 	@GetMapping("/api/popularMovies")
 	public ResponseEntity<Map> getPopularMovies() {
-		ResponseEntity<Map> result = mediaInfoService.requestPopularMovies();
+		ResponseEntity<Map> result = null;
+		try {
+			result = mediaInfoService.requestPopularMovies();
+		} catch (Exception e) {
+			log.error("TMDB API 호출 중 문제 생김", e);
+			return ResponseEntity.internalServerError().body(null);
+		}
 		return result;
 	}
 	

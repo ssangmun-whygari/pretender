@@ -9,7 +9,7 @@
             <div id="profile-contents" class="d-flex position-absolute">
               <div id="profile-image-frame" class="position-relative">
                 <div id="profile-image" class="w-100 h-100">
-                  <img class="w-100 h-100" src="http://localhost:8080/api/members/profile/image"/>
+                  <img class="w-100 h-100" v-bind:src="apiBaseUrl + '/api/members/profile/image'"/>
                 </div>
                 <div id="profile-image-change-btn" class="position-absolute">
                   <v-icon icon="mdi-camera-image" size="large" @click="openUpdateProfileSection"/>
@@ -29,7 +29,7 @@
                 <v-icon icon="mdi-window-close" size="large" @click="closeUpdateProfileSection"/>
               </v-col>
               <v-col class="d-flex flex-column justify-center ga-1" sm="6" lg="4" cols="12">
-                <img id="profile-image-editing" src="http://localhost:8080/api/members/profile/image"/>
+                <img id="profile-image-editing" :src="apiBaseUrl + '/api/members/profile/image'"/>
               </v-col>
               <v-col class="d-flex justify-space-between flex-column" sm="6" lg="4" cols="12">
                 <div class="d-flex flex-column ga-3">
@@ -202,6 +202,8 @@
   import MyActivities from './MyActivities.vue';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
 
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
   let userId = ref('')
   let userNickname = ref('')
   let watchList = ref({data: [], loaded: false})
@@ -225,7 +227,7 @@
 
   async function getUser() {
     let response = await axios.get(
-      'http://localhost:8080/api/authenticated',
+      apiBaseUrl + '/api/authenticated',
       {
         withCredentials: true,
 
@@ -247,7 +249,7 @@
       return
     }
     let response = await axios.get(
-      'http://localhost:8080/api/members/nickname',
+      apiBaseUrl + '/api/members/nickname',
       {
         withCredentials: true,
 
@@ -265,7 +267,7 @@
 
   async function getWatchList() {
     let response = await axios.get(
-      'http://localhost:8080/api/collection/watchList',
+      apiBaseUrl + '/api/collection/watchList',
       {
         withCredentials: true,
 
@@ -349,7 +351,7 @@
     
     try {
       let response = await axios.post(
-        'http://localhost:8080/api/members/profile/image',
+        apiBaseUrl + '/api/members/profile/image',
         formData, // 본문
         {
           withCredentials: true,
@@ -386,7 +388,7 @@
 
     
     // 프로필 이미지 재요청
-    document.querySelector("#profile-image img").src = `http://localhost:8080/api/members/profile/image?timestamp=${new Date().getTime()}`
+    document.querySelector("#profile-image img").src = `${apiBaseUrl}/api/members/profile/image?timestamp=${new Date().getTime()}`
     imageUploadCardStyle.value = "bg-green-lighten-4"
     imageUploadMessageCardStyle.value = "display: block;"
     imageUploadMessageCardClass.value = "bg-green-lighten-2 pa-1"

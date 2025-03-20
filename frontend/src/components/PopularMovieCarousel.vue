@@ -90,8 +90,9 @@
   let groupedIndexes = ref([]) // 예 : [[0, 1], [2, 3], [4, 5], ... [16, 17]]
 
   let requestPopularMovies = async () => {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     let response = await axios.get(
-      'http://localhost:8080/api/popularMovies',
+      apiBaseUrl + '/api/popularMovies',
     )
     console.log(response.data.results)
     popularMovieInfos.value = popularMovieInfos.value.concat(response.data.results)

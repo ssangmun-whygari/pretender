@@ -8,6 +8,8 @@ import axios from 'axios';
 import { onMounted,ref } from 'vue';
 import Chart from 'chart.js/auto';
 
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
   const props = defineProps({
     media_id: String,
     media_type: String,
@@ -21,7 +23,7 @@ import Chart from 'chart.js/auto';
   async function fetchVoteReasons() {
     console.log("fetchVoteReasons...");
    try {
-     const response = await axios.get("http://localhost:8080/api/detail/votesReasons",{
+     const response = await axios.get(apiBaseUrl + "/api/detail/votesReasons",{
        params: { mediaId: props.media_id, type: props.media_type, characterId: props.character_id},
      })
      return response.data;

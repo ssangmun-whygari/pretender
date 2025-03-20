@@ -108,6 +108,7 @@
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
   import { useNavigationStore } from '@/composables/stores/navigation';
   import { useReviewSaveStore } from '@/composables/stores/reviewSave';
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
   
   let showCharacterView = ref(false)
   const id = ref(useRoute().query.id) // 주소창에서 id 쿼리를 얻어옴
@@ -141,7 +142,7 @@
   // working...
   async function getResponse() {
     let response = await axios.get(
-      'http://localhost:8080/api/detail',
+      apiBaseUrl + '/api/detail',
       {
         // TODO : 바꿔야 함
         params : {
@@ -194,7 +195,7 @@
 
     // working...
     let response = await axios.post(
-      'http://localhost:8080/api/review',
+      apiBaseUrl + '/api/review',
       null,
       {
         withCredentials: true,
@@ -227,10 +228,14 @@
   let getContentProviders = computed(() => {
     if (!(mediaInfo.value)["watch/providers"]) { return [] }
     let providerInfos = (mediaInfo.value)["watch/providers"]["results"]["KR"]
+    console.log('+++++++++++++++++++++++++++++++++providerInfos ...')
+    console.log(providerInfos)
+    console.log('+++++++++++++++++++++++++++++++++providerInfos end')
+    if (!providerInfos) {return []}
     let providerInfoArray = []
-    if (Array.isArray(providerInfos.rent)) { providerInfoArray = providerInfoArray.concat(providerInfos.rent) }
-    if (Array.isArray(providerInfos.buy)) { providerInfoArray = providerInfoArray.concat(providerInfos.buy) }
-    if (Array.isArray(providerInfos.flatrate)) { providerInfoArray = providerInfoArray.concat(providerInfos.flatrate) }
+    if (providerInfos.rent && Array.isArray(providerInfos.rent)) { providerInfoArray = providerInfoArray.concat(providerInfos.rent) }
+    if (providerInfos.buy && Array.isArray(providerInfos.buy)) { providerInfoArray = providerInfoArray.concat(providerInfos.buy) }
+    if (providerInfos.flatrate && Array.isArray(providerInfos.flatrate)) { providerInfoArray = providerInfoArray.concat(providerInfos.flatrate) }
     // 중복 제거 알고리즘
     let nameSet = new Set(providerInfoArray.map((p) => {
         return p.provider_name
