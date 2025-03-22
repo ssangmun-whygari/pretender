@@ -32,6 +32,8 @@
   /* 슬라이더 컨테이너 */
   .slider {
     width: 100%;
+    height: 0px;
+    transition: height 0.7s ease-in-out;
     overflow: hidden;
   }
 
@@ -60,12 +62,14 @@
   .slide {
     width: 100%;
     display: block; /* NOTE : inline일 때는 부모 요소의 크기가 아니라 자기 자신의 크기 기준으로 width 비율이 설정됨 */
-    padding: 10%; /* NOTE : 브라우저는 가로 패딩, 세로 패딩 모두 width의 10%로 계산함 */
+    padding: 10% 6.666% 10% 6.666%;
+    transition: padding 0.1s linear;
+    /* padding: 10%; 브라우저는 가로 패딩, 세로 패딩 모두 width의 10%로 계산함 */
   }
 
   .slide-image {
     width: 100%;
-    aspect-ratio: 0.666;
+    aspect-ratio: 0.666; /* 포스터 이미지마다 비율이 제각기라서 통일함 */
     display: block; /* NOTE : v-sheet와 img 사이의 작은 간격을 없앨 수 있음 */
   }
 
@@ -159,7 +163,15 @@
       console.log("======groupedIndexes ...")
       console.log(groupedIndexes.value)
       console.log("======groupedIndexes end")
+      
       nextTick(() => {
+        let sliderElement = document.querySelector(".slider")
+        // expand 처리
+        if (sliderElement.style.height == '0px' || sliderElement.style.height == '') {
+          console.log("==================debug")
+          const targetHeight = sliderElement.scrollHeight + 'px';
+          sliderElement.style.height = targetHeight;
+        }
         addEventHandler()
       })
     })
@@ -179,16 +191,17 @@
         let parentWidth = document.querySelector(".slide").clientWidth // 모든 slide의 인스턴스가 동일한 크기라고 가정
         let height = image.clientHeight;
         let parentHeight = document.querySelector(".slide").clientHeight
-        /* NOTE : 브라우저는 가로 패딩, 세로 패딩 모두 width의 20%로 계산함 */
-        let newAspectRatio = (width + (parentWidth * 0.1 * 2)) / (height + (parentWidth * 0.1 * 2)) // padding이 20%일때
-        image.style.aspectRatio = newAspectRatio;
-        console.log(`width : ${width}, height: ${height}, parentWidth : ${parentWidth}, parentHeight: ${parentHeight}, newAspectRatio: ${newAspectRatio}`)
-        image.parentElement.parentElement.style.padding = "0px" // 중간에 RouterVies element가 끼어있으므로 .parentElement.parentElement로 접근
+        /* deprecated
+          /* NOTE : 브라우저는 가로 패딩, 세로 패딩 모두 width의 20%로 계산함 */
+          // let newAspectRatio = (width + (parentWidth * 0.1 * 2)) / (height + (parentWidth * 0.1 * 2)) // padding이 20%일때
+          // image.style.aspectRatio = newAspectRatio;
+          // console.log(`width : ${width}, height: ${height}, parentWidth : ${parentWidth}, parentHeight: ${parentHeight}, newAspectRatio: ${newAspectRatio}`) */
+          image.parentElement.parentElement.style.padding = "0px" // 중간에 RouterVies element가 끼어있으므로 .parentElement.parentElement로 접근
       });
 
       image.addEventListener('mouseleave', () => {
         image.style.aspectRatio = '0.666'; // 원래 비율로 복귀
-        image.parentElement.parentElement.style.padding = "10%"
+        image.parentElement.parentElement.style.padding = "10% 6.666% 10% 6.666%"
       });
     });
   }

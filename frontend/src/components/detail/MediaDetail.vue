@@ -71,7 +71,6 @@
 <style scoped>
   #container {
     background-color: #F8FAFD;
-    /* background-color: aqua; */
   }
 
   .contents {

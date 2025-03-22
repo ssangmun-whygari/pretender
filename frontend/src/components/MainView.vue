@@ -25,8 +25,9 @@
       <div>
         <v-text-field
           class="mx-auto main-search-bar"
+          bg-color="white"
           :max-width="lgAndUp ? 1000 : null"
-          placeholder="제목을 검색하세요"
+          placeholder="영화, 애니메이션, TV 프로그램의 제목을 검색하세요"
           v-on:keyup.enter="onEnter"
           v-model="word"
         ></v-text-field>
@@ -39,9 +40,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw; /* 화면 너비 100% */
-    height: 100vh; /* 화면 높이 100% */
-    /* background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage'); */
+    width: 100vw;
+    height: 100vh;
     background-size: cover;
     background-position: top;
     background-attachment: fixed;
@@ -62,7 +62,7 @@
   import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
-  import { ref, onMounted, nextTick } from 'vue'
+  import { ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { useNavigationStore } from '../composables/stores/navigation';
   import PopularMovieCarousel from './PopularMovieCarousel.vue';
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
@@ -77,7 +77,6 @@
     document.querySelector('.background-container').style.backgroundImage = 
     `linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.205)), url('${backgroundImageUrl}')`
   })
-
 
   const { lgAndUp } = useDisplay();
   const router = useRouter();

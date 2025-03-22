@@ -45,17 +45,19 @@
                   type="image"
                   color="transparent"
                 >
-                  <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg"
+                  <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg poster-image-sheet"
                     :elevation="2">
                     <RouterLink 
-                    class="h-100 w-100 d-flex justify-center"
+                    class="d-flex justify-center h-100 w-100"
                     :to="{path: '/detail', query: {id : innerItem['id'], type : currentCategory}}"
                     v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
-                    <img 
+                    <div class="poster-image-container">
+                      <img 
                       :src="posterPath(innerItem['poster_path'])"
                       class="poster"
                       @load="onPosterImageLoad"
-                    ></img>
+                      ></img>
+                    </div>
                     </RouterLink>
                   </v-sheet>
                 </v-skeleton-loader>
@@ -166,11 +168,27 @@
     width: 200px; */
   }
 
-  .poster {
+  .poster-image-container {
     width: 70%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .poster {
+    width: 100%;
     object-fit: contain;
     aspect-ratio: 0.666;
   }
+
+  .poster-image-container:hover .poster {
+    transition: transform 0.1s linear;
+    transform: scale(1.2);
+  }
+
+  .poster-image-sheet:hover {
+    background-color: #EEEEEE;
+  }
+
 
   .hidden {
     display: none;

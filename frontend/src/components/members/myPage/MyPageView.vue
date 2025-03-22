@@ -20,9 +20,11 @@
           </div>
         </v-col>
       </v-row>
+
+
       <v-row justify="center" id="image-upload-card-container">
-        <v-col lg="8" cols="12">
-          <v-card id="image-upload-card" :class="imageUploadCardStyle + ' pa-5'">
+        <v-col lg="8" cols="12" style="height: auto;">
+          <v-card id="image-upload-card" :class="imageUploadCardStyle + ' pa-5'" style="height: auto;">
             <v-row>
               <v-col class="d-flex justify-space-between pb-0" cols="12">
                 <h2>🔍 미리보기</h2>
@@ -67,6 +69,8 @@
           ></v-progress-linear>
         </v-col>
       </v-row>
+
+      <!-- 탭 (아이템 예시 : 리스트, 내 활동...) -->
       <v-row justify="center">
         <v-col lg="8" cols="12">
           <v-tabs v-model="tab" bg-color="transparent" color="primary" grow>
@@ -197,7 +201,7 @@
   register();
 
   import AppHeader from '@/components/AppHeader.vue';
-  import { reactive, ref, watch, computed, nextTick } from 'vue'
+  import { reactive, ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import axios from 'axios'
   import MyActivities from './MyActivities.vue';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
@@ -283,6 +287,30 @@
   }
   getWatchList()
 
+
+
+  let onTransitionEnd = (e, cardContainerElement) => {
+      if (e.propertyName == 'height' && cardContainerElement.style.height !== '0px') {
+        cardContainerElement.style.height = 'auto'
+      }
+  }
+
+  let onTransitionEndClosure = null
+
+  onMounted(() => {
+    let cardContainerElement = document.getElementById('image-upload-card-container')
+    onTransitionEndClosure = (e) => {
+      onTransitionEnd(e, cardContainerElement)
+    }
+    cardContainerElement.addEventListener('transitionend', onTransitionEndClosure)
+  })
+
+  onUnmounted(() => {
+    let cardContainerElement = document.getElementById('image-upload-card-container')
+    cardContainerElement.removeEventListener('transitionend', onTransitionEndClosure)
+  })
+
+
   const openUpdateProfileSection = () => {
     // 초기화
     successUpload.value = 'before'
@@ -291,6 +319,7 @@
 
     let cardContainerElement = document.getElementById('image-upload-card-container')
     nextTick(() => {
+      // expand 처리
       if (cardContainerElement.style.height == '0px' || cardContainerElement.style.height == '') {
         cardContainerElement.style.opacity = '1';
         const targetHeight = cardContainerElement.scrollHeight + 'px';
@@ -301,9 +330,15 @@
 
   const closeUpdateProfileSection = () => {
     let cardContainerElement = document.getElementById('image-upload-card-container')
+    let targetHeight = cardContainerElement.scrollHeight + 'px';
+    cardContainerElement.style.height = targetHeight;
+
+    // 강제로 리플로우 발생 → 브라우저가 현제 height을 인식하게 만듦
+    cardContainerElement.offsetHeight;
+
     nextTick(() => {
       cardContainerElement.style.opacity = '0';
-      const targetHeight = '0px'
+      targetHeight = '0px'
       cardContainerElement.style.height = targetHeight;
     })
   }
