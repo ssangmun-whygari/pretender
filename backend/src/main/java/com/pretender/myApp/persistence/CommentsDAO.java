@@ -59,11 +59,12 @@ public class CommentsDAO {
 		return ses.insert(ns+"insertRvw", review);
 	}
 
-	public int deleteTheReview(int id, int no) {
+	public int deleteTheReview(int id, int no, String mediaType) {
 		// 댓글 삭제
-		HashMap<String, Integer> idAndNo = new HashMap<>();
+		HashMap<String, Object> idAndNo = new HashMap<>();
 		idAndNo.put("id", id);
 		idAndNo.put("no", no);
+		idAndNo.put("mediaType", mediaType);
 		return ses.update(ns+"deleteRvw", idAndNo);
 	}
 
@@ -72,11 +73,12 @@ public class CommentsDAO {
 		return ses.delete(ns+"modifyRvw", review);
 	}
 
-	public List<Integer> selectAllMyReviewLikes(String userId, int contentId) {
+	public List<Integer> selectAllMyReviewLikes(String userId, int contentId, String mediaType) {
 		// 내가 좋아요한 댓글 리스트
 		HashMap<String,Object> map = new HashMap<>();
 		map.put("userId", userId);
 		map.put("contentId", contentId);
+		map.put("mediaType", mediaType);
 		return ses.selectList(ns+"myReviewlikeList", map);
 	}
 

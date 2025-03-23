@@ -60,9 +60,9 @@ public class CommentsService {
 	}
 
 
-	public int deleteMyReview(int id, int no) {
+	public int deleteMyReview(int id, int no, String mediaType) {
 		// 댓글 삭제
-		return cDao.deleteTheReview(id,no);
+		return cDao.deleteTheReview(id,no, mediaType);
 		
 	}
 
@@ -73,9 +73,9 @@ public class CommentsService {
 	}
 
 
-	public List<Integer> selectmyReviewLike(String userId, int contentId) {
+	public List<Integer> selectmyReviewLike(String userId, int contentId, String mediaType) {
 		// 내가 좋아요한 댓글 목록
-		List<Integer> likeLists = cDao.selectAllMyReviewLikes(userId,contentId);
+		List<Integer> likeLists = cDao.selectAllMyReviewLikes(userId,contentId, mediaType);
 		return likeLists;
 	}
 

@@ -8,21 +8,4 @@
 		select count(*) from collection_infos where owner = #{memberId} and is_default = 'Y'
 	</select>
 	
-	<select id="selCastVotes" resultType="com.pretender.myApp.model.CastVotesDTO">
-		SELECT c.character_id, c.character_name, c.actor_name, count(l.character_id) as votes
-		FROM cast_likes l LEFT JOIN casts c
-		ON c.character_id = l.character_id
-		where c.media_id = #{mediaId} and c.media_type= #{type}
-		GROUP BY c.character_id, c.character_name, c.actor_name
-		ORDER BY votes DESC
-	</select>
-	
-	<select id="selVoteReasons" resultType="com.pretender.myApp.model.VoteReasonsDTO">
-		SELECT y.content, count(l.why) as votes
-		FROM cast_likes l LEFT JOIN cast_like_category y
-		ON l.why = y.why
-		WHERE l.media_id = #{mediaId} AND l.media_type= #{type} AND l.character_id =#{characterId}
-		GROUP BY l.character_id, l.why
-		ORDER BY votes DESC
-	</select>
 </mapper>

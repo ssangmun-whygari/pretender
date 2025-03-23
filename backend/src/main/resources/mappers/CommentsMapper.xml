@@ -58,7 +58,7 @@
   
   <delete id="deleteReviewLk">
     delete FROM review_likes 
-    WHERE media_id = #{ mediaId } AND reviews_no = #{ reviewsNo } AND members_id = #{ membersId } LIMIT 1
+    WHERE media_id = #{ mediaId } AND reviews_no = #{ reviewsNo } AND members_id = #{ membersId } AND media_type= #{ mediaType } LIMIT 1
   </delete>
   	
   <insert id="insertRvw" parameterType="com.pretender.myApp.model.ReviewDTO">
@@ -73,16 +73,16 @@
   </insert>
   
   <update id="deleteRvw">
-  	update reviews set is_deleted = 'Y' WHERE no = #{ no } AND media_id =#{ id } 
+  	update reviews set is_deleted = 'Y' WHERE no = #{ no } AND media_id =#{ id } AND media_type= #{ mediaType }
   </update>
   
   <update id="modifyRvw">
-  	update reviews set content = #{ content }, correct_date = now() WHERE no = #{ no } AND media_id = #{ id }
+  	update reviews set content = #{ content }, correct_date = now() WHERE no = #{ no } AND media_id = #{ id } AND media_type= #{ type }
   </update>
   
   <select id="myReviewlikeList" resultType="java.lang.Integer">
   	SELECT reviews_no FROM review_likes 
-    WHERE members_id = #{ userId } AND media_id= #{ contentId }
+    WHERE members_id = #{ userId } AND media_id= #{ contentId } AND media_type= #{ mediaType }
   </select>
   
   <insert id="insertRprt" parameterType="com.pretender.myApp.model.ReportDTO">

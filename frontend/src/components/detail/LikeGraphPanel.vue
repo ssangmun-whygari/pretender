@@ -198,7 +198,7 @@ import axios from "axios";
 onMounted(async () => {
   setTimeout(() => {
     showChart(); 
-  }, 900); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
+  }, 1500); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
 });
 
 
