@@ -108,7 +108,7 @@
                   · · · 
                   </v-btn>
                   <li v-for="(reply, index) in replies[comment.no]" :key="reply.no" :id="'reply-'+reply.no" class="comment-item">
-                    {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}<!-- 테스트용--><img :src="apiBaseUrl + '/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
+                    <!-- {{ index + 1 + (((repliesPage[comment.no] ?? 0) - 1) * replySize) }}--><img :src="'http://localhost:8080/api/members/profile/image?memberId=' + reply['members_id']" alt="프로필" class="comment-image" />
                     <div class="comment-content">
                       <div class="comment-header">
                         <div class="nicknameTime">
@@ -392,6 +392,7 @@ const loggedInUserId = ref(null);
 
 const route = useRoute();
 const contentId = ref(route.query.id ||null);
+const mediaType = ref(route.query.type || null);
 
 const router = useRouter();
 const navigationStore = useNavigationStore(); 
@@ -405,10 +406,11 @@ const sortOptions = [
 const openReportModal = async(comment) => {
   //axios로 중복 검사하기
   try {
-    const response = await axios.post(apiBaseUrl + '/api/checkBeforeReport', 
-      {
+    const response = await axios.post('http://localhost:8080/api/checkBeforeReport', 
+      { // type업데이트 완료
         reviewsNo: comment.no, 
         mediaId: contentId.value, 
+        mediaType: mediaType.value
       },
       {withCredentials: true,} 
     );
@@ -442,6 +444,7 @@ const submitReport = async () => {
       message: reportMessage.value,
       reviewsNo: selectedComment.value.no, // 신고 당한 댓글
       mediaId: contentId.value, 
+      mediaType: mediaType.value
     };
    
     const response = await axios.post(
@@ -499,8 +502,9 @@ const fetchLikedCommentIds = async (contentId) => {
     if (!isAuthenticated) {
       return;
     }    
-    const response = await axios.get(apiBaseUrl + '/api/myReviewLikes', {
-      params: { contentId },
+    const response = await axios.get('http://localhost:8080/api/myReviewLikes', { //type update
+      params: { contentId, mediaType: mediaType.value 
+       },
       withCredentials: true,
     });
     likedCommentIds.value = response.data;
@@ -537,8 +541,8 @@ const toggleLike = async (commentId) => {
 
     if (likedCommentIds.value.includes(commentId)) {
       // 좋아요 취소
-      const response = await axios.delete(apiBaseUrl + '/api/reviewUnlike', {
-        params: { id: contentId.value, no: commentId },
+      const response = await axios.delete('http://localhost:8080/api/reviewUnlike', {//원래 id와 no였음 // type update
+        params: { mediaId: contentId.value, reviewsNo: commentId, mediaType: mediaType.value },
         withCredentials: true,
       });
 
@@ -551,6 +555,7 @@ const toggleLike = async (commentId) => {
       const response = await axios.post(apiBaseUrl + '/api/reviewLike', {
         mediaId: contentId.value,
         reviewsNo: commentId,
+        mediaType: mediaType.value,
       }, { withCredentials: true });
 
       if (response.status === 200) {
@@ -615,14 +620,15 @@ const saveEditComment = async (item) => {
     const formattedContent = item.updatedContent.replace(/\r?\n/g, '\\n');
 
     // 서버로 수정 요청
-    const response = await axios.put(
-      apiBaseUrl + "/api/modifyReview",
+    const response = await axios.put( //type update
+      "http://localhost:8080/api/modifyReview",
       {
         no: item.no, // 댓글 또는 대댓글 ID
         membersId: item.members_id,
         content: formattedContent , // 수정된 내용
         id: contentId.value, // 게시물 ID
-        isDeleted: item.is_deleted
+        isDeleted: item.is_deleted,
+        type: mediaType.value,
       },
       { withCredentials: true }
     );
@@ -642,11 +648,12 @@ const saveEditComment = async (item) => {
 const deleteComment = async (item) => {
   try {
     // 삭제 확인 대화상자
-    const response = await axios.put(apiBaseUrl + "/api/deleteReview", null, {
+    const response = await axios.put("http://localhost:8080/api/deleteReview", null, { // type update
       params: {
         id: contentId.value, // 게시물 ID
         no: item.no, // 댓글 ID
-        membersId: item.members_id
+        membersId: item.members_id,
+        mediaType: mediaType.value,
       },
       withCredentials: true,
     });
@@ -708,8 +715,8 @@ const formatLikeCount = (count) => {
 const fetchComments = async (contentId, page = 0, sortBy = "likeCount") => {
   console.log("fetchComments 실행됨...")
   try {
-    const response = await axios.get(apiBaseUrl + `/api/comments`, {
-      params: { id: contentId, page, sortBy }, 
+    const response = await axios.get(`http://localhost:8080/api/comments`, { //type update
+      params: { id: contentId, page, sortBy, mediaType: mediaType.value }, 
     });
 
     if (response.data && response.data.comments) {
@@ -743,8 +750,8 @@ const changePages = (page) => {
 // 대댓글 가져오기 함수
 const fetchReplies = async (parentNo, page = 0, replyCount) => {
   try {
-    const response = await axios.post(apiBaseUrl + '/api/replies', null, {
-      params: { id: contentId.value, page, parentId: parentNo, total: replyCount },
+    const response = await axios.post('http://localhost:8080/api/replies', null, { //type update
+      params: { id: contentId.value, page, parentId: parentNo, total: replyCount, mediaType: mediaType.value },
     });
 
     const fetchedReplies = response.data.replies;
@@ -815,11 +822,11 @@ const submitReply = async (comment) => {
   const formattedContent = comment.replyText.replace(/\r?\n/g, '\\n');
 
   try {
-    const response = await axios.post(apiBaseUrl + '/api/insertReview', {
+    const response = await axios.post('http://localhost:8080/api/insertReview', { //type update
       parent_no: comment.no,
       content: formattedContent,
     },{
-      params:{ id: contentId.value },
+      params:{ id: contentId.value, mediaType: mediaType.value },
       withCredentials: true, 
     });
     console.log('서버에서 반환된 데이터:', response.data);
@@ -870,8 +877,8 @@ onMounted(async () => {
   let replyTargetPage = 0;
   if (commentId) {
     try {
-      const response = await axios.get(apiBaseUrl + `/api/commentPage`, {
-        params: { id:contentId.value, commentId, replyId },
+      const response = await axios.get(`http://localhost:8080/api/commentPage`, { //type update
+        params: { id:contentId.value, commentId, replyId, mediaType: mediaType.value },
       });
 
       if (response.data.commentPage !== undefined) {

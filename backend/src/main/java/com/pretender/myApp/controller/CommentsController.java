@@ -37,14 +37,14 @@ public class CommentsController {
 	private static final int PAGE_SIZE_COMMENTS = 5;
 	private static final int PAGE_SIZE_REPLIES = 10;
 	
-	// 모든 코멘트 가져오기 (페이지네이션) //type수정
+	// 모든 코멘트 가져오기 (페이지네이션) //type update
 	@GetMapping("/api/comments")
-	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,@RequestParam(defaultValue = "likeCount") String sortBy){
+	ResponseEntity<Object> getComments(@RequestParam int id, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "likeCount") String sortBy, @RequestParam String mediaType){
 		int size = PAGE_SIZE_COMMENTS;
-		String type="tv";
-		int totalComments = cService.getTotalComments(id,type);
+		int totalComments = cService.getTotalComments(id,mediaType);
 		int totalPages = (int) Math.ceil((double) totalComments / size);
-		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy,type);
+		List<CommentsVO> comments = cService.getAllComments(id,page,size,sortBy,mediaType);
 		Map<String, Object> response = new HashMap<>();
 		response.put("totalComments", totalComments);
 		response.put("totalPages", totalPages);
@@ -85,13 +85,13 @@ public class CommentsController {
 		return ResponseEntity.ok(response);
 	}
 	
-	// 대댓글 기져오기 //type수정
+	// 대댓글 기져오기 //type update
 	@PostMapping("/api/replies")
-	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId, @RequestParam int total){
+	ResponseEntity<Object> getReplies(@RequestParam int id, @RequestParam(defaultValue = "0") int page, int parentId, 
+			@RequestParam int total, @RequestParam String mediaType){
 		int size = PAGE_SIZE_REPLIES;
-		String type = "tv";
 		Map<String, Object> response = new HashMap<>();
-		List<CommentsDTO> replies = cService.getAllReplies(id,parentId,page,size,type);
+		List<CommentsDTO> replies = cService.getAllReplies(id,parentId,page,size,mediaType);
 		response.put("page", page);
 		response.put("size", size);
 		response.put("parentId", parentId);
@@ -99,7 +99,7 @@ public class CommentsController {
 		return ResponseEntity.ok(response);
 	}
 	
-	//좋아요 기능
+	//좋아요 기능 // type update
 	@PostMapping("api/reviewLike")
 	public ResponseEntity<Object> insertReviewLike(@RequestBody ReviewLikesDTO likeEle) {
 		
@@ -112,7 +112,6 @@ public class CommentsController {
 		String userId = auth.getName();
 		int id = likeEle.getMediaId();
 		
-		likeEle.setMediaType("tv");
 		likeEle.setMembersId(userId);
 		
 		if(cService.insertReviewLike(likeEle) == 1) {
@@ -121,9 +120,9 @@ public class CommentsController {
 		return ResponseEntity.badRequest().body("리뷰 좋아요가 실패했습니다.");
 	}
 	
-	//좋아요 취소
+	//좋아요 취소 //type update
 	@DeleteMapping("api/reviewUnlike")
-	public ResponseEntity<Object> deleteReviewLike(@RequestParam int id, @RequestParam int no){
+	public ResponseEntity<Object> deleteReviewLike(@RequestParam int mediaId, @RequestParam int reviewsNo, @RequestParam String mediaType){
 		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		
@@ -132,9 +131,10 @@ public class CommentsController {
 	        }
 		String userId = auth.getName();
 		ReviewLikesDTO likeEle = new ReviewLikesDTO();
-		likeEle.setMediaId(id);
-		likeEle.setReviewsNo(no);
+		likeEle.setMediaId(mediaId);
+		likeEle.setReviewsNo(reviewsNo);
 		likeEle.setMembersId(userId);
+		likeEle.setMediaType(mediaType);
 		System.out.println("likeEle:"+likeEle.toString());
 		
 		if(cService.deleteReviewLike(likeEle) == 1) {
@@ -144,9 +144,9 @@ public class CommentsController {
 		return ResponseEntity.badRequest().body("리뷰 좋아요 취소에 실패했습니다.");
 	}
 	
-	//좋아요 조회
+	//좋아요 조회 //Type update
 	@GetMapping("/api/myReviewLikes")
-	public ResponseEntity<Object> selectReviewLike(int contentId){
+	public ResponseEntity<Object> selectReviewLike(@RequestParam int contentId,@RequestParam String mediaType){
 	  Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
@@ -155,13 +155,13 @@ public class CommentsController {
 
         String userId = authentication.getName();
         
-        List<Integer> myLikes = cService.selectmyReviewLike(userId,contentId);
+        List<Integer> myLikes = cService.selectmyReviewLike(userId,contentId, mediaType);
         
         return ResponseEntity.ok(myLikes);
 	}
-	//댓글 작성 //setType부분은 다시 해줘야 함
+	//댓글 작성 // type update
 	@PostMapping("api/insertReview")
-	public ResponseEntity<Object> insertReview(int id, @RequestBody CommentsDTO comment){
+	public ResponseEntity<Object> insertReview(@RequestParam int id, @RequestParam String mediaType, @RequestBody CommentsDTO comment){
 		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		
@@ -178,7 +178,7 @@ public class CommentsController {
 		review.setParentNo(parentNo);
 		review.setContent(content);
 		review.setId(id);
-		review.setType("tv");
+		review.setType(mediaType);
 		
 		if(parentNo == 0) {
 			review.setIsParent('Y');
@@ -193,12 +193,13 @@ public class CommentsController {
 		}
 	}
 	
-	//댓글 삭제
+	//댓글 삭제 // type update
 	@PutMapping("api/deleteReview")
 	public ResponseEntity<Object> deleteReview(
 	    @RequestParam int id,
 	    @RequestParam int no,
-	    @RequestParam String membersId
+	    @RequestParam String membersId,
+	    @RequestParam String mediaType
 	) {
 	    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	    if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
@@ -210,7 +211,7 @@ public class CommentsController {
 	        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다");
 	    }
 
-	    if (cService.deleteMyReview(id, no) == 1) {
+	    if (cService.deleteMyReview(id, no, mediaType) == 1) {
 	        return ResponseEntity.ok("리뷰가 삭제되었습니다.");
 	    }
 
@@ -218,7 +219,7 @@ public class CommentsController {
 	}
 
 	
-	//댓글 수정
+	//댓글 수정 // type update
 	@PutMapping("api/modifyReview")
 	public ResponseEntity<Object> modifyReview(@RequestBody ReviewDTO review){
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();	
@@ -256,7 +257,7 @@ public class CommentsController {
 	
 	
 	
-	//댓글 신고 //setType부분은 수정 예정
+	//댓글 신고 //type update
 	@PostMapping("api/report")
 	public ResponseEntity<Object> reportComment (@RequestBody ReportDTO report) {
 		try {
@@ -268,7 +269,6 @@ public class CommentsController {
 	
 	        String userId = authentication.getName();
 	        report.setReporterId(userId);
-	        report.setMediaType("tv");
 	        
 			cService.reportAComment(report);
 			
@@ -278,18 +278,17 @@ public class CommentsController {
 		}
 	}
 	
-	//신고 중복 체크 //setType수정예정
+	//신고 중복 체크 // type update
 	@PostMapping("api/checkBeforeReport")
 	public ResponseEntity<Object> checkBeforeReport (@RequestBody ReportDTO report) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof 			AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
         String userId = authentication.getName();
         report.setReporterId(userId);
-        report.setMediaType("tv");
         
         if(cService.checkDupeBeforeReport(report) != null) {
         	return ResponseEntity.status(HttpStatus.OK).body("이미 신고한 댓글입니다.");
@@ -297,23 +296,23 @@ public class CommentsController {
         return ResponseEntity.status(HttpStatus.OK).body("신고폼을 작성해주세요.");
 	}
 	
-	//comment의 인덱스와 reply의 인덱스 가져오기/ type바꾸기
+	//comment의 인덱스와 reply의 인덱스 가져오기/ type update
 	@GetMapping("/api/commentPage")
 	public ResponseEntity<Map<String, Integer>> getCommentPage(
 	    @RequestParam("id") int contentId,
 	    @RequestParam("commentId") int commentId,
-	    @RequestParam(value="replyId", required = false) Integer replyId ) {
+	    @RequestParam(value="replyId", required = false) Integer replyId,
+	    @RequestParam String mediaType) {
 	    
 	    int pageSize = PAGE_SIZE_COMMENTS;
-	    String type = "tv";
 	    //댓글 인덱스
-	    int commentIndex = cService.findCommentIndex(contentId, commentId, type);
+	    int commentIndex = cService.findCommentIndex(contentId, commentId, mediaType);
 	    int commentPage = Math.max(0, (commentIndex - 1) / pageSize);
 	    //대댓글 인엑스
 	    Integer replyPage = null;
 	    int replyPageSize =PAGE_SIZE_REPLIES;
 	    if (replyId != null) { 
-	        int replyIndex = cService.findReplyIndex(contentId, commentId, replyId, type);
+	        int replyIndex = cService.findReplyIndex(contentId, commentId, replyId, mediaType);
 	        replyPage = ( replyIndex/ replyPageSize );
 	    }
 	    

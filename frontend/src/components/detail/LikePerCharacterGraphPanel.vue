@@ -6,7 +6,8 @@
 <script setup>
 import axios from 'axios';
 import { onMounted,ref } from 'vue';
-import Chart from 'chart.js/auto';
+import Chart, { plugins } from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
@@ -16,12 +17,13 @@ const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     character_id: Number,
   });
 
+  Chart.register(ChartDataLabels);
+
   const doughnutChart = ref(null);
   let myChart = null; // 기존 차트 저장
   const voteReasonsData = ref([]);
 
   async function fetchVoteReasons() {
-    console.log("fetchVoteReasons...");
    try {
      const response = await axios.get(apiBaseUrl + "/api/detail/votesReasons",{
        params: { mediaId: props.media_id, type: props.media_type, characterId: props.character_id},
@@ -34,7 +36,6 @@ const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
   } 
 
   async function showChart() {
-    console.log("showChart...");
     voteReasonsData.value = await fetchVoteReasons();
     console.log(voteReasonsData.value);
 
@@ -47,7 +48,7 @@ const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
       return;
     }
 
-    // 기존 차트(있다면) 제거
+    // 원래 있는 차트 제거
     if (myChart) {
       myChart.destroy();
     }
@@ -86,6 +87,52 @@ const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     const config = {
       type: 'doughnut',
       data: data,
+      options: {
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                size: 18
+              }
+            }
+          },
+          tooltip: {
+            bodyFont: {
+              size: 16
+            },
+            position: 'nearest',
+            yAlign: 'bottom', // 툴팁을 살짝 위로 올리기
+            caretPadding: 13, //툴팁 더 올리기(툴팁과 차트의 간격)
+            callbacks: {
+              label: function (tooltipItem) {
+                let label = tooltipItem.label;
+                if(label === "득표 없음") {
+                  return "0표";
+                }
+                return `${tooltipItem.raw}표`;
+              }
+            }
+          },
+          datalabels: {
+            color: '#777',
+            font: {
+              size: 14,
+              weight: 'bold'
+            },
+            anchor: 'center', //가운데 위치
+            align: 'center',
+            formatter: (value, ctx) => {
+              let label = ctx.chart.data.labels[ctx.dataIndex];
+              if (label === "득표 없음") {
+                return ""; 
+              }
+              let words = label.split(" ");
+              let wordsWithEnter = words.join("\n");
+              return wordsWithEnter;
+            }
+          }
+        }
+      }
     };
 
     myChart = new Chart(doughnutChart.value, config);
