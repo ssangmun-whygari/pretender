@@ -16,7 +16,7 @@
           </div>
       <ul class="comment-list">
         <li v-for="comment in comments" :key="comment.no" :id="'comment-'+comment.no" class="comment-item">
-          <img :src="'http://localhost:8080/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
+          <img :src="apiBaseUrl + '/api/members/profile/image?memberId=' + comment['members_id']" alt="프로필" class="comment-image" />
           <div class="comment-content">
             <div class="comment-header">
               <div class="nicknameTime">
@@ -366,6 +366,8 @@ import { defineStore } from 'pinia';
 import { nextTick } from 'vue';
 import { useCommentSaveStore } from '../../composables/stores/commentSave'
 
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
 const reportModal = ref(false);
 const reportDupe = ref(false);
 const reportCause = ref(false);
@@ -446,7 +448,7 @@ const submitReport = async () => {
     };
    
     const response = await axios.post(
-      'http://localhost:8080/api/report',
+      apiBaseUrl + '/api/report',
       reportData,
       { withCredentials: true }
     );
@@ -468,7 +470,7 @@ const submitReport = async () => {
 // 로그인 검증 함수
 async function checkAuthenticated() {
   try {
-    let response = await axios.get('http://localhost:8080/api/authenticated', {
+    let response = await axios.get(apiBaseUrl + '/api/authenticated', {
       withCredentials: true,
       headers: {
         "X-Requested-With": "XMLHttpRequest",
@@ -483,7 +485,7 @@ async function checkAuthenticated() {
 
 const fetchLoggedInUserId = async () => {
   try {
-    const response = await axios.get("http://localhost:8080/api/getLoggedInId", {
+    const response = await axios.get(apiBaseUrl + "/api/getLoggedInId", {
       withCredentials: true,
     });
     console.log(response.data);
@@ -550,7 +552,7 @@ const toggleLike = async (commentId) => {
       }
     } else {
       // 좋아요 추가
-      const response = await axios.post('http://localhost:8080/api/reviewLike', {
+      const response = await axios.post(apiBaseUrl + '/api/reviewLike', {
         mediaId: contentId.value,
         reviewsNo: commentId,
         mediaType: mediaType.value,

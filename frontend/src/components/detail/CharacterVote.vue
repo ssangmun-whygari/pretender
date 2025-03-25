@@ -12,7 +12,7 @@
     <div v-if="totalItemLength > 0">
       <v-row v-for="n in Math.ceil(totalItemLength / denominator)" v-if="castInfo.length > 0">
         <v-col v-for="(item, index) in slicedCastInfo(castInfo, n - 1)" md="4" cols="12">
-          <v-card class="cast-info-container pa-3" :hover="true" @click="expandPanel(n, (n - 1) * 3 + index)">
+          <v-card class="cast-info-container pa-3" :hover="true" @click="expandPanel(n, index)">
             <v-row>
               <v-col class="d-flex align-center" cols="5">
                 <img class="cast-image" :src="getProfileImagePath(item.profile_path)"></img>
@@ -28,12 +28,12 @@
           {{ n - 1 }}
           <v-sheet :elevation="2" cols="12" class="pa-3">
             <v-row>
-              <v-col cols="2">
-                <img :src="getProfileImagePath(castInfo[currentActiveIndex].profile_path)"></img>
+              <v-col v-if="smAndUp" cols="2">
+                <img class="vote-target-profile-image" :src="getProfileImagePath(castInfo[currentActiveIndex].profile_path)"></img>
               </v-col>
               
               <v-col cols="10">
-                <div v-if="likePerCharacterGraphPanelShown === false" class="d-flex flex-column justify-space-around h-100">
+                <div v-if="likePerCharacterGraphPanelShown === false" class="d-flex flex-column h-100">
                   <div class="vote-panel-line1">
                     <h2>당신이 가장 마음에 드는 캐릭터는?</h2>
                   </div>
@@ -101,22 +101,27 @@
 
   .cast-image {
     max-height: 176px;
+    aspect-ratio: 0.666 / 1;
   }
 
   .cast-info-container {
     height: 200px;
   }
 
-  .vote-panel-line1 {
-    height: 20%;
+  /* .vote-panel-line1 {
   }
 
   .vote-panel-line2 {
-    height: 60%;
-  }
+  } */
 
   .vote-panel-line3 {
-    height: 20%;
+    margin-top: auto;
+  }
+
+  .vote-target-profile-image {
+    aspect-ratio: 0.666 / 1;
+    width: 100%;
+    max-height: 250px;
   }
 </style>
 
@@ -127,6 +132,7 @@
   import LikePerCharacterGraphPanel from './LikePerCharacterGraphPanel.vue'
   import LikeGraphPanel from './LikeGraphPanel.vue'
 
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL;
   const profileBaseUrl = "http://image.tmdb.org/t/p/w185"
   const props = defineProps({
       id: String,
@@ -138,7 +144,7 @@
   const character_id = ref(0)
 
   const castInfo = ref([])
-  const { mdAndUp } = useDisplay()
+  const { mdAndUp, smAndUp } = useDisplay()
   let totalItemLength = ref(0)
   let denominator = computed(() => {
     if (mdAndUp.value) {
@@ -163,16 +169,24 @@
   function expandPanel(lineNum, index) {
     if (mdAndUp.value) {
       console.log("######md이상")
-      console.log(`######${lineNum}`)
+      console.log(`######lineNum : ${lineNum}, index : ${index}`)
+      index = (lineNum - 1) * 3 + index
       currentActiveIndex.value = index
+      likePerCharacterGraphPanelShown.value = false
+      character_id.value = (castInfo.value)[index].id
+      panelExpanded.value = new Array(panelExpanded.value.length).fill(false);
+      (panelExpanded.value)[lineNum - 1] = true
     } else {
       console.log("######md이하")
-      console.log(`######${lineNum}`)
+      console.log(`######lineNum : ${lineNum}, index : ${index}`)
+      index = lineNum - 1
+      currentActiveIndex.value = index
+      likePerCharacterGraphPanelShown.value = false
+      character_id.value = (castInfo.value)[index].id
+      panelExpanded.value = new Array(panelExpanded.value.length).fill(false);
+      (panelExpanded.value)[lineNum - 1] = true
     }
-    likePerCharacterGraphPanelShown.value = false
-    character_id.value = (castInfo.value)[index].id
-    panelExpanded.value = new Array(panelExpanded.value.length).fill(false);
-    (panelExpanded.value)[lineNum - 1] = true
+
   }
 
   function showLikePerCharacterGraphPanel() {
@@ -186,7 +200,7 @@
 
   async function requestCastInfo() {
     let response = await axios.get(
-      'http://localhost:8080/api/detail/cast',
+      apiBaseUrl + '/api/detail/cast',
       {
         params : {
           type: type.value,
@@ -206,7 +220,7 @@
 
   async function requestCharacterLikeCategory() {
     let response = await axios.get(
-      'http://localhost:8080/api/detail/cast/likeCategory',
+      apiBaseUrl + '/api/detail/cast/likeCategory',
     ) // axios.get end
     console.log("########## requestCharacterLikeCategory() ##########")
     console.log(response)
@@ -216,6 +230,11 @@
   }
 
   function getProfileImagePath(path) {
-    return profileBaseUrl + path
-  }
+    if (path) {
+      return profileBaseUrl + path
+    } else {
+      console.log()
+      return apiBaseUrl + '/resource/characterVoteNoImage'
+    }
+  } 
 </script>

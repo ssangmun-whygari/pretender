@@ -101,9 +101,9 @@ public class MembersService {
     	File imageFile;
     	// 디폴트 프로필 이미지와 유저가 지정한 프로필 이미지의 경로가 다름
     	if (!("default_profile.png").equals(fileName)) {
-    		imageFile = new File("images/members/" + fileName);
+    		imageFile = new File("src/main/resources/static/images/members/" + fileName);
     	} else {
-    		imageFile = new File("images/public/" + fileName);
+    		imageFile = new File("src/main/resources/static/images/public/" + fileName);
     	}
     	
     	Resource resource = new UrlResource(Paths.get(imageFile.getAbsolutePath()).normalize().toUri());

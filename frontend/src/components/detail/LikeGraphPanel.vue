@@ -5,9 +5,11 @@
 </template>
 
 <script setup>
-import {ref, onMounted, watchEffect} from "Vue";
-import Chart from "chart.js/auto";
-import axios from "axios";
+  import {ref, onMounted, watchEffect} from "Vue";
+  import Chart from "chart.js/auto";
+  import axios from "axios";
+
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
   const props = defineProps({
     media_id: String,
@@ -22,16 +24,16 @@ import axios from "axios";
   const fullData =ref([]); //배열
 
   async function fetchVoteData() {
-   try {
-     const response = await axios.get("http://localhost:8080/api/detail/castVotes", {
-       params: { mediaId: props.media_id, type: props.media_type },
-     });
- 
-     return response.data; 
-   } catch (error) {
+    try {
+      const response = await axios.get(apiBaseUrl + "/api/detail/castVotes", {
+        params: { mediaId: props.media_id, type: props.media_type },
+      });
+
+      return response.data; 
+    } catch (error) {
     console.error("fetchingVoteData 오류 발생! : "+ error);
     return [];
-   }
+    }
   }
 
   async function showChart() {

@@ -48,6 +48,7 @@
 import { onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
 const router = useRouter();
 const myActivitiesData =ref([]);
@@ -59,7 +60,7 @@ const isSearching = ref(false);
 
 async function checkAuthenticated() {
   try {
-    let response = await axios.get('http://localhost:8080/api/authenticated', {
+    let response = await axios.get(apiBaseUrl + '/api/authenticated', {
       withCredentials: true,
       headers: {
         "X-Requested-With": "XMLHttpRequest"},
@@ -83,7 +84,7 @@ async function checkAuthenticated() {
 
   const fetchMyActivities = async (page = 0) => {
     try {
-      let response = await axios.get("http://localhost:8080/api/members/myActivites", {
+      let response = await axios.get(apiBaseUrl + "/api/members/myActivites", {
         params:{ page },
         withCredentials: true
       });
@@ -103,7 +104,7 @@ async function checkAuthenticated() {
       alert("한글자 이상 입력해주세요");
     }
     try {
-      let response = await axios.get("http://localhost:8080/api/members/searchMyAct",{
+      let response = await axios.get(apiBaseUrl + "/api/members/searchMyAct",{
         params:{ page , word: word.value },
         withCredentials: true
       });

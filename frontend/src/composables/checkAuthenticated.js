@@ -1,8 +1,10 @@
 import axios from 'axios'
 
 export async function useCheckAuthenticated() {
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
   let response = await axios.get(
-    'http://localhost:8080/api/authenticated',
+    apiBaseUrl + '/api/authenticated',
     {
       withCredentials: true,
 

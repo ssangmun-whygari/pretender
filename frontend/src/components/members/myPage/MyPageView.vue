@@ -9,7 +9,7 @@
             <div id="profile-contents" class="d-flex position-absolute">
               <div id="profile-image-frame" class="position-relative">
                 <div id="profile-image" class="w-100 h-100">
-                  <img class="w-100 h-100" src="http://localhost:8080/api/members/profile/image"/>
+                  <img class="w-100 h-100" v-bind:src="apiBaseUrl + '/api/members/profile/image'"/>
                 </div>
                 <div id="profile-image-change-btn" class="position-absolute">
                   <v-icon icon="mdi-camera-image" size="large" @click="openUpdateProfileSection"/>
@@ -20,16 +20,18 @@
           </div>
         </v-col>
       </v-row>
+
+
       <v-row justify="center" id="image-upload-card-container">
-        <v-col lg="8" cols="12">
-          <v-card id="image-upload-card" :class="imageUploadCardStyle + ' pa-5'">
+        <v-col lg="8" cols="12" style="height: auto;">
+          <v-card id="image-upload-card" :class="imageUploadCardStyle + ' pa-5'" style="height: auto;">
             <v-row>
               <v-col class="d-flex justify-space-between pb-0" cols="12">
                 <h2>🔍 미리보기</h2>
                 <v-icon icon="mdi-window-close" size="large" @click="closeUpdateProfileSection"/>
               </v-col>
               <v-col class="d-flex flex-column justify-center ga-1" sm="6" lg="4" cols="12">
-                <img id="profile-image-editing" src="http://localhost:8080/api/members/profile/image"/>
+                <img id="profile-image-editing" :src="apiBaseUrl + '/api/members/profile/image'"/>
               </v-col>
               <v-col class="d-flex justify-space-between flex-column" sm="6" lg="4" cols="12">
                 <div class="d-flex flex-column ga-3">
@@ -67,6 +69,8 @@
           ></v-progress-linear>
         </v-col>
       </v-row>
+
+      <!-- 탭 (아이템 예시 : 리스트, 내 활동...) -->
       <v-row justify="center">
         <v-col lg="8" cols="12">
           <v-tabs v-model="tab" bg-color="transparent" color="primary" grow>
@@ -197,10 +201,12 @@
   register();
 
   import AppHeader from '@/components/AppHeader.vue';
-  import { reactive, ref, watch, computed, nextTick } from 'vue'
+  import { reactive, ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import axios from 'axios'
   import MyActivities from './MyActivities.vue';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
+
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
   let userId = ref('')
   let userNickname = ref('')
@@ -225,7 +231,7 @@
 
   async function getUser() {
     let response = await axios.get(
-      'http://localhost:8080/api/authenticated',
+      apiBaseUrl + '/api/authenticated',
       {
         withCredentials: true,
 
@@ -247,7 +253,7 @@
       return
     }
     let response = await axios.get(
-      'http://localhost:8080/api/members/nickname',
+      apiBaseUrl + '/api/members/nickname',
       {
         withCredentials: true,
 
@@ -265,7 +271,7 @@
 
   async function getWatchList() {
     let response = await axios.get(
-      'http://localhost:8080/api/collection/watchList',
+      apiBaseUrl + '/api/collection/watchList',
       {
         withCredentials: true,
 
@@ -281,6 +287,30 @@
   }
   getWatchList()
 
+
+
+  let onTransitionEnd = (e, cardContainerElement) => {
+      if (e.propertyName == 'height' && cardContainerElement.style.height !== '0px') {
+        cardContainerElement.style.height = 'auto'
+      }
+  }
+
+  let onTransitionEndClosure = null
+
+  onMounted(() => {
+    let cardContainerElement = document.getElementById('image-upload-card-container')
+    onTransitionEndClosure = (e) => {
+      onTransitionEnd(e, cardContainerElement)
+    }
+    cardContainerElement.addEventListener('transitionend', onTransitionEndClosure)
+  })
+
+  onUnmounted(() => {
+    let cardContainerElement = document.getElementById('image-upload-card-container')
+    cardContainerElement.removeEventListener('transitionend', onTransitionEndClosure)
+  })
+
+
   const openUpdateProfileSection = () => {
     // 초기화
     successUpload.value = 'before'
@@ -289,6 +319,7 @@
 
     let cardContainerElement = document.getElementById('image-upload-card-container')
     nextTick(() => {
+      // expand 처리
       if (cardContainerElement.style.height == '0px' || cardContainerElement.style.height == '') {
         cardContainerElement.style.opacity = '1';
         const targetHeight = cardContainerElement.scrollHeight + 'px';
@@ -299,9 +330,15 @@
 
   const closeUpdateProfileSection = () => {
     let cardContainerElement = document.getElementById('image-upload-card-container')
+    let targetHeight = cardContainerElement.scrollHeight + 'px';
+    cardContainerElement.style.height = targetHeight;
+
+    // 강제로 리플로우 발생 → 브라우저가 현제 height을 인식하게 만듦
+    cardContainerElement.offsetHeight;
+
     nextTick(() => {
       cardContainerElement.style.opacity = '0';
-      const targetHeight = '0px'
+      targetHeight = '0px'
       cardContainerElement.style.height = targetHeight;
     })
   }
@@ -349,7 +386,7 @@
     
     try {
       let response = await axios.post(
-        'http://localhost:8080/api/members/profile/image',
+        apiBaseUrl + '/api/members/profile/image',
         formData, // 본문
         {
           withCredentials: true,
@@ -386,7 +423,7 @@
 
     
     // 프로필 이미지 재요청
-    document.querySelector("#profile-image img").src = `http://localhost:8080/api/members/profile/image?timestamp=${new Date().getTime()}`
+    document.querySelector("#profile-image img").src = `${apiBaseUrl}/api/members/profile/image?timestamp=${new Date().getTime()}`
     imageUploadCardStyle.value = "bg-green-lighten-4"
     imageUploadMessageCardStyle.value = "display: block;"
     imageUploadMessageCardClass.value = "bg-green-lighten-2 pa-1"

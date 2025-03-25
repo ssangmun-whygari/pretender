@@ -49,8 +49,13 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useNavigationStore } from '../../composables/stores/navigation';
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
+onMounted(() => {
+  document.querySelector('.v-main')?.classList.remove('background-container');
+});
 
 // Vue Router와 Pinia Store 초기화
 const router = useRouter();
@@ -69,7 +74,7 @@ async function requestAuth() {
     console.log('requestAuth...');
 
     // 로그인 요청
-    const response = await axios.get('http://localhost:8080/api/login', {
+    const response = await axios.get(apiBaseUrl + '/api/login', {
       auth: {
         username: userId.value,
         password: userPassword.value,
@@ -106,17 +111,17 @@ async function requestAuth() {
 
 async function naverLogin() {
   navigationStore.setPreviousPage(route.fullPath);
-  window.location.href = 'http://localhost:8080/api/login/naver'
+  window.location.href = apiBaseUrl + '/api/login/naver'
 }
 
 async function kakaoLogin() {
   navigationStore.setPreviousPage(route.fullPath);
-  window.location.href = 'http://localhost:8080/api/login/kakao'
+  window.location.href = apiBaseUrl + '/api/login/kakao'
 }
 
 async function googleLogin() {
   navigationStore.setPreviousPage(route.fullPath);
-  window.location.href = 'http://localhost:8080/api/login/google'
+  window.location.href = apiBaseUrl + '/api/login/google'
 }
 
 </script>

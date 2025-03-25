@@ -4,6 +4,8 @@ import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
 export function useSignUpLogic() {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
     // Pinia, Router, Route 초기화
     const router = useRouter();
     const route = useRoute();
@@ -109,7 +111,7 @@ export function useSignUpLogic() {
     };
 
     try{
-      const response = await axios.post('http://localhost:8080/api/signup', personalInfo);
+      const response = await axios.post(apiBaseUrl + '/api/signup', personalInfo);
           console.log('Response', response.data);
           const previousPage = navigationStore.previousPage || '/';
           router.push(previousPage);
