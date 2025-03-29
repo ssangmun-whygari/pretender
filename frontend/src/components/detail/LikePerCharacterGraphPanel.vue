@@ -9,6 +9,8 @@ import { onMounted,ref } from 'vue';
 import Chart, { plugins } from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
   const props = defineProps({
     media_id: String,
     media_type: String,
@@ -23,7 +25,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 
   async function fetchVoteReasons() {
    try {
-     const response = await axios.get("http://localhost:8080/api/detail/votesReasons",{
+     const response = await axios.get(apiBaseUrl + "/api/detail/votesReasons",{
        params: { mediaId: props.media_id, type: props.media_type, characterId: props.character_id},
      })
      return response.data;

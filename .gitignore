@@ -173,3 +173,7 @@ pnpm-debug.log*
 *.sln
 *.sw?
 ## Vuetify에 의해 생성됨 끝 ## 
+
+# deploy script
+/deploy/
+/backend/logs/

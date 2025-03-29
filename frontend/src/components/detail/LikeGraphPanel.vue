@@ -9,6 +9,10 @@ import {ref, onMounted,onUnmounted, watchEffect} from "Vue";
 import Chart from "chart.js/auto";
 import axios from "axios";
 
+
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+
+
   const props = defineProps({
     media_id: String,
     media_type: String,
@@ -22,25 +26,21 @@ import axios from "axios";
   const fullData =ref([]); //배열
 
   async function fetchVoteData() {
-   try {
-     const response = await axios.get("http://localhost:8080/api/detail/castVotes", {
-       params: { mediaId: props.media_id, type: props.media_type },
-     });
- 
-     return response.data; 
-   } catch (error) {
+    try {
+      const response = await axios.get(apiBaseUrl + "/api/detail/castVotes", {
+        params: { mediaId: props.media_id, type: props.media_type },
+      });
+
+      return response.data; 
+    } catch (error) {
     console.error("fetchingVoteData 오류 발생! : "+ error);
     return [];
-   }
+    }
   }
 
   async function showChart() {
     const voteData = (await fetchVoteData()) || [];
-  //   if (!voteData.length) {
-  //   console.log("voteData가 없습니다");
-  //   return;
-  // }
-   
+ 
     const voteMap = {};
     voteData.forEach((item) => {
       voteMap[String(item.character_id)] = item.votes; // String으로 형식 맞춰주기
@@ -96,9 +96,8 @@ import axios from "axios";
       options: {
         layout: {  // 미리 설정해야 적용됨
           padding: {
-            //offset: true,  // 각 막대가 약간 중앙에 위치하도록 여백 추가
             bottom: extraSpace, 
-            right: 50, // 마지막 캐릭터의 이름이 잘리지 않게 오른쪽에 여백 추가가
+            right: 50, // 마지막 캐릭터의 이름이 잘리지 않게 오른쪽에 여백 추가
           },
         },
         scales: {
@@ -118,15 +117,15 @@ import axios from "axios";
             const totalBars = fullData.value.length;
             const barWidth = xAxis.width / totalBars; // 바 하나의 Width
             const maxTextWidth = barWidth * 0.5; 
-            const lineHeight = 14; // 줄높이이
+            const lineHeight = 14; // 줄높이
 
             chart.options.layout = {
               padding: {
-                bottom: extraSpace, // 차트 아래 공간간
+                bottom: extraSpace, // 차트 아래 공간
               },
             };
 
-              // 한 단어를 maxWidth에 맞게 줄바꿈 처리하는 함수
+              // 단어를 maxWidth에 맞게 줄바꿈 처리
             function wrapWord(ctx, word, maxWidth) {
               let lines = [];
               let currentLine = "";
@@ -182,7 +181,7 @@ import axios from "axios";
                       displayText = words[0] || "";
                     }
 
-                    // 그리고 displayText(첫 단어)가 maxTextWidth를 초과하면 wrap 처리
+                    // 첫단어가 maxTextWidth를 초과하면 wrap 처리
                     const wrappedLines = wrapWord(ctx, displayText, maxTextWidth);
                           
                     let textX = xPos + imgWidth + padding; // 사진의 오른쪽
@@ -205,7 +204,7 @@ import axios from "axios";
     });
   }
   function handleResize() {
-  // 창 크기가 변경되면 차트가 존재할 경우 크기를 업데이트함
+  // 창크기가 변경되면 차트 리사이즈
   if (myChart) {
     myChart.resize();
   }
@@ -216,7 +215,7 @@ onMounted(async () => {
   window.addEventListener("resize", handleResize); //이벤트 종류: resize
   setTimeout(() => {
     showChart(); 
-  }, 1500); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
+  },1600 ); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
 });
 
 onUnmounted(() => {

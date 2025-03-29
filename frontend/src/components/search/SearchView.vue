@@ -14,12 +14,12 @@
   let mediaListComponentKey = 'initial'
   let showMode = "primary" // primary or more
 
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
-  // working...
   // axios 요청
   async function requestMediaList(word) {
     let tvResponse = await axios.get(
-      'http://localhost:8080/api/search',
+      apiBaseUrl + '/api/search',
       {
         params : {
           query: word,
@@ -30,7 +30,7 @@
     mediaInfo.value.tv = mediaInfo.value.tv.concat(tvResponse.data.results)
     
     let movieResponse = await axios.get(
-      'http://localhost:8080/api/search',
+      apiBaseUrl + '/api/search',
       {
         params : {
           query: word,

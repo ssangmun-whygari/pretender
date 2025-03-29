@@ -2,8 +2,8 @@
   <v-container fluid>
     <div v-if="imageUrls.allLoaded && lgAndUp" class="progress-image-container">
       <!-- TODO : 계절에 따른 변화 필요 -->
-      <img :src="imageCache['http://localhost:8080/resource/image/ladder.png']" class="progress-image">
-        <img :src="imageCache['http://localhost:8080/resource/image/bunny-l.png']" id="progress-image-child"/>
+      <img :src="imageCache[apiBaseUrl + '/resource/image?filename=ladder.png']" class="progress-image">
+        <img :src="imageCache[apiBaseUrl + '/resource/image?filename=bunny-l.png']" id="progress-image-child"/>
       </img>
     </div>
     <v-row justify="center">
@@ -45,17 +45,19 @@
                   type="image"
                   color="transparent"
                 >
-                  <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg"
+                  <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg poster-image-sheet"
                     :elevation="2">
                     <RouterLink 
-                    class="h-100 w-100 d-flex justify-center"
+                    class="d-flex justify-center h-100 w-100"
                     :to="{path: '/detail', query: {id : innerItem['id'], type : currentCategory}}"
                     v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
-                    <img 
+                    <div class="poster-image-container">
+                      <img 
                       :src="posterPath(innerItem['poster_path'])"
                       class="poster"
                       @load="onPosterImageLoad"
-                    ></img>
+                      ></img>
+                    </div>
                     </RouterLink>
                   </v-sheet>
                 </v-skeleton-loader>
@@ -121,7 +123,7 @@
   }
 
   .background-container {
-    background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage');
+    /* background-image: linear-gradient(rgb(255, 255, 255),rgba(255, 255, 255, 0.205)), url('http://localhost:8080/resource/backgroundImage'); */
     background-size: cover;
     background-position: top;
     background-attachment: fixed;
@@ -166,11 +168,27 @@
     width: 200px; */
   }
 
-  .poster {
+  .poster-image-container {
     width: 70%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .poster {
+    width: 100%;
     object-fit: contain;
     aspect-ratio: 0.666;
   }
+
+  .poster-image-container:hover .poster {
+    transition: transform 0.1s linear;
+    transform: scale(1.2);
+  }
+
+  .poster-image-sheet:hover {
+    background-color: #EEEEEE;
+  }
+
 
   .hidden {
     display: none;
@@ -210,6 +228,8 @@
   import { useDisplay } from 'vuetify'
   const { lgAndUp } = useDisplay()
   register()
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
   const YEAR_CATEGORY_NUMBER = 7
   const SCROLL_SPEED = 100
   const itemsPerRow = 3
@@ -276,10 +296,10 @@
   // 사전 로드 실행
   const imageUrls = ref({
     urls : [
-      'http://localhost:8080/resource/image/bunny-f.png',
-      'http://localhost:8080/resource/image/bunny-l.png',
-      'http://localhost:8080/resource/image/bunny-r.png',
-      'http://localhost:8080/resource/image/ladder.png',
+      apiBaseUrl + '/resource/image?filename=bunny-f.png',
+      apiBaseUrl + '/resource/image?filename=bunny-l.png',
+      apiBaseUrl + '/resource/image?filename=bunny-r.png',
+      apiBaseUrl + '/resource/image?filename=ladder.png',
     ],
     allLoaded : false
   })
@@ -312,7 +332,7 @@
 
     if (scrollPercentage >= 97) {
       progressImageChild.style.top = `${height}px`
-      progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-f.png']
+      progressImageChild.src = imageCache[apiBaseUrl + '/resource/image?filename=bunny-f.png']
       return
     }
 
@@ -326,14 +346,14 @@
 
     for (const [start, end] of ranges_1) {
       if (scrollPercentage >= start && scrollPercentage < end) {
-        progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-l.png']
+        progressImageChild.src = imageCache[apiBaseUrl + '/resource/image?filename=bunny-l.png']
         return
       }
     }
 
     for (const [start, end] of ranges_2) {
       if (scrollPercentage >= start && scrollPercentage < end) {
-        progressImageChild.src = imageCache['http://localhost:8080/resource/image/bunny-r.png']
+        progressImageChild.src = imageCache[apiBaseUrl + '/resource/image?filename=bunny-r.png']
         return
       }
     }
@@ -712,12 +732,19 @@
 
   // TODO : id도 굳이 pinia에 저장할 필요 있나?
   // TODO : "movie"인지, "tv"인지를 저장해야 함(그것에 따라 요청해야 하는 외부 api가 다름)
-  import { useMediaDetailStore } from '../../composables/stores/MediaDetail'
-  const store = useMediaDetailStore()
-  const handleClick = (mediaId, backDropPath) => {
-    store.setMediaDetail({
-      id: mediaId,
-      backDropPath: backDropPath
-    })
-  }
+  // deprecated
+  // import { useMediaDetailStore } from '../../composables/stores/MediaDetail'
+  // const store = useMediaDetailStore()
+  // const handleClick = (mediaId, backDropPath) => {
+  //   store.setMediaDetail({
+  //     id: mediaId,
+  //     backDropPath: backDropPath
+  //   })
+  // }
+
+  onMounted(() => {
+    // console.log(`+++++++++++++++backgroundImageUrl : ${backgroundImageUrl}`)
+    document.querySelector('.background-container').style.backgroundImage = 
+    `linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.205)), url('${backgroundImageUrl}')`
+  })
 </script>
