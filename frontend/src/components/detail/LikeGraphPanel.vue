@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, watchEffect} from "Vue";
+import {ref, onMounted,onUnmounted, watchEffect} from "Vue";
 import Chart from "chart.js/auto";
 import axios from "axios";
 
@@ -35,11 +35,11 @@ import axios from "axios";
   }
 
   async function showChart() {
-    const voteData = await fetchVoteData();
-    if (!voteData.length) {
-    console.log("voteData가 없습니다");
-    return;
-  }
+    const voteData = (await fetchVoteData()) || [];
+  //   if (!voteData.length) {
+  //   console.log("voteData가 없습니다");
+  //   return;
+  // }
    
     const voteMap = {};
     voteData.forEach((item) => {
@@ -96,7 +96,9 @@ import axios from "axios";
       options: {
         layout: {  // 미리 설정해야 적용됨
           padding: {
+            //offset: true,  // 각 막대가 약간 중앙에 위치하도록 여백 추가
             bottom: extraSpace, 
+            right: 50, // 마지막 캐릭터의 이름이 잘리지 않게 오른쪽에 여백 추가가
           },
         },
         scales: {
@@ -113,16 +115,33 @@ import axios from "axios";
             const ctx = chart.ctx;
             const xAxis = chart.scales.x;
             const yAxis = chart.scales.y;
-
             const totalBars = fullData.value.length;
             const barWidth = xAxis.width / totalBars; // 바 하나의 Width
             const maxTextWidth = barWidth * 0.5; 
+            const lineHeight = 14; // 줄높이이
 
             chart.options.layout = {
               padding: {
                 bottom: extraSpace, // 차트 아래 공간간
               },
             };
+
+              // 한 단어를 maxWidth에 맞게 줄바꿈 처리하는 함수
+            function wrapWord(ctx, word, maxWidth) {
+              let lines = [];
+              let currentLine = "";
+              for (let i = 0; i < word.length; i++) {
+                const testLine = currentLine + word[i];
+                if (ctx.measureText(testLine).width <= maxWidth) {
+                  currentLine = testLine;
+                } else {
+                  lines.push(currentLine);
+                  currentLine = word[i];
+                }
+              }
+              if (currentLine !== "") lines.push(currentLine);
+              return lines;
+            }
 
             fullData.value.forEach((item, index) => {
               const characterId = item.character_id;
@@ -141,7 +160,7 @@ import axios from "axios";
                     imgWidth = (imgWidth / imgHeight) * maxImgSize;
                     imgHeight = maxImgSize;
 
-                    const xPos = xAxis.getPixelForTick(index) - imgWidth / 2; // 이름 왼쪽
+                    const xPos = xAxis.getPixelForTick(index) - barWidth/2.5; // 이름 왼쪽// /2를 하면 완전 딱붙음
                     const yPos = yAxis.bottom + 5; 
 
                     // 사진 동그라미로 만들기
@@ -154,37 +173,28 @@ import axios from "axios";
                     ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight); 
                     ctx.restore(); // 상태 복원(다른 그리기에 영향 안주도록)
 
-                    const nameText = `${item.character_name}`;
-                    const textWidth = ctx.measureText(nameText).width;
-                    
+                    const rawText = (item.character_name === "Self")
+                                ? item.actor_name
+                                : item.character_name;
+                    let displayText = rawText;
+                    if (ctx.measureText(rawText).width > barWidth) {
+                      const words = rawText.split(" ");
+                      displayText = words[0] || "";
+                    }
+
+                    // 그리고 displayText(첫 단어)가 maxTextWidth를 초과하면 wrap 처리
+                    const wrappedLines = wrapWord(ctx, displayText, maxTextWidth);
+                          
                     let textX = xPos + imgWidth + padding; // 사진의 오른쪽
                     let textY = yPos + imgHeight / 2 + 5; // 중앙 정렬
 
                     // 이름이 너무 길면면 줄바꿈
-                    if (textWidth > maxTextWidth) {
-                      const words = nameText.split(" ");
-                      let line = "";
-                      let lineHeight = 14;
-                      let yOffset = 0;
-
-                      words.forEach((word) => {
-                        const testLine = line + word + " ";
-                        const testWidth = ctx.measureText(testLine).width;
-
-                        if (testWidth > maxTextWidth && line !== "") {
-                          ctx.fillText(line, textX, textY + yOffset);
-                          line = word + " ";
-                          yOffset += lineHeight;
-                        } else {
-                          line = testLine;
-                        }
-                      });
-
+                 
+                    let yOffset = 0;
+                    wrappedLines.forEach((line) => {
                       ctx.fillText(line, textX, textY + yOffset);
-                    } else {
-                      ctx.fillText(nameText, textX, textY);
-                    }
-
+                      yOffset += lineHeight;
+                    });
                   });
                 };
               }
@@ -194,12 +204,23 @@ import axios from "axios";
       ],
     });
   }
+  function handleResize() {
+  // 창 크기가 변경되면 차트가 존재할 경우 크기를 업데이트함
+  if (myChart) {
+    myChart.resize();
+  }
+}
+
 
 onMounted(async () => {
+  window.addEventListener("resize", handleResize); //이벤트 종류: resize
   setTimeout(() => {
     showChart(); 
   }, 1500); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
 });
 
+onUnmounted(() => {
+  window.removeEventListener("resize", handleResize);
+});
 
 </script>
