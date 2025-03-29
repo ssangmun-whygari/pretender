@@ -87,6 +87,7 @@ public class MediaInfoController {
 	public ResponseEntity<List<CastVotesDTO>> getCastVotes(@RequestParam String mediaId, @RequestParam String type) {
 		System.out.println("it's working!"+mediaId+" : "+type);
 		List<CastVotesDTO> castVotes = mediaInfoService.requestCastVotes(mediaId,type);
+		System.out.println("#######@@@@@@@@@@@@@@@###########castVotes :" +castVotes);
 		return ResponseEntity.ok(castVotes);
 	}
 	
