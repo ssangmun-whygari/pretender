@@ -4,6 +4,12 @@
     align-items: center;
     height: 100%;
   }
+
+  .error_msg {
+    color: red;
+    font-size: 0.8em;
+    margin-top: 4px;
+  }
   
   .card {
     padding: 16px;
@@ -24,3 +30,4 @@
     margin-top: 8px;
   }
   
+ 

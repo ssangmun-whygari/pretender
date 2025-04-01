@@ -36,6 +36,39 @@ export function useSignUpLogic() {
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,15}$/;
 
 
+    const birthdateErrorMessage = ref('');
+    const genderErrorMessage = ref('');
+
+    async function newHandleSubmit() {
+      // error-message 초기화
+      idErrorMessage.value = '';
+      nicknameErrorMessage.value = '';
+      birthdateErrorMessage.value = '';
+      genderErrorMessage.value = '';
+
+      validateId();
+      validatePassword();
+
+      if (!fromDateVal.value) {
+        birthdateErrorMessage.value = '생년월일을 선택하세요.';
+      }
+      if (!gender.value) {
+        genderErrorMessage.value = '성별을 선택하세요.';
+      }
+      if (!nickname.value) {
+        nicknameErrorMessage.value = '닉네임을 입력하세요.';
+      }
+
+ 
+      if (!isIdValid.value || !isPasswordValid.value || birthdateErrorMessage.value || genderErrorMessage.value || nicknameErrorMessage.value) {
+        console.error('필수 입력 사항을 확인하세요.');
+        return;
+      }
+
+      // 모든 검증이 통과되면 폼을 제출함
+      await handleSubmit();
+    }
+
   // 검증 함수
     function validateId() {
       hasTypedId.value = true;
@@ -118,7 +151,7 @@ export function useSignUpLogic() {
       
     }catch(error) {
           console.error('Error:', error.response?.data || error.message);
-          // 서버에서 반환된 메시지 처리
+          // 서버에서 메시지를 받아옴
           if(error.response && error.response.status === 400){
             const errorMessage = error.response.data;
             if(errorMessage.includes('가입한 회원')) {
@@ -154,7 +187,9 @@ export function useSignUpLogic() {
       validatePassword,
       fromDateDisp,
       handleDateInput,
-      handleSubmit,
+      birthdateErrorMessage,
+      genderErrorMessage,
+      handleSubmit: newHandleSubmit,
     };
   }
 
