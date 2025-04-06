@@ -53,10 +53,6 @@ import { ref, onMounted } from 'vue';
 import { useNavigationStore } from '../../composables/stores/navigation';
 const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
-onMounted(() => {
-  document.querySelector('.v-main')?.classList.remove('background-container');
-});
-
 // Vue Router와 Pinia Store 초기화
 const router = useRouter();
 const navigationStore = useNavigationStore();

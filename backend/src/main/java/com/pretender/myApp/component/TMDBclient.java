@@ -13,13 +13,23 @@ public class TMDBclient {
 	@Autowired
 	private RestClient.Builder builder;
 	
+	private volatile RestClient restClient;
+	
 	public RestClient getRestClient() {
-		return builder
-			.baseUrl("https://api.themoviedb.org")
-			.defaultHeaders(httpHeaders -> {
-				httpHeaders.add("Authorization", "Bearer " + token);
-				httpHeaders.add("accept", "application/json");
-			})
-			.build();
+	    if (restClient == null) {
+	        synchronized (this) {
+	        	if (restClient == null) {
+	    			restClient = builder
+	    					.baseUrl("https://api.themoviedb.org")
+	    					.defaultHeaders(httpHeaders -> {
+	    						httpHeaders.add("Authorization", "Bearer " + token);
+	    						httpHeaders.add("accept", "application/json");
+	    						httpHeaders.add("User-Agent", "Mozilla/5.0");
+	    					})
+	    					.build();
+	        	}
+	        }
+	    }
+		return restClient;
 	}
 }

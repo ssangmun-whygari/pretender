@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid class="mediaList">
     <div v-if="imageUrls.allLoaded && lgAndUp" class="progress-image-container">
       <!-- TODO : 계절에 따른 변화 필요 -->
       <img :src="imageCache[apiBaseUrl + '/resource/image?filename=ladder.png']" class="progress-image">
@@ -98,6 +98,10 @@
 </template>
 
 <style>
+  .mediaList {
+    position: relative;
+  }
+
   .mainTitle {
     font-size: xxx-large;
     font-weight: bold;
@@ -150,9 +154,11 @@
   }
 
   .yearCategory {
-    color: rgb(170, 170, 170);
-    font-size: 250%;
-    font-style: italic;
+    font-size: 400%;
+    font-family: 'PartialSansKR-Regular', sans-serif;
+    display: inline-block; /* transform 적용을 위해 필요 */
+    transform: scaleX(0.7);
+    transform-origin: left;
   }
 
   .mySwiper {
@@ -307,13 +313,10 @@
   onMounted(() => {
     preloadImages(imageUrls)
     window.addEventListener('scroll', handleScroll)
-    // 배경화면 지정
-    document.querySelector('.v-main')?.classList.add('background-container');
   });
 
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
-    document.querySelector('.v-main')?.classList.remove('background-container');
   });
 
   // TODO : 매끄러운 스크롤을 위한 해결과정 블로그에 적기
@@ -741,10 +744,4 @@
   //     backDropPath: backDropPath
   //   })
   // }
-
-  onMounted(() => {
-    // console.log(`+++++++++++++++backgroundImageUrl : ${backgroundImageUrl}`)
-    document.querySelector('.background-container').style.backgroundImage = 
-    `linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.205)), url('${backgroundImageUrl}')`
-  })
 </script>

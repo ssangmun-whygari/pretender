@@ -9,10 +9,6 @@ import { useRouter } from 'vue-router'
 import { useNavigationStore } from '@/composables/stores/navigation';
 const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
-onMounted(() => {
-  document.querySelector('.v-main')?.classList.remove('background-container');
-});
-
 let navigationStore = useNavigationStore()
 let router = useRouter()
 

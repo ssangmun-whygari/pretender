@@ -19,23 +19,23 @@ public class KakaoAccessTokenResponseClient implements OAuth2AccessTokenResponse
 	
     @Override
     public OAuth2AccessTokenResponse getTokenResponse(OAuth2AuthorizationCodeGrantRequest request) throws OAuth2AuthenticationException {
-    	 ClientRegistration clientRegistration = request.getClientRegistration();
+    	ClientRegistration clientRegistration = request.getClientRegistration();
 
-         RestClient restClient = RestClient.create();
-         
-		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-		params.add("grant_type", "authorization_code");
-		params.add("client_id", clientRegistration.getClientId());
-		params.add("client_secret", clientRegistration.getClientSecret());
-		params.add("redirect_uri", request.getAuthorizationExchange().getAuthorizationRequest().getRedirectUri());
-		params.add("code", request.getAuthorizationExchange().getAuthorizationResponse().getCode());
+    	RestClient restClient = RestClient.create();
+    	
+    	MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    	params.add("grant_type", "authorization_code");
+    	params.add("client_id", clientRegistration.getClientId());
+    	params.add("client_secret", clientRegistration.getClientSecret());
+    	params.add("redirect_uri", request.getAuthorizationExchange().getAuthorizationRequest().getRedirectUri());
+    	params.add("code", request.getAuthorizationExchange().getAuthorizationResponse().getCode());
 
-         ResponseEntity<Map> responseEntity = restClient.post()
-        	        .uri(clientRegistration.getProviderDetails().getTokenUri())
-        	        .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
-        	        .body(params)
-        	        .retrieve()
-        	        .toEntity(Map.class);
+    	ResponseEntity<Map> responseEntity = restClient.post()
+    			.uri(clientRegistration.getProviderDetails().getTokenUri())
+    			.contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
+    			.body(params)
+        	    .retrieve()
+        	    .toEntity(Map.class);
 
          Map<String, Object> body = responseEntity.getBody();
 
