@@ -30,4 +30,30 @@
 		GROUP BY l.character_id, l.why
 		ORDER BY votes DESC
 	</select>
+	
+	<select id="selectAiSummary" resultType="com.pretender.myApp.model.AISummaryDTO">
+		select work_id as workId, 
+			one_point as onePoint, 
+			category1, category2, category3, category5, category6, media_type
+		from ai_summary
+		where work_id = #{mediaId} and media_type = #{type}
+	</select>
+	
+	<select id="selectAiSummaryCategory" resultType="com.pretender.myApp.model.AISummaryCategoryDTO">
+		select category_number as categoryNumber, category
+		from ai_summary_category
+	</select>
+	
+	<select id="selectAiSummaryProvidedList" resultType="String">
+		select work_id from ai_summary
+	</select>
+	
+	<select id="selectDetailForAiSummaryProvidedList" resultType="map">
+		select work_id as mediaId, poster_path as posterPath, work_title as title 
+		from ai_summary
+		where work_id in
+		<foreach item="item" collection="list" open="(" separator="," close=")">
+		    #{item}
+		</foreach>
+	</select>
 </mapper>

@@ -1,12 +1,14 @@
 package com.pretender.myApp.controller;
 
 
+import java.net.URI;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,7 @@ public class MembersController {
   @Autowired
   private MembersService membersService;
   private static final int PAGE_SIZE_MyActivities = 10;
+  
 
   @PostMapping("/api/signup")
   public ResponseEntity<String> registerUser(@RequestBody MembersDTO signUpRequest) {
@@ -87,6 +90,12 @@ public class MembersController {
             return ResponseEntity.badRequest().body("이미지 파일만 업로드 가능합니다.");
         }
         
+    	long MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+
+    	if (file.getSize() > MAX_FILE_SIZE) {
+    	    return ResponseEntity.badRequest().body("파일 크기는 1MB를 초과할 수 없습니다.");
+    	}
+        
         try {
         	// TODO : 이미지 작은 크기로 변환하여 저장
         	membersService.updateProfileImage(token.getName(), file);
@@ -97,6 +106,7 @@ public class MembersController {
         return ResponseEntity.ok("이미지 등록이 완료되었습니다.");
 	}
 	
+	/* deprecated
 	@GetMapping("api/members/profile/image")
 	public ResponseEntity<Object> getProfileImage (
 			@RequestParam(required = false) String memberId,
@@ -117,6 +127,29 @@ public class MembersController {
             } else {
                 return ResponseEntity.notFound().build();
             }
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 조회 중 오류가 발생했습니다.");
+		}
+	} */ 
+	
+	@GetMapping("api/members/profile/image")
+	public ResponseEntity<Object> getProfileImage (
+			@RequestParam(required = false) String memberId,
+			Authentication token
+		) {
+		System.out.println("GET api/members/profile/image");
+		String s3Url;
+		try {
+			if (memberId == null) {
+				s3Url = membersService.getProfileImagePath(token.getName()); // 로그인한 아이디로 조회
+			} else {
+				s3Url = membersService.getProfileImagePath(memberId); // 멤버 아이디로 조회
+			}
+			return ResponseEntity.status(HttpStatus.FOUND) // 302 Redirect
+		            .location(URI.create(s3Url))
+		            .build();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 조회 중 오류가 발생했습니다.");

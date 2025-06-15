@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.pretender.myApp.component.TMDBclient;
+import com.pretender.myApp.model.AISummaryDTO;
 import com.pretender.myApp.model.CastLikeCategoryDTO;
 import com.pretender.myApp.model.CastVotesDTO;
 import com.pretender.myApp.model.VoteReasonsDTO;
@@ -98,10 +99,16 @@ public class MediaInfoService {
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 		// TODO : 평균 별점 DB에서 조회
-		// working...
 		Float averageStars = mediaInfoDAO.getAverageStars(mediaId, type);
 		System.out.println("평균별점 : " + averageStars);
 		result.put("average_stars", averageStars);
+		
+		AISummaryDTO aiSummary = mediaInfoDAO.getAiSummary(mediaId, type);
+		result.put("ai_summary", aiSummary);
+		if (aiSummary != null) {
+			Map<Integer, String> aiSummaryCategory = mediaInfoDAO.getAiSummaryCategory();
+			result.put("ai_summary_category", aiSummaryCategory);
+		}
 		return result;
 	}
 
@@ -152,6 +159,12 @@ public class MediaInfoService {
 		// 투표 이유와 투표 수 가져오기
 		return mediaInfoDAO.getVotesResons(mediaId, type, characterId);
 	}
-	
-	
+
+	public List<String> requestAiSummaryProvidedList() {
+		return mediaInfoDAO.getAiSummaryProvidedList();
+	}
+
+	public List<Map<String, String>> requesDetailFortAiSummaryProvidedList(List<String> idList) {
+		return mediaInfoDAO.getDetailForAiSummaryProvidedList(idList);
+	}
 }

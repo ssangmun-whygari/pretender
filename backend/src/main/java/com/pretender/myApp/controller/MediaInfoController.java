@@ -6,6 +6,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,6 +52,33 @@ public class MediaInfoController {
 		Map<String, Object> result = null;
 		try {
 			result = mediaInfoService.requestDetail(type, mediaId);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().build();
+		}
+		return ResponseEntity.ok(result);
+	}
+	
+	@GetMapping("/api/aiSummaryProvided")
+	public ResponseEntity<List<String>> getAiSummaryProvidedList() {
+		List<String> result = null;
+		try {
+			result = mediaInfoService.requestAiSummaryProvidedList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().build();
+		}
+		return ResponseEntity.ok(result);
+	}
+	
+	@PostMapping("/api/detail/aiSummaryProvided")
+	public ResponseEntity<List<Map<String, String>>> getAiSummaryProvidedList(
+			@RequestBody List<String> idList
+			) {
+		System.out.println("도착한 idList : " + idList.toString());
+		List<Map<String, String>> result = null;
+		try {
+			result = mediaInfoService.requesDetailFortAiSummaryProvidedList(idList);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.badRequest().build();

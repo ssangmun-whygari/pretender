@@ -39,7 +39,7 @@ public class ResourceController {
 	}
 	
 	@GetMapping("/resource/characterVoteNoImage")
-	public ResponseEntity<Object> getImage( // 함수 오버로딩
+	public ResponseEntity<Object> getImage(
 			) {
 		
 		String s3Url = resourceS3bucketUrl + "/images/public/characterVoteNoImage.webp";

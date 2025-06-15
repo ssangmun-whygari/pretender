@@ -1,26 +1,38 @@
 package com.pretender.myApp.service;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pretender.myApp.component.S3client;
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.model.MyActivitiesDTO;
 import com.pretender.myApp.persistence.MembersDAO;
 
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
 
 @Service
 public class MembersService {
+	
+	@Value("${resourceS3bucketUrl}")
+	private String resourceS3bucketUrl;
+	
+	@Value("${S3bucketName}")
+	private String S3bucketName;
+	
+	@Autowired
+	private S3client s3client;
 		
 	@Autowired
 	private MembersDAO membersDAO;
@@ -73,6 +85,7 @@ public class MembersService {
       return membersDAO.countByNickname(nickname) > 0;
     }
     
+    /* deprecated
     @Transactional
     public void updateProfileImage(String memberId, MultipartFile imageFile) throws Exception {
     	File imageSaveDir = new File("images/members/");
@@ -94,8 +107,30 @@ public class MembersService {
         if (membersDAO.updateProfileImageName(memberId, newFilename) != 1) {
         	throw new Exception("DB 업데이트 중 문제 발생");
         }
+    } */
+    
+    @Transactional
+    public void updateProfileImage(String memberId, MultipartFile imageFile) throws Exception {        
+        // ID_현재시간의 형식으로 파일이름을 지정
+        String newFilename = memberId + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+        
+        S3Client client = s3client.getS3Client();
+        
+        // S3에 넣을 요청 만들기
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(S3bucketName)
+                .key("images/members/" + newFilename)
+                .contentType(imageFile.getContentType())
+                .build();
+        
+        client.putObject(putObjectRequest, RequestBody.fromBytes(imageFile.getBytes()));
+
+        if (membersDAO.updateProfileImageName(memberId, newFilename) != 1) {
+        	throw new Exception("DB 업데이트 중 문제 발생");
+        }
     }
     
+    /* deprecated
     public Resource getProfileImage(String memberId) throws Exception {
     	String fileName = membersDAO.getProfileImageName(memberId);
     	File imageFile;
@@ -109,6 +144,20 @@ public class MembersService {
     	Resource resource = new UrlResource(Paths.get(imageFile.getAbsolutePath()).normalize().toUri());
     	return resource;
     }
+    */
+    
+    public String getProfileImagePath(String memberId) throws Exception {
+    	String s3Url;
+    	String fileName = membersDAO.getProfileImageName(memberId);
+    	if (!("default_profile.png").equals(fileName)) {
+    		s3Url = resourceS3bucketUrl + "/images/members/" + fileName;
+    	} else {
+    		s3Url = resourceS3bucketUrl + "/images/public/" + fileName;
+    	}
+    	return s3Url;
+    }
+    
+    
 
 	public List<MyActivitiesDTO> selectMyActivitiesInfo(String userId, int page, int size) {
 		// 내활동 불러오기

@@ -5,6 +5,22 @@
       <v-col lg="8" cols="12">
         <v-expand-transition class="contents">
           <div v-show="showCharacterView === false">
+            <v-sheet v-if="mediaInfo.ai_summary" border class="mt-3 mb-3 pa-3 rounded-lg">
+              <div class="pretender-headline">🧐 아는 척</div>
+              <div><span class="pretender-subline">"AI의 똑똑한 감상 요약으로 지인들에게 '아는 척'을 해보세요!"</span></div>
+              <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
+                <div v-if="mediaInfo.ai_summary.onePoint">
+                  <h1>원포인트</h1>
+                  <div class="pretender-directive">친구에게 이 한마디로 대화를 시작해보는 건 어떨까요?</div>
+                  <div class="pretender-onepoint mt-3 mb-3">{{ "\"" + mediaInfo.ai_summary.onePoint + "\"" }}</div>
+                </div>
+                <div class="mt-1 mb-1" v-for="categoryKey in Object.keys(mediaInfo.ai_summary).filter((key) => key.startsWith('category') && mediaInfo.ai_summary[key])" :key="categoryKey">
+                  <h2 class="mb-1">{{ mediaInfo.ai_summary_category[Number(categoryKey.replace("category", ""))] }}</h2>
+                  <p>{{ mediaInfo.ai_summary[categoryKey] }}</p>
+                </div>
+              </v-sheet>
+            </v-sheet>
+
             <v-sheet v-if="hasContentProvider()" border class="mt-3 mb-3 pa-3 rounded-lg">
               <h2>다음과 같은 플랫폼에서 볼 수 있어요</h2>
               <div class="d-flex align-center ga-3">
@@ -85,6 +101,29 @@
     color:grey;
     text-decoration:none;
   }
+
+  .pretender-headline {
+    font-size: 60px;
+    font-weight: bold;
+  }
+
+  .pretender-subline {
+    font-size: 24px;
+    font-style: italic;
+    background-color: #D2F9F4;
+  }
+
+  .pretender-directive {
+    font-style: italic;
+  }
+
+  .pretender-onepoint {
+    font-size: 24px;
+    /* font-weight: bold; */
+    text-align: center;
+    /* font-style: italic; */
+    background-color: #d1d1d1;
+  }
 </style>
 
 <script setup>
@@ -138,12 +177,10 @@
   let videoPlaying = ref(false)
 
   // axios 요청
-  // working...
   async function getResponse() {
     let response = await axios.get(
       apiBaseUrl + '/api/detail',
       {
-        // TODO : 바꿔야 함
         params : {
           type: type.value,
           mediaId: id.value,
@@ -227,9 +264,9 @@
   let getContentProviders = computed(() => {
     if (!(mediaInfo.value)["watch/providers"]) { return [] }
     let providerInfos = (mediaInfo.value)["watch/providers"]["results"]["KR"]
-    console.log('+++++++++++++++++++++++++++++++++providerInfos ...')
-    console.log(providerInfos)
-    console.log('+++++++++++++++++++++++++++++++++providerInfos end')
+    // console.log('+++++++++++++++++++++++++++++++++providerInfos ...')
+    // console.log(providerInfos)
+    // console.log('+++++++++++++++++++++++++++++++++providerInfos end')
     if (!providerInfos) {return []}
     let providerInfoArray = []
     if (providerInfos.rent && Array.isArray(providerInfos.rent)) { providerInfoArray = providerInfoArray.concat(providerInfos.rent) }
@@ -242,17 +279,17 @@
     )
     let filteredProviderInfoArray = []
     for (name of nameSet) {
-      console.log(`providerName : ${name}`)
-      console.log(`index : ${providerInfoArray.findIndex((p) => {return p.provider_name === name})}`)
+      // console.log(`providerName : ${name}`)
+      // console.log(`index : ${providerInfoArray.findIndex((p) => {return p.provider_name === name})}`)
       if (providerInfoArray.findIndex((p) => {return p.provider_name === name}) === -1) {continue}
       filteredProviderInfoArray.push( providerInfoArray[providerInfoArray.findIndex((p) => {return p.provider_name === name})] )
     }
     // 중복 제거 알고리즘 END
-    console.log("===providerInfoArray : ")
-    console.log(mediaInfo.value)
-    console.log(providerInfoArray)
-    console.log(filteredProviderInfoArray)
-    console.log("===providerInfoArray END")
+    // console.log("===providerInfoArray : ")
+    // console.log(mediaInfo.value)
+    // console.log(providerInfoArray)
+    // console.log(filteredProviderInfoArray)
+    // console.log("===providerInfoArray END")
     return filteredProviderInfoArray
   })
 

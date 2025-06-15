@@ -51,6 +51,56 @@
           ></v-text-field>
         </div>
       </v-col>
+      <v-col lg="9" cols="12">
+        <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
+          <div style="font-size: xx-large; font-weight: bold;">🧐 똑똑한 AI 요약이 제공되는 작품 리스트에요</div>
+        </v-sheet>
+        <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg" v-if="aiSummaryProvidingList.length > 0">
+          <div v-if="aiSummaryWorksMediaInfoList.length > 0">
+            <swiper-container
+              class="mySwiper mb-3"
+              centered-slides="true"
+              :breakpoints="{
+                '@0.75': {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
+                },
+                '@1.00': {
+                  slidesPerView: 3,
+                  spaceBetween: 40,
+                },
+                '@1.50': {
+                  slidesPerView: 4,
+                  spaceBetween: 50,
+                },
+              }"
+              >
+              <swiper-slide 
+                class="slide"
+                v-for="(innerItem, index) in aiSummaryWorksMediaInfoList"
+                >
+                <v-sheet class="ma-3 pa-3 w-100 h-100 border rounded-lg poster-image-sheet"
+                  :elevation="2">
+                  <RouterLink 
+                  class="d-flex justify-center h-100 w-100"
+                  :to="{path: '/detail', query: {id : innerItem['mediaId'], type : 'tv'}}" >
+                    <div class="poster-image-container">
+                      <img 
+                      :src="posterPath(innerItem['posterPath'])"
+                      class="poster"
+                      @load="onPosterImageLoad"
+                      ></img>
+                    </div>
+                  </RouterLink>
+                </v-sheet>
+                <v-sheet class="ma-3 pa-3 w-100 h-100 border rounded-lg">
+                  <div style="text-align: center"><b>{{ innerItem["title"] }}</b></div>
+                </v-sheet>
+              </swiper-slide>
+            </swiper-container>
+          </div>
+        </v-sheet>
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -184,6 +234,18 @@
   const mainPosterPath = ref('')
   const mainPosterName = ref('')
   const mainPosterTMDBid = ref(0)
+  const aiSummaryProvidingList = ref([])
+  const aiSummaryWorksMediaInfoList = ref([])
+  const noImageUrl = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930"
+  const posterPath = (string) => {
+    if (string) {
+      return posterBaseUrl + string 
+    } else {
+      return noImageUrl
+    }
+  }
+  import { register } from 'swiper/element/bundle'
+  register()
 
   onMounted(() => {
     document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
@@ -210,6 +272,37 @@
       })
     }
   })
+
+  // AI 요약이 첨부된 작품 리스트 받기
+  let requestAiSummaryProvidingList = async () => {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+    let response = await axios.get(
+      apiBaseUrl + '/api/aiSummaryProvided',
+    )
+    console.log("==================requestAiSummaryProvidingList")
+    console.log(response)
+    let sourceList = response.data
+    let list = sourceList.sort(() => Math.random() - 0.5).slice(0, 10)// 랜덤으로 10개 추출
+    console.log(list)
+    aiSummaryProvidingList.value = aiSummaryProvidingList.value.concat(list)
+  }
+  requestAiSummaryProvidingList()
+  let requestMediaInfoForAiSummaryProvidingList = async (idList) => {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+    let response = await axios.post(
+      apiBaseUrl + '/api/detail/aiSummaryProvided', aiSummaryProvidingList.value
+    )
+    console.log("========================requestMediaInfoForAiSummaryProvidingList")
+    console.log(response.data)
+    aiSummaryWorksMediaInfoList.value = aiSummaryWorksMediaInfoList.value.concat(response.data)
+  }
+
+  watch(() => {return aiSummaryProvidingList.value.length}, (length) => {
+      if (length > 0) {
+        requestMediaInfoForAiSummaryProvidingList()
+      }
+    } 
+  )
 
   const { lgAndUp } = useDisplay();
   const router = useRouter();
