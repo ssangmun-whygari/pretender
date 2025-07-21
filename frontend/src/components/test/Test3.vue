@@ -36,7 +36,7 @@
   // GLB 로드
   const loader = new GLTFLoader();
   let loadedModel;
-  loader.load('../public/models/eumig_film_projector.glb', (gltf) => {
+  loader.load('/models/eumig_film_projector.glb', (gltf) => {
     loadedModel = gltf.scene;
     scene.add(loadedModel);
 

@@ -22,13 +22,13 @@
     <v-row justify="center">
       <v-col cols="12">
         <v-row justify="center" align="end">
-          <v-col lg="6" cols="12" class="order-2 order-lg-1">
+          <v-col xl="4" cols="12" class="order-2 order-xl-1">
             <div class="logo-wrapper">
               <div class="logo">pretender</div>
               <div class="logo-animated">pretender</div>
             </div>
           </v-col>
-          <v-col lg="6" cols="12" class="order-1 order-lg-2">
+          <v-col xl="5" cols="12" class="order-1 order-xl-2">
             <div class="main-poster-container">
               <RouterLink 
                 class="d-flex justify-center h-100 w-100"
@@ -50,6 +50,36 @@
             v-model="word"
           ></v-text-field>
         </div>
+      </v-col>
+      <v-col cols="12">
+        <v-row justify="center">
+          <v-col lg="5" cols="6" class="emphasized-bg-left d-flex flex-column justify-center ga-3" style="background-color: #00A1FF;">
+            <div class="ml-3" style="font-size: 48px;">사람처럼 똑똑합니다.</div>
+            <div class="ml-3" style="font-size: 20px;">- 똑똑한 AI 요약 정보로 '아는 척' 해보세요.</div>
+          </v-col>
+          <v-col lg="4" cols="6">
+            <TresCanvas>
+              <TresPerspectiveCamera
+                :position="[0, 4, 7.2]"
+                :look-at="[0, 1, 0]"
+                :fov="30"
+              />
+              <Suspense>
+                <PopCorn/>
+              </Suspense>
+              <TresDirectionalLight
+                :position="[5, 0, 5]"
+                :intensity="1"
+              ></TresDirectionalLight>
+              <TresDirectionalLight
+                :position="[-5, 0, 5]"
+                :intensity="0.5"
+                :color="0xFF8400"
+              ></TresDirectionalLight>
+              <TresAmbientLight :intensity="1.5" />
+            </TresCanvas>
+          </v-col>
+        </v-row>
       </v-col>
       <v-col lg="9" cols="12">
         <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
@@ -101,11 +131,46 @@
           </div>
         </v-sheet>
       </v-col>
+      <v-col cols="12">
+        <v-row justify="center">
+          <v-col lg="4" cols="6">
+            <TresCanvas>
+              <Suspense>
+                <MovieCut/>
+              </Suspense>
+              <TresPerspectiveCamera
+                :position="[4, -2.4, 1.6]"
+                :look-at="[0, 0, 0]"
+              />
+              <TresSpotLight
+                :position="[2, 2, 2]"
+                :intensity="15"
+              ></TresSpotLight>
+            </TresCanvas>
+          </v-col>
+          <v-col lg="5" cols="6" class="emphasized-bg-right d-flex flex-column justify-center align-end ga-3" style="background-color: #00CEB6;">
+            <div class="mr-3" style="font-size: 48px;">당신의 최애는 누구인가요?</div>
+            <div class="mr-3" style="font-size: 20px;">- 최애에게 소중한 한표를 주세요!</div>
+          </v-col>
+        </v-row>
+      </v-col>
     </v-row>
   </v-container>
 </template>
 
 <style scoped>
+  .emphasized-bg-left {
+    border-radius: 0px 100px 100px 0px / 0px 200px 200px 0px;
+    height: 400px;
+    color: white;
+  }
+
+  .emphasized-bg-right {
+    border-radius: 100px 0px 0px 100px / 200px 0px 0px 200px;
+    height: 400px;
+    color: white;
+  }
+
   .logo-wrapper {
     position: relative;
     text-align: center;
@@ -220,6 +285,10 @@
 </style>
 
 <script setup>
+  // 3d model 컴포넌트 import
+  import PopCorn from './3Dmodel/PopCorn.vue';
+  import MovieCut from './3Dmodel/MovieCut.vue';
+
   import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
@@ -245,10 +314,15 @@
     }
   }
   import { register } from 'swiper/element/bundle'
+import { TresCanvas } from '@tresjs/core';
   register()
 
+  // deprecated
+  // onMounted(() => {
+  //   document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
+  // })
   onMounted(() => {
-    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
+    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
   })
 
   let popularMovieInfos = ref([])

@@ -76,7 +76,11 @@
   );
 
   const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
+  // deprecated
+  // onMounted(() => {
+  //   document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
+  // })
   onMounted(() => {
-    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
+    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
   })
 </script>
