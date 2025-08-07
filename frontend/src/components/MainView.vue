@@ -1,7 +1,7 @@
 <template>
   <div class="bg-container"></div>
   <v-container class="d-flex justify-end position-relative">
-    <div v-if="isAuthenticated == true">
+    <!-- <div v-if="isAuthenticated == true">
       <RouterLink to="/myPage">
         마이페이지
       </RouterLink> / 
@@ -16,6 +16,44 @@
       <RouterLink to="/login">
         로그인
       </RouterLink>
+    </div> -->
+    <div v-if="isAuthenticated == true">
+      <RouterLink to="logout" @click="onLogout">
+        로그아웃
+      </RouterLink>
+    </div>
+    <div v-else class="d-flex">
+      <SignUpModal></SignUpModal> / 
+      <LoginModal @requestCheckAuthenticated="executeCheckAuthenticated"></LoginModal>
+      <!-- <v-dialog max-width="1280">
+        <template v-slot:activator="{ props: activatorProps }">
+          <div v-bind="activatorProps">로그인</div>
+        </template>
+
+        <template v-slot:default="{ isActive }">
+          <v-card>
+            <v-row no-gutters>
+              <v-col
+                cols="6"
+                class="d-none d-md-flex"
+                style="background-color: #eee; align-items: center; justify-content: center;"
+              >
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-card-title><div class="ma-5 members-form-title">로그인</div></v-card-title>
+                <v-card-text>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn text="Close Dialog" @click="isActive.value = false" />
+                </v-card-actions>
+              </v-col>
+            </v-row>
+          </v-card>
+        </template>
+      </v-dialog> -->
     </div>
   </v-container>
   <v-container class="d-flex flex-column justify-center position-relative" style="height:100%">
@@ -294,8 +332,9 @@
   import axios from 'axios'
   import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
   import { useNavigationStore } from '@/composables/stores/navigation';
+  import { usePopularMoviesStore } from '@/composables/stores/popularMovies';
   import { usePageTransition } from '@/composables/pageTransition';
-  import PopularMovieCarousel from './PopularMovieCarousel.vue';
+  // import PopularMovieCarousel from './PopularMovieCarousel.vue'; // deprecated
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
   const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
   const posterBaseUrl = "http://image.tmdb.org/t/p/w780"
@@ -314,8 +353,9 @@
     }
   }
   import { register } from 'swiper/element/bundle'
-import { TresCanvas } from '@tresjs/core';
   register()
+  import { TresCanvas } from '@tresjs/core';
+import SignUpModal from './members/SignUpModal.vue';
 
   // deprecated
   // onMounted(() => {
@@ -325,27 +365,64 @@ import { TresCanvas } from '@tresjs/core';
     document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
   })
 
-  let popularMovieInfos = ref([])
+  let popularMoviesStore = usePopularMoviesStore()
+
   let requestPopularMovies = async () => {
     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     let response = await axios.get(
       apiBaseUrl + '/api/popularMovies',
     )
-    popularMovieInfos.value = popularMovieInfos.value.concat(response.data.results)
+    popularMoviesStore.setPopularMovieInfos(response.data.results)
   }
-  requestPopularMovies()
-  watch(() => {return popularMovieInfos.value.length}, (length) => {
-    if (length > 0) { // popularMovieInfos에 값이 채워지면
-      let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
-      let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
-      loading.value = false
-      mainPosterName.value = movieInfoObj.title
-      mainPosterTMDBid.value = movieInfoObj.id
-      nextTick(() => {
-        document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
-      })
+  if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
+    requestPopularMovies()
+  }
+  // main-poster-container에 이미지 채워넣기
+  let setMainPoster = () => {
+    let popularMovieInfos = popularMoviesStore.getPopularMovieInfos()
+    let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
+    let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
+    loading.value = false
+    mainPosterName.value = movieInfoObj.title
+    mainPosterTMDBid.value = movieInfoObj.id
+    nextTick(() => {
+      document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
+    })
+  }
+  watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
+    if (length > 0) {
+      setMainPoster()
     }
   })
+  if (popularMoviesStore.getPopularMovieInfos().value.length > 0) {
+    setMainPoster()
+  }
+
+  // deprecated
+  // let popularMovieInfos = ref([])
+  // let requestPopularMovies = async () => {
+  //   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  //   let response = await axios.get(
+  //     apiBaseUrl + '/api/popularMovies',
+  //   )
+  //   popularMovieInfos.value = popularMovieInfos.value.concat(response.data.results)
+  // }
+  // requestPopularMovies()
+  // watch(() => {return popularMovieInfos.value.length}, (length) => {
+  //   if (length > 0) { // popularMovieInfos에 값이 채워지면
+  //     // console.log("================popularMovieInfos...")
+  //     // console.log(popularMovieInfos.value)
+  //     // console.log("================popularMovieInfos end")
+  //     let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
+  //     let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
+  //     loading.value = false
+  //     mainPosterName.value = movieInfoObj.title
+  //     mainPosterTMDBid.value = movieInfoObj.id
+  //     nextTick(() => {
+  //       document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
+  //     })
+  //   }
+  // })
 
   // AI 요약이 첨부된 작품 리스트 받기
   let requestAiSummaryProvidingList = async () => {
@@ -353,11 +430,11 @@ import { TresCanvas } from '@tresjs/core';
     let response = await axios.get(
       apiBaseUrl + '/api/aiSummaryProvided',
     )
-    console.log("==================requestAiSummaryProvidingList")
-    console.log(response)
+    // console.log("==================requestAiSummaryProvidingList")
+    // console.log(response)
     let sourceList = response.data
     let list = sourceList.sort(() => Math.random() - 0.5).slice(0, 10)// 랜덤으로 10개 추출
-    console.log(list)
+    // console.log(list)
     aiSummaryProvidingList.value = aiSummaryProvidingList.value.concat(list)
   }
   requestAiSummaryProvidingList()
@@ -366,8 +443,8 @@ import { TresCanvas } from '@tresjs/core';
     let response = await axios.post(
       apiBaseUrl + '/api/detail/aiSummaryProvided', aiSummaryProvidingList.value
     )
-    console.log("========================requestMediaInfoForAiSummaryProvidingList")
-    console.log(response.data)
+    // console.log("========================requestMediaInfoForAiSummaryProvidingList")
+    // console.log(response.data)
     aiSummaryWorksMediaInfoList.value = aiSummaryWorksMediaInfoList.value.concat(response.data)
   }
 
@@ -397,6 +474,12 @@ import { TresCanvas } from '@tresjs/core';
     })
   }
 
+  // 자식 컴포넌트가 보낸 이벤트(요청)을 처리
+  async function executeCheckAuthenticated() {
+    console.log("자식이 보낸 이벤트 받음")
+    isAuthenticated.value = await checkAuthenticated();
+  }
+
   async function checkAuthenticated() {
     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     let response = await axios.get(
@@ -417,6 +500,7 @@ import { TresCanvas } from '@tresjs/core';
   }
 
   function onLogout() {
+    isAuthenticated.value = false
     savePreviousPage()
   }
 

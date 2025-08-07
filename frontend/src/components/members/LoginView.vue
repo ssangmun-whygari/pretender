@@ -49,13 +49,15 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useNavigationStore } from '../../composables/stores/navigation';
+import { usePopularMoviesStore } from '@/composables/stores/popularMovies';
 const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
 // Vue Router와 Pinia Store 초기화
 const router = useRouter();
 const navigationStore = useNavigationStore();
+const popularMoviesStore = usePopularMoviesStore();
 
 const route = useRoute();
 
@@ -63,6 +65,28 @@ const route = useRoute();
 const userId = ref('');
 const userPassword = ref('');
 const errorMessage = ref('');
+
+let requestPopularMovies = async () => {
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  let response = await axios.get(
+    apiBaseUrl + '/api/popularMovies',
+  )
+  popularMoviesStore.setPopularMovieInfos(response.data.results)
+}
+
+if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
+  requestPopularMovies()
+}
+
+watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
+  if (length > 0) {
+    // working...
+  }
+})
+if (popularMoviesStore.getPopularMovieInfos().value.length > 0) {
+  // working...
+}
+
 
 // 로그인 요청 함수
 async function requestAuth() {

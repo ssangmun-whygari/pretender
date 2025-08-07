@@ -35,12 +35,16 @@ import Test2 from './components/test/Test2.vue'
 import Test3 from './components/test/Test3.vue'
 import Test4_socialLogin from './components/test/Test4_socialLogin.vue'
 import Test_TresJS from './components/test/Test_TresJS.vue'
-import SignUpView from './components/members/SignUpView.vue'
+import SignUpView from './components/members/SignUpView.vue' // deprecated
+import SignUpModal from './components/members/SignUpModal.vue'
 import MyPageView from './components/members/myPage/MyPageView.vue'
 import Background3Dmodel from './components/members/myPage/Background3Dmodel.vue'
-import LoginView from './components/members/LoginView.vue'
+import LoginView from './components/members/LoginView.vue' // deprecated
+import LoginModal from './components/members/LoginModal.vue'
+import AbstractCirclePatternShader from './components/members/AbstractCirclePatternShader.vue'
 import LogoutView from './components/members/LogoutView.vue'
 import SocialLoginSuccess from './components/members/SocialLoginSuccess.vue'
+import Test_CustomShader from './components/test/Test_CustomShader.vue'
 
 const pinia = createPinia()
 
@@ -57,7 +61,8 @@ const routes = [
     { path: '/socialLogin/success', component: SocialLoginSuccess},
     { path: '/login', component: LoginView},
     { path: '/logout', component: LogoutView},
-    { path: '/myPage', component: MyPageView}
+    { path: '/myPage', component: MyPageView},
+    { path: '/test/shader', component: Test_CustomShader}
 ]
 
 const router = createRouter({

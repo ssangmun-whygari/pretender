@@ -2,7 +2,7 @@
   <v-app>
     <v-main>
       <div :class="['d-flex', 'justify-center', 'align-center', 'transition-image-container', transitionState]" @transitionend="handleTransitionEnd">검색 중...</div>
-      <RouterView />
+      <RouterView/>
     </v-main>
   </v-app>
 </template>
