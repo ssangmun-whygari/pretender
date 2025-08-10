@@ -1,5 +1,5 @@
 <template>
-  <v-dialog max-width="1280">
+  <v-dialog v-model="dialog" max-width="1280">
     <template v-slot:activator="{ props: activatorProps }">
       <div class="ml-1 mr-1" v-bind="activatorProps">회원가입</div>
     </template>
@@ -22,21 +22,20 @@
             <v-card-title><div class="mt-10 ml-5 mr-5 members-form-title">회원가입</div></v-card-title>
             <v-card-text class="card-text d-flex flex-column justify-center">
               <div class="label mb-3">아이디</div>
-              <v-text-field v-model="userId" class="pb-5" placeholder="pretender@email.co.kr" variant="outlined"></v-text-field>
+              <v-text-field v-model="userId" placeholder="pretender@email.co.kr" variant="outlined"></v-text-field>
+              <div class="validation-message d-flex flex-column justify-center">
+                <div class="not-valid">{{ emailErrorMessage }}</div>
+              </div>
               <div class="label mb-3">비밀번호</div>
               <v-text-field 
-                v-model="userPassword" class="pb-5"  variant="outlined"
+                v-model="userPassword" variant="outlined"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                 :type="showPassword ? 'password' : 'text'"
                 @click:append-inner="showPassword = !showPassword"
               ></v-text-field>
               <div class="validation-message d-flex flex-column justify-center">
-                <div 
-                  :class="{ 
-                    'not-valid' : !isValidPassword,
-                    'valid' : isValidPassword
-                  }"
-                  v-if="userPassword.length > 0">{{ getPasswordRequirement() }}
+                <div :class="{ 'not-valid' : !isValidPassword,'valid' : isValidPassword}">
+                  {{ passwordErrorMessage }}
                 </div>
               </div>
               <div class="label mb-3">생년월일</div>
@@ -47,7 +46,7 @@
                     v-bind="props"
                     v-model="formattedDate" 
                     readonly
-                    class="pb-5"  variant="outlined"
+                    variant="outlined"
                   ></v-text-field>
                 </template>
                 <v-date-picker
@@ -57,9 +56,35 @@
                   @update:year="onYearChange"
                 />
               </v-menu>
+              <div class="validation-message d-flex flex-column justify-center">
+                <div class="not-valid">{{ birthdateErrorMessage }}</div>
+              </div>
+
+              <div class="label">성별</div>
+              <v-radio-group class="mb-3" v-model="gender" inline>
+                <v-radio class="ml-3 mr-3" label="남성" value="M"></v-radio>
+                <v-radio class="ml-3 mr-3" label="여성" value="F"></v-radio>
+                <v-radio class="ml-3 mr-3" label="비공개" value="N"></v-radio>
+              </v-radio-group>
+              <div class="validation-message d-flex flex-column justify-center">
+                <div class="not-valid">{{ genderErrorMessage }}</div>
+              </div>
 
 
+              <div class="label">닉네임</div>
+              <v-text-field 
+                v-model="nickname"  variant="outlined"
+              ></v-text-field>
+              <div class="validation-message d-flex flex-column justify-center">
+                <div class="not-valid">{{ nicknameErrorMessage }}</div>
+              </div>
 
+
+              <v-btn 
+                class="mt-5" height="48" color="primary" block outlined 
+                @click="handleSubmit">
+                <div class="button-text">가입하기</div>
+              </v-btn>
 
 
             </v-card-text>
@@ -73,6 +98,10 @@
 </template>
 
 <style scoped>
+  .button-text {
+    font-size: 16px;
+  }
+
   .members-form-title {
     font-size: 32px;
     font-weight: bold;
@@ -89,7 +118,7 @@
   }
 
   .validation-message {
-    height: 100px;
+    height: 32px;
   }
 
   .not-valid {
@@ -102,7 +131,10 @@
 </style>
 
 <script setup>
+  import axios from 'axios'
   import { ref, watch, onMounted, nextTick } from 'vue'
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  const dialog = ref(null)
 
   const menuOpened = ref(null)
   const selectedDate = ref(null)
@@ -190,23 +222,144 @@
     menuOpened.value = false
   }
 
-
-
+  const userId = ref('')
   const userPassword = ref('')
-  const isValidPassword = ref(false)
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,15}$/;
+  const isValidPassword = ref(false)
+  const gender = ref(null)
+  const nickname = ref('')
 
   // 입력이 변할때만 유효성 체크
   watch(userPassword, (password) => {
-    isValidPassword.value = PASSWORD_REGEX.test(password);
+    setPasswordErrorMessage()
+  })
+  watch(userId, (id) => {
+    setEmailErrorMessage()
+  })
+  watch(formattedDate, (string) => {
+    setBirthdayErrorMessage()
+  })
+  watch(gender, (g) => {
+    setGenderErrorMessage()
+  })
+  watch(nickname, (n) => {
+    setNicknameErrorMessage()
   })
 
-  function getPasswordRequirement() {
-    if (isValidPassword.value === true) {
-      return "✅ 6~15자, 영문 대소문자, 숫자, 특수문자를 포함"
+  let passwordErrorMessage = ref('')
+  function setPasswordErrorMessage() {
+    if (!PASSWORD_REGEX.test(userPassword.value)) {
+      passwordErrorMessage.value = "⚠️ 6~15자, 영문 대소문자, 숫자, 특수문자를 포함"
+      isValidPassword.value = false
+      return false
     } else {
-      return "⚠️ 6~15자, 영문 대소문자, 숫자, 특수문자를 포함"
+      passwordErrorMessage.value = "✅ 6~15자, 영문 대소문자, 숫자, 특수문자를 포함"
+      isValidPassword.value = true
+      return true
     }
   }
+
+  async function handleSubmit() {
+    let isEmailValid = setEmailErrorMessage()
+    let isPasswordValid = setPasswordErrorMessage()
+    let isBirthdayValid = setBirthdayErrorMessage()
+    let isGenderValid = setGenderErrorMessage()
+    let isNicknameValid = setNicknameErrorMessage()
+    console.log("회원가입 시도")
+    if (!isEmailValid || !isPasswordValid || !isBirthdayValid || !isGenderValid || !isNicknameValid) {
+      return
+    }
+
+    const personalInfo = {
+      id: userId.value,
+      password: userPassword.value,
+      nickname: nickname.value,
+      gender: gender.value,
+      birthday: formattedDate.value.replace(/-/g, ""),
+    };
+
+    try {
+      const response = await axios.post(apiBaseUrl + '/api/signup', personalInfo);
+      console.log('Response', response.data);
+    } catch (error) {
+      console.error('Error:', error.response?.data || error.message);
+      if (error.response && error.response.status === 400){
+        const errorBody = error.response.data;
+        // 서버에서 받아온 메시지 화면에 표시
+        if (errorBody["result"] === "fail" && errorBody["errorCode"] == "memberId") {
+          emailErrorMessage.value = "⚠️" + errorBody["message"]
+        } else if (errorBody["result"] === "fail" && errorBody["errorCode"] == "memberPassword") {
+          passwordErrorMessage.value = "⚠️" + errorBody["message"]
+        } else if (rrorBody["result"] === "fail" && errorBody["errorCode"] == "nickname") {
+          nicknameErrorMessage.value = "⚠️" + errorBody["message"]
+        }
+      } else {
+        console.log('오류:', error.message);
+      }
+    }
+    // 회원 가입 성공, 모달 닫기
+    clearForm()
+    dialog.value = false
+  }
+
+  function clearForm() {
+    userId.value = ""
+    userPassword.value = ""
+    nickname.value = ""
+    formattedDate.value = ""
+    emailErrorMessage.value = ""
+    nicknameErrorMessage.value = ""
+    birthdateErrorMessage.value = ""
+    genderErrorMessage.value = ""
+
+
+  }
+
+  const emailErrorMessage = ref('')
+  function setEmailErrorMessage() {
+    if (!EMAIL_REGEX.test(userId.value)) {
+      emailErrorMessage.value = "⚠️ 유효한 이메일 주소를 입력하세요"
+      return false
+    } else {
+      emailErrorMessage.value = ""
+      return true
+    }
+  }
+
+
+  const nicknameErrorMessage = ref('')
+  function setNicknameErrorMessage() {
+    if (!nickname.value || nickname.value.length <= 0) {
+      nicknameErrorMessage.value = "⚠️ 닉네임을 설정해주세요"
+      return false
+    } else if (nickname.value.length > 15) {
+      nicknameErrorMessage.value = "⚠️ 닉네임은 15자를 넘길 수 없습니다."
+      return false
+    }
+    nicknameErrorMessage.value =""
+    return true
+  }
+  const birthdateErrorMessage = ref('')
+  function setBirthdayErrorMessage() { // false 반환시 생일입력에 문제가 있음
+    if (formattedDate.value && formattedDate.value.length > 0) {
+      birthdateErrorMessage.value = ""
+      return true
+    } else {
+      birthdateErrorMessage.value = "⚠️ 생년월일을 입력하세요"
+      return false
+    }
+  }
+  const genderErrorMessage = ref('')
+  function setGenderErrorMessage() {
+    if (gender.value) {
+      genderErrorMessage.value = ""
+      return true
+    } else {
+      genderErrorMessage.value = "⚠️ 성별을 입력하세요"
+      return false
+    }
+  }
+
 
 </script>

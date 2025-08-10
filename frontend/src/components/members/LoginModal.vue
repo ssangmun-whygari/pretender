@@ -36,7 +36,6 @@
                 @click:append-inner="showPassword = !showPassword"
               ></v-text-field>
               <v-btn 
-                v-model="userPassword" 
                 class="mt-5" height="48" color="primary" block outlined 
                 @click="async () => {let result = await requestAuth(); isActive.value = !result}">
                 <div class="button-text">로그인하기</div>
