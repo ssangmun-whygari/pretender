@@ -26,7 +26,10 @@
               half-increments
             />
             <h1 class="text-white">{{ averageStars }}</h1>
-            <v-btn v-if="hasWatched == false" class="ml-3" color="primary" @click="addToWatchList">내가 본 작품인가요?</v-btn>
+            <v-btn 
+              v-if="hasWatched == false" 
+              class="ml-3" color="primary" 
+              @click="addToWatchList">내가 본 작품인가요?</v-btn>
             <v-btn v-else class="ml-3" color="secondary">내가 본 작품이에요!</v-btn>
           </div>
         </v-col>
@@ -126,15 +129,15 @@
   }
   getHasWatched()
 
+  const emit =  defineEmits(['requestOpenLoginModal'])
+
   async function addToWatchList() {
-    // 로그인이 되어있지 않으면 로그인 페이지로 보냄
+    // 로그인이 되어있지 않으면 부모 컴포넌트에게 이벤트 보내서 로그인 모달 띄우게 함
     const isLogined = await useCheckAuthenticated(); // 결과를 기다림
 
     if (!isLogined) {
-      navigationStore.setPreviousPage(route.fullPath)
-      router.push({
-        path: '/login'
-      })
+      console.log("MediaDetailBackdrop에서 requestOpenLoginModal를 요청함")
+      emit("requestOpenLoginModal")
       return
     }
 

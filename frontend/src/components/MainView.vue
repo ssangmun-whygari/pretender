@@ -1,23 +1,10 @@
 <template>
   <div class="bg-container"></div>
   <v-container class="d-flex justify-end position-relative">
-    <!-- <div v-if="isAuthenticated == true">
+    <div v-if="isAuthenticated == true">
       <RouterLink to="/myPage">
         마이페이지
       </RouterLink> / 
-      <RouterLink to="logout" @click="onLogout">
-        로그아웃
-      </RouterLink>
-    </div>
-    <div v-else>
-      <RouterLink to="/signUp" @click="savePreviousPage">
-        회원가입
-      </RouterLink> / 
-      <RouterLink to="/login">
-        로그인
-      </RouterLink>
-    </div> -->
-    <div v-if="isAuthenticated == true">
       <RouterLink to="logout" @click="onLogout">
         로그아웃
       </RouterLink>
@@ -27,40 +14,27 @@
       <LoginModal @requestCheckAuthenticated="executeCheckAuthenticated"></LoginModal>
     </div>
   </v-container>
-  <v-container class="d-flex flex-column justify-center position-relative" style="height:100%">
+  <v-container class="ma-0 pa-0 position-relative" style="max-width: none;">
+    <PopularMovieCarouselV2 :imagePaths="imagePathsForPopularMovieCarousel">
+    </PopularMovieCarouselV2>
+    <div class="logo">
+      pretender
+    </div>
+    <div class="main-search-bar">
+      <v-text-field
+        class="mx-auto"
+        bg-color="white"
+        :max-width="lgAndUp ? 1000 : null"
+        placeholder="영화, 애니메이션, TV 프로그램의 제목을 검색하세요"
+        v-on:keyup.enter="onEnter"
+        v-model="word"
+      ></v-text-field>
+    </div>
+  </v-container>
+  <v-container class="w-100 d-flex flex-column justify-center position-relative">
     <v-row justify="center">
-      <v-col cols="12">
-        <v-row justify="center" align="end">
-          <v-col xl="4" cols="12" class="order-2 order-xl-1">
-            <div class="logo-wrapper">
-              <div class="logo">pretender</div>
-              <div class="logo-animated">pretender</div>
-            </div>
-          </v-col>
-          <v-col xl="5" cols="12" class="order-1 order-xl-2">
-            <div class="main-poster-container">
-              <RouterLink 
-                class="d-flex justify-center h-100 w-100"
-                :to="{path: '/detail', query: {id : mainPosterTMDBid, type : 'movie'}}"
-              >
-              </RouterLink>
-              <div class="overlay-text">{{ mainPosterName ? mainPosterName : "제목 없음" }}</div>
-            </div>
-          </v-col>
-        </v-row>
-        
-        <div class="mt-5">
-          <v-text-field
-            class="mx-auto main-search-bar"
-            bg-color="white"
-            :max-width="lgAndUp ? 1000 : null"
-            placeholder="영화, 애니메이션, TV 프로그램의 제목을 검색하세요"
-            v-on:keyup.enter="onEnter"
-            v-model="word"
-          ></v-text-field>
-        </div>
-      </v-col>
-      <v-col cols="12">
+
+      <v-col class="mt-5" cols="12">
         <v-row justify="center">
           <v-col lg="5" cols="6" class="emphasized-bg-left d-flex flex-column justify-center ga-3" style="background-color: #00A1FF;">
             <div class="ml-3" style="font-size: 48px;">사람처럼 똑똑합니다.</div>
@@ -90,7 +64,8 @@
           </v-col>
         </v-row>
       </v-col>
-      <v-col lg="9" cols="12">
+
+      <v-col class="mt-5" lg="9" cols="12">
         <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
           <div style="font-size: xx-large; font-weight: bold;">🧐 똑똑한 AI 요약이 제공되는 작품 리스트에요</div>
         </v-sheet>
@@ -140,7 +115,8 @@
           </div>
         </v-sheet>
       </v-col>
-      <v-col cols="12">
+
+      <v-col class="mt-5" cols="12">
         <v-row justify="center">
           <v-col lg="4" cols="6">
             <TresCanvas>
@@ -163,11 +139,33 @@
           </v-col>
         </v-row>
       </v-col>
+
     </v-row>
   </v-container>
 </template>
 
 <style scoped>
+  .main-search-bar {
+    width: 100%;
+    margin-top: 50px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+  }
+
+  .logo {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    font-weight: bold;
+    color: white;
+    z-index: 3;
+  }
+
   .emphasized-bg-left {
     border-radius: 0px 100px 100px 0px / 0px 200px 200px 0px;
     height: 400px;
@@ -180,7 +178,8 @@
     color: white;
   }
 
-  .logo-wrapper {
+  /* deprecated */
+  /* .logo-wrapper {
     position: relative;
     text-align: center;
   }
@@ -200,9 +199,14 @@
     transform: translateX(-50%);
     animation: zoomFadeOut 1.5s ease-out forwards;
     animation-delay: 1.5s;
+  } */
+
+  .main-bg-poster-container {
+    width: 100%;
   }
 
-  .main-poster-container::before,
+  /* deprecated */
+  /* .main-poster-container::before,
   .main-poster-container::after {
     pointer-events: none;
   }
@@ -257,7 +261,7 @@
 
   .main-poster-container:hover::before {
     opacity: 1;
-  }
+  } */
 
   @keyframes zoomFadeOut {
     0% {
@@ -301,11 +305,12 @@
   import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
   import axios from 'axios'
-  import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+  import { ref, onMounted, onUnmounted, nextTick, watch, onBeforeUnmount } from 'vue'
   import { useNavigationStore } from '@/composables/stores/navigation';
   import { usePopularMoviesStore } from '@/composables/stores/popularMovies';
   import { usePageTransition } from '@/composables/pageTransition';
-  // import PopularMovieCarousel from './PopularMovieCarousel.vue'; // deprecated
+  import { TresCanvas } from '@tresjs/core';
+
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
   const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
   const posterBaseUrl = "http://image.tmdb.org/t/p/w780"
@@ -323,21 +328,25 @@
       return noImageUrl
     }
   }
-  import { register } from 'swiper/element/bundle'
-  register()
-  import { TresCanvas } from '@tresjs/core';
-import SignUpModal from './members/SignUpModal.vue';
-
-  // deprecated
-  // onMounted(() => {
-  //   document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
-  // })
+  
   onMounted(() => {
     document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
   })
 
+  // let popularMoviesStore = usePopularMoviesStore()
+  // onMounted(() => {
+  //   let requestPopularMovies = async () => {
+  //     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  //     let response = await axios.get(
+  //       apiBaseUrl + '/api/popularMovies',
+  //     )
+  //     popularMoviesStore.setPopularMovieInfos(response.data.results)
+  //   }
+  //   if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
+  //     requestPopularMovies()
+  //   }
+  // })
   let popularMoviesStore = usePopularMoviesStore()
-
   let requestPopularMovies = async () => {
     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
     let response = await axios.get(
@@ -348,52 +357,52 @@ import SignUpModal from './members/SignUpModal.vue';
   if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
     requestPopularMovies()
   }
-  // main-poster-container에 이미지 채워넣기
-  let setMainPoster = () => {
-    let popularMovieInfos = popularMoviesStore.getPopularMovieInfos()
-    let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
-    let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
-    loading.value = false
-    mainPosterName.value = movieInfoObj.title
-    mainPosterTMDBid.value = movieInfoObj.id
-    nextTick(() => {
-      document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
-    })
-  }
-  watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
-    if (length > 0) {
-      setMainPoster()
-    }
-  })
-  if (popularMoviesStore.getPopularMovieInfos().value.length > 0) {
-    setMainPoster()
-  }
 
+  let imagePathsForPopularMovieCarousel = ref([])
+  watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
+      if (length > 0) {
+        // console.log("인기 영화 정보 다운로드됨")
+        let infos = popularMoviesStore.getPopularMovieInfos().value
+        imagePathsForPopularMovieCarousel.value = 
+        imagePathsForPopularMovieCarousel.value.concat(
+          infos.slice(0, 5).filter((entry) => entry["backdrop_path"] !== undefined).map((entry) => entry["backdrop_path"])
+        )
+      }
+    } 
+  )
+  
+  // store에 저장된 value는 이 컴포넌트가 언마운트가 되어도 초기화가 안되기때문에 초기화해줌
+  onBeforeUnmount(() => {
+    popularMoviesStore.setPopularMovieInfos([])
+  })
+
+  onMounted(() => {
+    console.log("imagePaths의 길이? : ")
+    console.log(imagePathsForPopularMovieCarousel)
+  })
+
+  // main-poster-container에 이미지 채워넣기
   // deprecated
-  // let popularMovieInfos = ref([])
-  // let requestPopularMovies = async () => {
-  //   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-  //   let response = await axios.get(
-  //     apiBaseUrl + '/api/popularMovies',
-  //   )
-  //   popularMovieInfos.value = popularMovieInfos.value.concat(response.data.results)
+  // let setMainPoster = () => {
+  //   let popularMovieInfos = popularMoviesStore.getPopularMovieInfos()
+  //   console.log(popularMovieInfos)
+  //   let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
+  //   let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
+  //   loading.value = false
+  //   mainPosterName.value = movieInfoObj.title
+  //   mainPosterTMDBid.value = movieInfoObj.id
+  //   nextTick(() => {
+  //     document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
+  //   })
   // }
-  // requestPopularMovies()
-  // watch(() => {return popularMovieInfos.value.length}, (length) => {
-  //   if (length > 0) { // popularMovieInfos에 값이 채워지면
-  //     // console.log("================popularMovieInfos...")
-  //     // console.log(popularMovieInfos.value)
-  //     // console.log("================popularMovieInfos end")
-  //     let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
-  //     let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
-  //     loading.value = false
-  //     mainPosterName.value = movieInfoObj.title
-  //     mainPosterTMDBid.value = movieInfoObj.id
-  //     nextTick(() => {
-  //       document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
-  //     })
+  // watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
+  //   if (length > 0) {
+  //     setMainPoster()
   //   }
   // })
+  // if (popularMoviesStore.getPopularMovieInfos().value.length > 0) {
+  //   setMainPoster()
+  // }
 
   // AI 요약이 첨부된 작품 리스트 받기
   let requestAiSummaryProvidingList = async () => {
@@ -447,7 +456,7 @@ import SignUpModal from './members/SignUpModal.vue';
 
   // 자식 컴포넌트가 보낸 이벤트(요청)을 처리
   async function executeCheckAuthenticated() {
-    console.log("자식이 보낸 이벤트 받음")
+    // console.log("자식이 보낸 이벤트 받음")
     isAuthenticated.value = await checkAuthenticated();
   }
 
@@ -479,4 +488,10 @@ import SignUpModal from './members/SignUpModal.vue';
   onMounted(async () => {
     isAuthenticated.value = await checkAuthenticated()
   })
+
+  // import { onActivated, onDeactivated } from 'vue';
+  // onMounted(() => console.log('mounted: MainView'))
+  // onBeforeUnmount(() => console.log('beforeUnmount: MainView'))
+  // onActivated(() => console.log('activated: MainView'))
+  // onDeactivated(() => console.log('deactivated: MainView'))
 </script>

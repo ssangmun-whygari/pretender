@@ -27,14 +27,10 @@ import Tres from '@tresjs/core'
 
 import AppHeader from './components/AppHeader.vue'
 import MainView from './components/MainView.vue'
-import PopularMovieCarousel from './components/PopularMovieCarousel.vue'
+import PopularMovieCarousel from './components/PopularMovieCarousel.vue' // deprecated
+import PopularMovieCarouselV2 from './components/PopularMovieCarouselV2.vue'
 import SearchView from './components/search/SearchView.vue'
 import DetailView from './components/detail/DetailView.vue'
-import Test from './components/test/Test.vue'
-import Test2 from './components/test/Test2.vue'
-import Test3 from './components/test/Test3.vue'
-import Test4_socialLogin from './components/test/Test4_socialLogin.vue'
-import Test_TresJS from './components/test/Test_TresJS.vue'
 import SignUpView from './components/members/SignUpView.vue' // deprecated
 import SignUpModal from './components/members/SignUpModal.vue'
 import MyPageView from './components/members/myPage/MyPageView.vue'
@@ -44,17 +40,22 @@ import LoginModal from './components/members/LoginModal.vue'
 import AbstractCirclePatternShader from './components/members/AbstractCirclePatternShader.vue'
 import LogoutView from './components/members/LogoutView.vue'
 import SocialLoginSuccess from './components/members/SocialLoginSuccess.vue'
-import Test_CustomShader from './components/test/Test_CustomShader.vue'
+// test
+// import Test from './components/test/Test.vue'
+// import Test2 from './components/test/Test2.vue'
+// import Test3 from './components/test/Test3.vue'
+// import Test4_socialLogin from './components/test/Test4_socialLogin.vue'
+// import Test_TresJS from './components/test/Test_TresJS.vue'
+// import Test_CustomShader from './components/test/Test_CustomShader.vue'
+
+// swiper 등록
+import { register } from 'swiper/element/bundle'
+register()
 
 const pinia = createPinia()
 
 const routes = [
     { path: '/', component: MainView },
-    { path: '/test', component: Test },
-    { path: '/test2', component: Test2 },
-    { path: '/test3', component: Test3 },
-    { path: '/test4', component: Test4_socialLogin },
-    { path: '/test/TresJS', component: Test_TresJS},
     { path: '/search', component: SearchView},
     { path: '/detail', component: DetailView},
     { path: '/signUp', component: SignUpView},
@@ -62,7 +63,12 @@ const routes = [
     { path: '/login', component: LoginView},
     { path: '/logout', component: LogoutView},
     { path: '/myPage', component: MyPageView},
-    { path: '/test/shader', component: Test_CustomShader}
+    // { path: '/test', component: Test },
+    // { path: '/test2', component: Test2 },
+    // { path: '/test3', component: Test3 },
+    // { path: '/test4', component: Test4_socialLogin },
+    // { path: '/test/TresJS', component: Test_TresJS},
+    // { path: '/test/shader', component: Test_CustomShader}
 ]
 
 const router = createRouter({

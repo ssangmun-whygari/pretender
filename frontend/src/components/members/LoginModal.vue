@@ -1,5 +1,5 @@
 <template>
-  <v-dialog max-width="1280">
+  <v-dialog v-model="modalActivated" max-width="1280">
     <template v-slot:activator="{ props: activatorProps }">
       <div class="ml-1 mr-1" v-if="logined == false" v-bind="activatorProps">로그인</div>
     </template>
@@ -92,7 +92,29 @@ import AbstractCirclePatternShader from './AbstractCirclePatternShader.vue';
 const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 const router = useRouter();
 const navigationStore = useNavigationStore();
-const emit =  defineEmits(['requestCheckAuthenticated'])
+const emit =  defineEmits(['requestCheckAuthenticated', 'requestRestoreTrigger'])
+
+// 부모가 내려주는 props
+const props = defineProps({
+  triggered: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const modalActivated = ref(false)
+// 부모에서 값 내려왔으면 내부 상태와 동기화
+watch(
+  () => props.triggered,
+  (val) => {
+    console.log("LoginModal에서 triggered props의 변화를 감지함")
+    if (val === true) {
+      modalActivated.value = val
+      console.log(`modalActivated의 값이 ${val}로 변경됨`)
+      emit("requestRestoreTrigger")
+    }
+  },
+)
 
 // 상태 변수
 const logined = ref(false)

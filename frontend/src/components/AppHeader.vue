@@ -24,13 +24,20 @@
         로그아웃
       </RouterLink>
     </div>
-    <div class="mr-3" v-else>
-      <RouterLink to="/signUp" @click="savePreviousPage">
+    <div class="mr-3 d-flex" v-else>
+      <!-- <RouterLink to="/signUp" @click="savePreviousPage">
         회원가입
       </RouterLink> / 
       <RouterLink to="/login">
         로그인
-      </RouterLink>
+      </RouterLink> -->
+      <SignUpModal></SignUpModal> / 
+      <LoginModal 
+        :triggered="loginModalTriggered" 
+        @requestCheckAuthenticated="executeCheckAuthenticated"
+        @requestRestoreTrigger="requestRestoreTrigger"
+      >
+      </LoginModal>
     </div>
   </v-app-bar>
 </template>
@@ -55,18 +62,43 @@
 </style>
 
 <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRoute } from 'vue-router'
   import { useNavigationStore } from '../composables/stores/navigation';
   import axios from 'axios'
+
+  const emitRestoreTrigger = defineEmits(["requestRestoreTrigger"])
+  function requestRestoreTrigger() {
+    console.log("AppHeader가 자식 컴포넌트로부터 requestRestoreTrigger 요청을 받음")
+    loginModalTriggered.value = false
+    emitRestoreTrigger("requestRestoreTrigger")
+  }
+
+  // 부모가 내려주는 props
+  const props = defineProps({
+    loginModalTriggered: {
+      type: Boolean,
+      default: false
+    }
+  })
+  const loginModalTriggered = ref(false)
+
+  watch(() => {return props.loginModalTriggered}, (bool) => {
+    console.log("AppHeader에서 loginModalTriggered props의 변화를 감지함")
+    if (bool === true) {
+      console.log("loginModalTriggered props 값은 true임")
+      loginModalTriggered.value = true // LoginModal에게 props로 내려주는 값
+    }
+  })
 
   let isAuthenticated = ref(false)
   let navigationStore = useNavigationStore()
   let route = useRoute()
 
-  onMounted(async () => {
+  async function executeCheckAuthenticated()  {
     isAuthenticated.value = await checkAuthenticated()
-  })
+  }
+  onMounted(executeCheckAuthenticated)
 
   async function checkAuthenticated() {
     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
@@ -93,7 +125,6 @@
   }
 
   import { useDisplay } from 'vuetify';
-  import { watch } from 'vue'
 
   const { lgAndUp } = useDisplay();
 

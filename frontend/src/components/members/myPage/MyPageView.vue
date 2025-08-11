@@ -197,14 +197,17 @@
 </style>
 
 <script setup>
-  import { register } from 'swiper/element/bundle'
-  register();
+  // import { register } from 'swiper/element/bundle'
+  // register();
 
   import AppHeader from '@/components/AppHeader.vue';
   import { reactive, ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue'
   import axios from 'axios'
   import MyActivities from './MyActivities.vue';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
+  import { useErrorBackNavigation } from '@/composables/stores/errorBackNavigation';
+  // useErrorBackNavigation()
+  console.log("useErrorBackNavigation 사용중")
 
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
 
@@ -307,7 +310,9 @@
 
   onUnmounted(() => {
     let cardContainerElement = document.getElementById('image-upload-card-container')
-    cardContainerElement.removeEventListener('transitionend', onTransitionEndClosure)
+    if (cardContainerElement) {
+      cardContainerElement.removeEventListener('transitionend', onTransitionEndClosure)
+    }
   })
 
 

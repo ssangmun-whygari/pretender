@@ -1,5 +1,9 @@
 <template>
-  <MediaDetailBackdop v-bind:mediaInfo="mediaInfo"/>
+  <!-- 자식에서 "requestOpenLoginModal"라는 emit이 오면 자신 안에 정의된 requestOpenLoginModal() 함수로 보냄 -->
+  <MediaDetailBackdop 
+    v-bind:mediaInfo="mediaInfo"
+    @requestOpenLoginModal="requestOpenLoginModal" 
+  />
   <v-container fluid id="container">
     <v-row justify="center">
       <v-col lg="8" cols="12">
@@ -147,6 +151,12 @@
   import { useNavigationStore } from '@/composables/stores/navigation';
   import { useReviewSaveStore } from '@/composables/stores/reviewSave';
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  
+  const emit = defineEmits("requestOpenLoginModal")
+  function requestOpenLoginModal() {
+    console.log("MediaDetail에서 requestOpenLoginModal를 요청함")
+    emit("requestOpenLoginModal")
+  }
   
   let showCharacterView = ref(false)
   const id = ref(useRoute().query.id) // 주소창에서 id 쿼리를 얻어옴
