@@ -1,4 +1,4 @@
-package com.pretender.myApp.model;
+package com.pretender.myApp.security.model;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,23 +14,28 @@ import lombok.ToString;
 @Getter
 @ToString
 public class PretenderUserDetails implements UserDetails {
-
 	private String username;
 	private String password;
+	private String nickname;
 	private boolean enabled;
 	private List<GrantedAuthority> authorities;
 	private boolean isAdmin;
 	private static PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 	
-	public PretenderUserDetails(String username, String password, boolean eanabled, boolean isAdmin) {
+	public PretenderUserDetails(String username, String password, String nickname, boolean enabled, boolean isAdmin) {
 		this.username = username;
 		this.password = password;
 		this.enabled = enabled;
 		this.isAdmin = isAdmin;
+		this.nickname = nickname;
 	}
 	
 	public void encodePassword() {
 	    this.password = passwordEncoder.encode(this.password);
+	}
+	
+	public String getNickname() {
+		return this.nickname;
 	}
 	
 	public void setAuthorities(List<GrantedAuthority> authorities) {
@@ -59,5 +64,4 @@ public class PretenderUserDetails implements UserDetails {
 	public String getUsername() {
 		return this.username;
 	}
-	
 }

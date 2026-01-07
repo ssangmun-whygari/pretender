@@ -40,6 +40,16 @@
                 @click="async () => {let result = await requestAuth(); isActive.value = !result}">
                 <div class="button-text">로그인하기</div>
               </v-btn>
+              <v-btn 
+                class="mt-5" height="48"  block outlined 
+                @click="requestSocialLoginNaver">
+                <div class="button-text">네이버로 로그인하기</div>
+              </v-btn>
+              <v-btn 
+                class="mt-5" height="48"  block outlined 
+                @click="requestSocialLoginKakao">
+                <div class="button-text">카카오로 로그인하기</div>
+              </v-btn>
             </v-card-text>
             <v-card-actions>
               <!-- <v-spacer />
@@ -167,5 +177,13 @@ async function requestAuth() {
       return false
     }
   }
+}
+
+async function requestSocialLoginNaver() {
+  window.location.href = apiBaseUrl + "/api/login/naver";
+}
+
+async function requestSocialLoginKakao() {
+  window.location.href = apiBaseUrl + "/api/login/kakao";
 }
 </script>

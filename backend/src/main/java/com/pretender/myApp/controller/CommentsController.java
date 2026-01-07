@@ -246,6 +246,7 @@ public class CommentsController {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("리뷰 수정에 실패했습니다.");
 	}
 	
+	// TODO : 유저 정보는 항상 /api/authenticated로 얻어오도록 통일
 	// 사용자 아이디 가져오기
 	@GetMapping("api/getLoggedInId")
 	public ResponseEntity<Object> getLoggedInUserId(){

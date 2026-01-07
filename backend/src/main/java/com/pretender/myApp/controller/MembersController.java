@@ -2,21 +2,19 @@ package com.pretender.myApp.controller;
 
 
 import java.net.URI;
-import java.security.Principal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
+import org.springframework.boot.actuate.web.exchanges.HttpExchange.Principal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,8 +22,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pretender.myApp.exception.SignUpException;
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.model.MyActivitiesDTO;
+import com.pretender.myApp.security.model.PretenderUserDetails;
 import com.pretender.myApp.service.MembersService;
 
 
@@ -37,20 +37,24 @@ public class MembersController {
   
 
   @PostMapping("/api/signup")
-  public ResponseEntity<String> registerUser(@RequestBody MembersDTO signUpRequest) {
+  public ResponseEntity<Map<String, Object>> registerUser(@RequestBody MembersDTO signUpRequest) {
 
     int result = 0;
     try {
-      result = membersService.registerUser(signUpRequest);
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
+    	result = membersService.registerUser(signUpRequest);
+    } catch (SignUpException e) {
+    	Map<String, Object> responseBody = e.getBody();
+    	responseBody.put("result", "fail");
+    	return ResponseEntity.badRequest().body(responseBody);
     }
 
     if (result != 0) {
-      return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    } else {
-      return ResponseEntity.badRequest().body("회원가입에 실패하였습니다.");
-    }
+    	Map<String, Object> responseBody = Map.of("result", "success");
+    	return ResponseEntity.ok(responseBody);
+	} else {
+		Map<String, Object> responseBody = Map.of("result", "fail", "errorCode", "unknown", "message", "회원가입에 실패하였습니다");
+	    return ResponseEntity.badRequest().body(responseBody);
+	}
   }
 
 	@GetMapping("/api/login")
@@ -61,10 +65,38 @@ public class MembersController {
 	}
 	
 	@GetMapping("/api/authenticated")
-	public Principal user(Principal user) {
-		System.out.println("SecurityContext: " + SecurityContextHolder.getContext().getAuthentication());
-		System.out.println("user : " + user);
-	    return user;
+	public Map<String, Object> user(Authentication auth) {
+		Map<String, Object> res = new LinkedHashMap<>();
+		
+		// 로그인되어 있지 않다면
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            res.put("authenticated", false);
+            return res;
+        }
+        res.put("authenticated", true);
+        res.put("authorities", auth.getAuthorities().toString());
+        
+        Object principal = auth.getPrincipal();
+        // 소셜 로그인(OAuth2)
+        if (principal instanceof OAuth2User oAuth2User) {
+        	Map<String, Object> attributes = oAuth2User.getAttributes();
+        	String providerId = String.valueOf(attributes.get("providerId"));
+        	String nickname = String.valueOf(attributes.get("nickname"));
+            res.put("loginType", "OAUTH2");
+            res.put("providerId", providerId);
+            res.put("nickname", nickname);
+            return res;
+        }
+        // 로컬(DB) 로그인(UserDetails 기반)
+        if (principal instanceof PretenderUserDetails userDetails) {
+            res.put("loginType", "LOCAL");
+            res.put("nickname", userDetails.getNickname());
+            return res;
+        }
+        
+        res.put("loginType", "UNKNOWN");
+        res.put("principal", String.valueOf(principal));
+        return res;
 	}
 	
 	@GetMapping("/api/myPage")

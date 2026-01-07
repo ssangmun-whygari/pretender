@@ -25,12 +25,6 @@
       </RouterLink>
     </div>
     <div class="mr-3 d-flex" v-else>
-      <!-- <RouterLink to="/signUp" @click="savePreviousPage">
-        회원가입
-      </RouterLink> / 
-      <RouterLink to="/login">
-        로그인
-      </RouterLink> -->
       <SignUpModal></SignUpModal> / 
       <LoginModal 
         :triggered="loginModalTriggered" 

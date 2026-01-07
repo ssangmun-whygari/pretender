@@ -2,7 +2,10 @@ package com.pretender.myApp.service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.pretender.myApp.component.S3client;
+import com.pretender.myApp.exception.SignUpException;
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.model.MyActivitiesDTO;
 import com.pretender.myApp.persistence.MembersDAO;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 
@@ -48,19 +51,19 @@ public class MembersService {
 
     public int registerUser(MembersDTO membersDTO) {
         if (!isValidEmail(membersDTO.getId())) {
-            throw new IllegalArgumentException("아이디는 이메일 형식이어야 합니다.");
+            throw new SignUpException("memberId", "아이디는 이메일 형식이어야 합니다.");
         }
 
         if (!isValidPassword(membersDTO.getPassword())) {
-            throw new IllegalArgumentException("비밀번호는 6~15자, 대문자, 소문자, 숫자, 특수문자 포함이어야 합니다.");
+            throw new SignUpException("memberPassword", "비밀번호는 6~15자, 영문대소문자, 숫자, 특수문자 포함이어야 합니다.");
         }
 
-        if(isDuplicateId(membersDTO.getId())){
-          throw new IllegalArgumentException("이미 가입한 회원입니다.");
+        if (isDuplicateId(membersDTO.getId())){
+	        throw new SignUpException("memberId", "이미 가입한 회원입니다.");
         }
 
-        if(isDuplicateNickname(membersDTO.getNickname())) {
-          throw new IllegalArgumentException("이미 사용중인 닉네임입니다.");
+        if (isDuplicateNickname(membersDTO.getNickname())) {
+          throw new SignUpException("nickname", "이미 사용중인 닉네임입니다.");
         }
 
         membersDTO.setStatus("active");
@@ -181,5 +184,16 @@ public class MembersService {
 		int startNo = page * size;
 		List<MyActivitiesDTO> searchList = membersDAO.searchMyActivities(userId, word, startNo, size); 
 		return searchList;
+	}
+	
+	@Transactional
+	public String updateOAuthUser(String provider, String providerId) {
+		String nickname = null;
+		int result = membersDAO.insertOAuthUser(provider, providerId);
+		if (result != 0) { // 새로운 회원임
+			nickname = provider + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+			membersDAO.insertOAuthUserToMembers(provider, providerId, nickname);
+		}
+		return nickname;
 	}
 }

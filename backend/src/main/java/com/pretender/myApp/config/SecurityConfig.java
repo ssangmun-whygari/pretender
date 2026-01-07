@@ -2,7 +2,8 @@ package com.pretender.myApp.config;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,25 +20,18 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.pretender.myApp.component.CustomOAuth2FailureHandler;
-import com.pretender.myApp.component.KakaoAccessTokenResponseClient;
+import com.pretender.myApp.security.service.CustomOAuth2UserService;
 import com.pretender.myApp.service.MyBatisUserDetailsService;
-import com.pretender.myApp.util.HttpsSchemeFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
-	@Autowired
-	private KakaoAccessTokenResponseClient kakaoAccessTokenResponseClient;
-	
 	@Value("${frontEndBaseUrl}")
 	private String frontEndBaseUrl;
 	
@@ -47,10 +41,10 @@ public class SecurityConfig {
 	@Value("${whygari.naverClientPassword}")
 	private String naverClientPassword;
 	
-	@Value("${kakaoClientId}")
+	@Value("${whygari.kakaoClientId}")
 	private String kakaoClientId;
 	
-	@Value("${kakaoClientSecret}")
+	@Value("${whygari.kakaoClientSecret}")
 	private String kakaoClientSecret;
 	
 	@Value("${googleClientId}")
@@ -69,13 +63,14 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 	
-    
 	@Bean
 	// reference : https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/config/annotation/web/builders/HttpSecurity.html
-	SecurityFilterChain configure(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
-		http.addFilterBefore(new HttpsSchemeFilter(), WebAsyncManagerIntegrationFilter.class);
+	SecurityFilterChain configure(
+			HttpSecurity http, 
+			CorsConfigurationSource corsConfigurationSource,
+			CustomOAuth2UserService customOAuth2UserService) throws Exception {
+		
 		// reference : https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
-		// TODO : 블로그에 적기...
 		http.sessionManagement((session) -> {
 			session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
 		});
@@ -90,36 +85,34 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.GET, "/resource/image/**").permitAll()
 				.requestMatchers("/images/public/**").permitAll()
 				.requestMatchers("/api/myPage/**").authenticated()
-				.requestMatchers("/api/login").authenticated()
 				.requestMatchers("/api/collection/**").authenticated()
 				.requestMatchers("/api/members/**").authenticated()
 				.requestMatchers("/api/reviewLike").authenticated()
 				.requestMatchers("/api/insertReview").authenticated()
+				.requestMatchers("/api/login").permitAll()
 				.requestMatchers("/api/login/**").permitAll()
 				.requestMatchers("/api/popularMovies").permitAll()
 				.anyRequest().permitAll();
 		});
 		
-//		// reference : https://github.com/spring-projects/spring-security/issues/13061
-//        http.securityContext((securityContext) -> securityContext
-//                .securityContextRepository(new HttpSessionSecurityContextRepository()) // SecurityContext 저장소 설정
-//            );
-        
+		// 소셜 로그인 관련 설정
 		String defaultSuccessUrl = frontEndBaseUrl + "/socialLogin/success";
 		String failureUrl = frontEndBaseUrl + "/socialLogin/fail";
+		http.oauth2Login(oauth2 -> 
+			oauth2
+				.authorizationEndpoint(a -> a.baseUri("/api/login")) // 프론트에서 window.location.href = 'http://localhost:8080/api/login/naver' 이런식으로 사용함
+				.defaultSuccessUrl(defaultSuccessUrl)
+				.failureUrl(failureUrl)
+				.userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+		);
 		
-		http.oauth2Login(oauth2 -> oauth2
-			    .authorizationEndpoint(authEndpoint -> authEndpoint.baseUri("/api/login"))
-			    .tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenResponseClient(kakaoAccessTokenResponseClient))
-			    .failureHandler(new CustomOAuth2FailureHandler())
-			    .defaultSuccessUrl(defaultSuccessUrl, true)
-			    .failureUrl(failureUrl)
-			);
 		return http.build();
 	}
-	
+
 	@Bean
 	UrlBasedCorsConfigurationSource corsConfigurationSource() {
+		Logger logger = LoggerFactory.getLogger(getClass());
+		logger.info("CORS에 등록된 Origin: {}", frontEndBaseUrl);
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList(frontEndBaseUrl));
 		configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT", "DELETE","OPTIONS"));
@@ -144,9 +137,9 @@ public class SecurityConfig {
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
 		return new InMemoryClientRegistrationRepository(
-				this.naverClientRegistration()
-				,this.kakaoClientRegistration()
-				,this.googleClientRegistration()
+				this.naverClientRegistration(),
+				this.kakaoClientRegistration(),
+				this.googleClientRegistration()
 			);
 	}
 	
@@ -155,32 +148,30 @@ public class SecurityConfig {
 		return ClientRegistration.withRegistrationId("naver")
 			.clientId(naverClientId)
 			.clientSecret(naverClientPassword)
-			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
 			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-			.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-			.scope() // reference : https://developers.worksmobile.com/kr/docs/auth-scope
-			.authorizationUri("https://nid.naver.com/oauth2.0/authorize") // reference : https://developers.naver.com/docs/login/api/api.md#2--api-%EA%B8%B0%EB%B3%B8-%EC%A0%95%EB%B3%B4
+			.authorizationUri("https://nid.naver.com/oauth2.0/authorize")
+			.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}") // 예 : http://localhost:8080/login/oauth2/code/naver
 			.tokenUri("https://nid.naver.com/oauth2.0/token")
 			.userInfoUri("https://openapi.naver.com/v1/nid/me") // reference : https://developers.naver.com/apps/#/myapps/8MmQz34Hsx5yA9XT9SWu/playground
-	        .userNameAttributeName("response") // ✅ 네이버의 JSON 응답 구조에 맞춰야 함
+	        .userNameAttributeName("response")
 			.clientName("Naver")
 			.build();
 	}
 	
 	private ClientRegistration kakaoClientRegistration() {
-		return ClientRegistration.withRegistrationId("kakao")
-	            .clientId(kakaoClientId) 
-	            .clientSecret(kakaoClientSecret) 
-	            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)//카카오는 PostBody로 전송
-	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-	            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-	            .scope("profile_nickname", "account_email")
-	            .authorizationUri("https://kauth.kakao.com/oauth/authorize")
-	            .tokenUri("https://kauth.kakao.com/oauth/token")
-	            .userInfoUri("https://kapi.kakao.com/v2/user/me")
-	            .userNameAttributeName("id") //카카오는 id가 유니크 값임
-	            .clientName("Kakao")
-	            .build();
+	return ClientRegistration.withRegistrationId("kakao")
+            .clientId(kakaoClientId) 
+            .clientSecret(kakaoClientSecret) 
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST) //카카오는 PostBody로 전송
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationUri("https://kauth.kakao.com/oauth/authorize")
+            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+            .tokenUri("https://kauth.kakao.com/oauth/token")
+            .userInfoUri("https://kapi.kakao.com/v2/user/me")
+            .userNameAttributeName("id") //카카오는 id가 유니크 값임
+            .clientName("Kakao")
+            .build();
 	}
 	
 	private ClientRegistration googleClientRegistration() {		

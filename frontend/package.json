@@ -18,9 +18,10 @@
     "roboto-fontface": "*",
     "swiper": "^11.1.15",
     "three": "^0.172.0",
-    "vue": "^3.4.31",
+    "vue": "^3.5.26",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.5.0",
-    "vuetify": "^3.7.19"
+    "vuetify": "^3.11.6"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",

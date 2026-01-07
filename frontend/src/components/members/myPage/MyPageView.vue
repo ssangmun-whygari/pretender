@@ -247,6 +247,8 @@
       return 
     }
     userId.value = response.data.principal.username
+    console.log("==============response : ")
+    console.log(response)
   }
   getUser()
 

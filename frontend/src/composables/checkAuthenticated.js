@@ -13,6 +13,5 @@ export async function useCheckAuthenticated() {
       }
     }
   ) // axios.get end
-  console.log(`authenticated? : ${response.data && response.data.authenticated == true}`)
   return response.data && response.data.authenticated == true
 }

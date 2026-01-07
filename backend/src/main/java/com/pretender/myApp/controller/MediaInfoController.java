@@ -33,7 +33,7 @@ public class MediaInfoController {
 			log.error("TMDB API 호출 중 문제 생김", e);
 			return ResponseEntity.internalServerError().body(null);
 		}
-		return result;
+		return ResponseEntity.ok(result.getBody()); // 헤더는 복사 안함
 	}
 	
 	@GetMapping("/api/search")
@@ -42,21 +42,15 @@ public class MediaInfoController {
 			@RequestParam String query,
 			@RequestParam(required = false) Integer page) {
 		ResponseEntity<Map> result = mediaInfoService.requestSearch(type, query, page);
-		return result;
+		return ResponseEntity.ok(result.getBody()); // 헤더는 복사 안함
 	}
 	
 	@GetMapping("/api/detail")
-	public ResponseEntity<Map> getDetailById(
+	public ResponseEntity<Map<String, Object>> getDetailById(
 			@RequestParam String type,
 			@RequestParam String mediaId) {
-		Map<String, Object> result = null;
-		try {
-			result = mediaInfoService.requestDetail(type, mediaId);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.badRequest().build();
-		}
-		return ResponseEntity.ok(result);
+		ResponseEntity<Map<String, Object>> result = mediaInfoService.requestDetail(type, mediaId);
+		return result;
 	}
 	
 	@GetMapping("/api/aiSummaryProvided")

@@ -26,9 +26,10 @@
         VALUES (#{id}, #{password}, #{nickname}, #{birthday}, #{gender}, #{status})
     </insert>
   
-    <select id="findUserByUsername" parameterType="string" resultType="com.pretender.myApp.model.PretenderUserDetails">
+    <select id="findUserByUsername" parameterType="string" resultType="com.pretender.myApp.security.model.PretenderUserDetails">
     	select id as username,
     	password,
+    	nickname,
     	case
     		when status = 'active'
     		then true
@@ -41,7 +42,7 @@
     		then true
     	end as isAdmin
     	from members
-    	where id = #{username}
+    	where id = #{username} and oauth_id = null
     </select>
     
     <update id="updateProfileImageName">
@@ -100,5 +101,24 @@
         AND REPLACE(c.media_title, ' ', '') LIKE REPLACE(CONCAT('%',#{word},'%'), ' ', '')
 	</select>
 
+	<insert id="insertOAuthUser">
+		insert ignore into members_oauth(provider, member_id)
+		values (#{provider}, #{providerId})
+	</insert>
+	
+	<insert id="insertOAuthUserToMembers">
+		insert into members(id, password, gender, status, nickname, oauth_id)
+		values (#{providerId}, 
+			#{providerId}, 
+			'N', 
+			'active', 
+			#{nickname},
+			(select mo.id 
+				from members_oauth mo 
+				where mo.provider = #{provider}
+				and mo.member_id = #{providerId}
+				limit 1)
+		)
+	</insert>
 	
 	</mapper>

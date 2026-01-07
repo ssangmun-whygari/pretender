@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.pretender.myApp.model.MembersDTO;
 import com.pretender.myApp.model.MyActivitiesDTO;
-import com.pretender.myApp.model.PretenderUserDetails;
+import com.pretender.myApp.security.model.PretenderUserDetails;
 
 @Component
 public class MembersDAO {
@@ -85,6 +85,21 @@ public class MembersDAO {
 		map.put("startNo", startNo);
 		map.put("size", size);
 		return ses.selectList(ns+"searchMyActvt", map);
+	}
+
+	public int insertOAuthUser(String provider, String providerId) {
+		Map<String, Object> map = new HashMap<>();
+		map.put("provider", provider);
+		map.put("providerId", providerId);
+		return ses.insert(ns + "insertOAuthUser", map);
+	}
+
+	public int insertOAuthUserToMembers(String provider, String providerId, String nickname) {
+		Map<String, Object> map = new HashMap<>();
+		map.put("provider", provider);
+		map.put("providerId", providerId);
+		map.put("nickname", nickname);
+		return ses.insert(ns + "insertOAuthUserToMembers", map);
 	}
 
 }

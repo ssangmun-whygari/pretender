@@ -21,13 +21,11 @@
             <div class="comment-header">
               <div class="nicknameTime">
                 <span class="nickname">{{ comment.nickname }}</span>
-                <span v-if="comment.correct_date" class="time">
-                  (수정됨: {{ formatDate(comment.correct_date) }})
-                </span>
+                <span v-if="comment.correct_date" class="time">(수정됨: {{ formatDate(comment.correct_date) }})</span>
                 <span v-else class="time">{{ formatDate(comment.post_date) }}</span>
-                </div>                
-                <div v-if="comment.stars" class="stars-container">
-                  <!-- 별점 표시 -->
+              </div>
+              <div v-if="comment.stars" class="stars-container">
+                <!-- 별점 표시 -->
                 <v-rating
                   class="stars"
                   :model-value="comment.stars"
@@ -39,24 +37,18 @@
                   readonly
                 />
               </div>
-                <div class="dropdown-container">
-                  <button v-if="loggedInUserId !='anonymousUser' && comment.is_deleted ==='N'"  class="dots-btn" @click="toggleDropdown(comment)">
-                    &#x22EE;
-                  </button>
-                  <div v-if="activeDropdown === comment.no" class="dropdown-menu">
-                    <template v-if="comment.members_id === loggedInUserId">
-                      <button @click="enableEditMode(comment)" class="dropdown-item">
-                        <v-icon>mdi-pencil</v-icon> 수정
-                      </button>
-                      <button @click="deleteComment(comment)" class="dropdown-item">
-                        <v-icon>mdi-delete</v-icon> 삭제
-                      </button>
-                    </template>
-                    <template v-else>
-                      <button @click="openReportModal(comment)" class="dropdown-item">
-                        신고하기
-                      </button>
-                    </template>
+              <div class="dropdown-container">
+                <button v-if="loggedInUserId !='anonymousUser' && comment.is_deleted ==='N'"  class="dots-btn" @click="toggleDropdown(comment)">
+                  &#x22EE;
+                </button>
+                <div v-if="activeDropdown === comment.no" class="dropdown-menu">
+                  <template v-if="comment.members_id === loggedInUserId">
+                    <button @click="enableEditMode(comment)" class="dropdown-item"><v-icon>mdi-pencil</v-icon> 수정</button>
+                    <button @click="deleteComment(comment)" class="dropdown-item"><v-icon>mdi-delete</v-icon> 삭제</button>
+                  </template>
+                  <template v-else>
+                    <button @click="openReportModal(comment)" class="dropdown-item">신고하기</button>
+                  </template>
                 </div>
               </div>
             </div>

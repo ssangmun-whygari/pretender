@@ -7,12 +7,23 @@ import ViteFonts from 'unplugin-fonts/vite'
 // Utilities
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { templateCompilerOptions } from '@tresjs/core'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     Vue({
-      template: { transformAssetUrls }
+      ...templateCompilerOptions,
+      template: {
+        transformAssetUrls,
+        compilerOptions: {
+          isCustomElement: (tag) =>
+            tag.startsWith('swiper-') ||
+            (templateCompilerOptions?.template?.compilerOptions?.isCustomElement
+              ? templateCompilerOptions.template.compilerOptions.isCustomElement(tag)
+              : false),
+        },
+      },
     }),
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify(),

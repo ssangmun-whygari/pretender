@@ -1,5 +1,6 @@
 <template>
   <div class="bg-container"></div>
+
   <v-container class="d-flex justify-end position-relative">
     <div v-if="isAuthenticated == true">
       <RouterLink to="/myPage">
@@ -14,9 +15,9 @@
       <LoginModal @requestCheckAuthenticated="executeCheckAuthenticated"></LoginModal>
     </div>
   </v-container>
+  
   <v-container class="ma-0 pa-0 position-relative" style="max-width: none;">
-    <PopularMovieCarouselV2 :imagePaths="imagePathsForPopularMovieCarousel">
-    </PopularMovieCarouselV2>
+    <PopularMovieCarouselV2 :imagePaths="imagePathsForPopularMovieCarousel"></PopularMovieCarouselV2>
     <div class="logo">
       pretender
     </div>
@@ -178,90 +179,9 @@
     color: white;
   }
 
-  /* deprecated */
-  /* .logo-wrapper {
-    position: relative;
-    text-align: center;
-  }
-
-  .logo {
-    font-size: 100px;
-    font-weight: bold;
-    position: relative;
-  }
-
-  .logo-animated {
-    font-size: 100px;
-    font-weight: bold;
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    animation: zoomFadeOut 1.5s ease-out forwards;
-    animation-delay: 1.5s;
-  } */
-
   .main-bg-poster-container {
     width: 100%;
   }
-
-  /* deprecated */
-  /* .main-poster-container::before,
-  .main-poster-container::after {
-    pointer-events: none;
-  }
-
-  .main-poster-container {
-    position: relative;
-    height: 600px;
-    border-radius: 20px;
-    overflow: hidden;
-  }
-
-  .main-poster-container::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-image: var(--main-poster-url);
-    background-size: cover;
-    background-position: center;
-    transition: transform 0.5s ease;
-    z-index: 0;
-  }
-
-  .main-poster-container:hover::after {
-    transform: scale(1.1);
-  }
-
-  .main-poster-container .overlay-text {
-    position: absolute;
-    top: 100%;
-    left: 1%;
-    transform: translate(0%, -100%);
-    color: white;
-    font-size: 50px;
-    opacity: 0;
-  }
-
-  .main-poster-container:hover .overlay-text {
-    z-index: 2;
-    opacity: 1;
-  }
-
-  .main-poster-container::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
-    opacity: 0;
-    z-index: 1;
-  }
-
-  .main-poster-container:hover::before {
-    opacity: 1;
-  } */
 
   @keyframes zoomFadeOut {
     0% {
@@ -301,16 +221,21 @@
   // 3d model 컴포넌트 import
   import PopCorn from './3Dmodel/PopCorn.vue';
   import MovieCut from './3Dmodel/MovieCut.vue';
-
+  import axios from 'axios'
+  import { TresCanvas } from '@tresjs/core';
   import { useRouter, useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
-  import axios from 'axios'
   import { ref, onMounted, onUnmounted, nextTick, watch, onBeforeUnmount } from 'vue'
   import { useNavigationStore } from '@/composables/stores/navigation';
   import { usePopularMoviesStore } from '@/composables/stores/popularMovies';
   import { usePageTransition } from '@/composables/pageTransition';
-  import { TresCanvas } from '@tresjs/core';
-
+  import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
+  
+  const { lgAndUp } = useDisplay();
+  const router = useRouter();
+  const route = useRoute();
+  const navigationStore = useNavigationStore();
+  const pageTransition = usePageTransition();
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
   const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
   const posterBaseUrl = "http://image.tmdb.org/t/p/w780"
@@ -328,24 +253,6 @@
       return noImageUrl
     }
   }
-  
-  onMounted(() => {
-    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
-  })
-
-  // let popularMoviesStore = usePopularMoviesStore()
-  // onMounted(() => {
-  //   let requestPopularMovies = async () => {
-  //     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-  //     let response = await axios.get(
-  //       apiBaseUrl + '/api/popularMovies',
-  //     )
-  //     popularMoviesStore.setPopularMovieInfos(response.data.results)
-  //   }
-  //   if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
-  //     requestPopularMovies()
-  //   }
-  // })
   let popularMoviesStore = usePopularMoviesStore()
   let requestPopularMovies = async () => {
     const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
@@ -354,14 +261,33 @@
     )
     popularMoviesStore.setPopularMovieInfos(response.data.results)
   }
+  let imagePathsForPopularMovieCarousel = ref([])
+  let requestAiSummaryProvidingList = async () => {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+    let response = await axios.get(
+      apiBaseUrl + '/api/aiSummaryProvided',
+    )
+    let sourceList = response.data
+    let list = sourceList.sort(() => Math.random() - 0.5).slice(0, 10)// 랜덤으로 10개 추출
+    aiSummaryProvidingList.value = aiSummaryProvidingList.value.concat(list)
+  }
+  let requestMediaInfoForAiSummaryProvidingList = async (idList) => {
+    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+    let response = await axios.post(
+      apiBaseUrl + '/api/detail/aiSummaryProvided', aiSummaryProvidingList.value
+    )
+    aiSummaryWorksMediaInfoList.value = aiSummaryWorksMediaInfoList.value.concat(response.data)
+  }
+  
+  onMounted(() => {
+    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
+  })
+
   if (popularMoviesStore.getPopularMovieInfos().value.length === 0) {
     requestPopularMovies()
   }
-
-  let imagePathsForPopularMovieCarousel = ref([])
   watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
       if (length > 0) {
-        // console.log("인기 영화 정보 다운로드됨")
         let infos = popularMoviesStore.getPopularMovieInfos().value
         imagePathsForPopularMovieCarousel.value = 
         imagePathsForPopularMovieCarousel.value.concat(
@@ -370,64 +296,12 @@
       }
     } 
   )
-  
-  // store에 저장된 value는 이 컴포넌트가 언마운트가 되어도 초기화가 안되기때문에 초기화해줌
-  onBeforeUnmount(() => {
-    popularMoviesStore.setPopularMovieInfos([])
+  onBeforeUnmount(() => { 
+    popularMoviesStore.setPopularMovieInfos([]) // store에 저장된 value는 이 컴포넌트가 언마운트가 되어도 초기화가 안되기때문에 초기화해줌
   })
-
-  onMounted(() => {
-    console.log("imagePaths의 길이? : ")
-    console.log(imagePathsForPopularMovieCarousel)
-  })
-
-  // main-poster-container에 이미지 채워넣기
-  // deprecated
-  // let setMainPoster = () => {
-  //   let popularMovieInfos = popularMoviesStore.getPopularMovieInfos()
-  //   console.log(popularMovieInfos)
-  //   let movieInfoObj = popularMovieInfos.value.find((e) => { return e.poster_path })
-  //   let mainPosterPath = posterBaseUrl + movieInfoObj.poster_path
-  //   loading.value = false
-  //   mainPosterName.value = movieInfoObj.title
-  //   mainPosterTMDBid.value = movieInfoObj.id
-  //   nextTick(() => {
-  //     document.querySelector('.main-poster-container').style.setProperty('--main-poster-url', `url(${mainPosterPath})`)
-  //   })
-  // }
-  // watch(() => {return popularMoviesStore.getPopularMovieInfos().value.length}, (length) => {
-  //   if (length > 0) {
-  //     setMainPoster()
-  //   }
-  // })
-  // if (popularMoviesStore.getPopularMovieInfos().value.length > 0) {
-  //   setMainPoster()
-  // }
 
   // AI 요약이 첨부된 작품 리스트 받기
-  let requestAiSummaryProvidingList = async () => {
-    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-    let response = await axios.get(
-      apiBaseUrl + '/api/aiSummaryProvided',
-    )
-    // console.log("==================requestAiSummaryProvidingList")
-    // console.log(response)
-    let sourceList = response.data
-    let list = sourceList.sort(() => Math.random() - 0.5).slice(0, 10)// 랜덤으로 10개 추출
-    // console.log(list)
-    aiSummaryProvidingList.value = aiSummaryProvidingList.value.concat(list)
-  }
   requestAiSummaryProvidingList()
-  let requestMediaInfoForAiSummaryProvidingList = async (idList) => {
-    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-    let response = await axios.post(
-      apiBaseUrl + '/api/detail/aiSummaryProvided', aiSummaryProvidingList.value
-    )
-    // console.log("========================requestMediaInfoForAiSummaryProvidingList")
-    // console.log(response.data)
-    aiSummaryWorksMediaInfoList.value = aiSummaryWorksMediaInfoList.value.concat(response.data)
-  }
-
   watch(() => {return aiSummaryProvidingList.value.length}, (length) => {
       if (length > 0) {
         requestMediaInfoForAiSummaryProvidingList()
@@ -435,16 +309,9 @@
     } 
   )
 
-  const { lgAndUp } = useDisplay();
-  const router = useRouter();
-  const route = useRoute();
-  const navigationStore = useNavigationStore();
-  const pageTransition = usePageTransition();
-
+  
   let word = ref('')
-  let responseData = ref(null)
   let isAuthenticated = ref(false)
-
   async function onEnter() {
     pageTransition.trigger({
       path: '/search',
@@ -453,45 +320,20 @@
       }
     })
   }
-
-  // 자식 컴포넌트가 보낸 이벤트(요청)을 처리
-  async function executeCheckAuthenticated() {
-    // console.log("자식이 보낸 이벤트 받음")
-    isAuthenticated.value = await checkAuthenticated();
-  }
-
-  async function checkAuthenticated() {
-    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-    let response = await axios.get(
-      apiBaseUrl + '/api/authenticated',
-      {
-        withCredentials: true,
-
-        headers: {
-          "X-Requested-With": "XMLHttpRequest"
-        }
-      }
-    ) // axios.get end
-    return response.data && response.data.authenticated == true
-  }
-
-  function savePreviousPage(){
-    navigationStore.setPreviousPage(route.fullPath);
-  }
-
   function onLogout() {
     isAuthenticated.value = false
     savePreviousPage()
   }
-
+  function savePreviousPage(){
+    navigationStore.setPreviousPage(route.fullPath);
+  }
+  // 자식 컴포넌트가 보낸 이벤트(요청)을 처리
+  async function executeCheckAuthenticated() {
+    // console.log("자식이 보낸 이벤트 받음")
+    isAuthenticated.value = await useCheckAuthenticated();
+  }
   // note : v-if하고 같이 쓰려면 onMounted()로 써야 하는 것 같음
   onMounted(async () => {
-    isAuthenticated.value = await checkAuthenticated()
+    isAuthenticated.value = await useCheckAuthenticated()
   })
-
-  // import { onActivated, onDeactivated } from 'vue';
-  // onMounted(() => console.log('mounted: MainView'))
-  // onBeforeUnmount(() => console.log('beforeUnmount: MainView'))
-  // onActivated(() => console.log('activated: MainView'))
-  // onDeactivated(() => console.log('deactivated: MainView'))
 </script>

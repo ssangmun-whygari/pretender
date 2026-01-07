@@ -5,14 +5,10 @@
 </template>
 
 <script setup>
-import {ref, onMounted,onUnmounted, watchEffect} from "Vue";
-import Chart from "chart.js/auto";
-import axios from "axios";
-
-
+  import {ref, onMounted, onUnmounted, watchEffect} from "Vue";
+  import Chart from "chart.js/auto";
+  import axios from "axios";
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-
-
   const props = defineProps({
     media_id: String,
     media_type: String,
@@ -210,16 +206,14 @@ import axios from "axios";
   }
 }
 
+  onMounted(async () => {
+    window.addEventListener("resize", handleResize); //이벤트 종류: resize
+    setTimeout(() => {
+      showChart(); 
+    },1600 ); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
+  });
 
-onMounted(async () => {
-  window.addEventListener("resize", handleResize); //이벤트 종류: resize
-  setTimeout(() => {
-    showChart(); 
-  },1600 ); //조금 늦게 시작해야 페이지 애니메이션과 상관없이 차트가 움직임
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
-});
-
+  onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+  });
 </script>

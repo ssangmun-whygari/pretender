@@ -10,8 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.pretender.myApp.model.PretenderUserDetails;
 import com.pretender.myApp.persistence.MembersDAO;
+import com.pretender.myApp.security.model.PretenderUserDetails;
 
 public class MyBatisUserDetailsService implements UserDetailsService {
 

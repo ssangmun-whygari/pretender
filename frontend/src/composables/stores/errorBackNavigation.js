@@ -29,10 +29,10 @@ export function useErrorBackNavigation() {
     const severity = classifyError(err)
     if (severity === 'minor') {
       hasMinorError.value = true
-      hasNoError = false
+      hasNoError.value = false
     } else {
       // TODO : 심각한 에러 발생시
-      hasNoError = false
+      hasNoError.value = false
     }
     return false // 전파 막기
   })

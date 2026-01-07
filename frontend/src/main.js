@@ -78,6 +78,12 @@ const router = createRouter({
 
 const app = createApp(App)
 
+app.config.warnHandler = (msg, instance, trace) => {
+  if (msg.includes('provide() can only be used inside setup()')) {
+    debugger // ✅ 여기서 멈춤 (DevTools 열어둔 상태)
+  }
+}
+
 app.use(Tres)
 app.use(pinia)
 app.use(router)

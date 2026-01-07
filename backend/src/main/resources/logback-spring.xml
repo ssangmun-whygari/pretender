@@ -18,28 +18,6 @@
 		</root>
 	</springProfile>
 	
-	<springProfile name="dev">
-		<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        	<encoder>
-            	<pattern>${LOG_PATTERN}</pattern>
-            </encoder>
-		</appender>
-		
-		<!-- MyBatis 쿼리 로그 관련 -->
-		<!--
-		<logger name="jdbc.sqlonly" level="OFF"/> 
-		<logger name="jdbc.sqltiming" level="info"/> 
-		<logger name="jdbc.resultsettable" level="info"/>
-		<logger name="jdbc.audit" level="OFF"/>
-		<logger name="jdbc.resultset" level="OFF"/>
-		<logger name="jdbc.connection" level="OFF"/>
-		-->
-		
-		<root level="INFO">
-			<appender-ref ref="STDOUT" />
-		</root>
-	</springProfile>
-	
 	<springProfile name="!dev">
 		 <appender name="ERROR-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>./logs/error/error.log</file>
