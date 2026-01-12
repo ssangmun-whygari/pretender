@@ -12,7 +12,6 @@ import lombok.ToString;
 @Setter
 @ToString
 public class CastVotesDTO {
-
 	private String character_name;
 	private String actor_name;
 	private int character_id;

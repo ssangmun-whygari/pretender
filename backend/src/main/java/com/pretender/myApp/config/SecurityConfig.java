@@ -94,6 +94,16 @@ public class SecurityConfig {
 				.requestMatchers("/api/popularMovies").permitAll()
 				.anyRequest().permitAll();
 		});
+		http.logout(logout -> logout
+			.logoutUrl("/logout") // POST로 요청해야 함
+			.invalidateHttpSession(true) // 세션 무효화 (Spring의 세션에서 로그인 정보 삭제됨)
+			.deleteCookies("JSESSIONID") // 쿠키 삭제를 브라우저에 요청
+				.logoutSuccessHandler((req, res, auth) -> { // 로그아웃 성공시 상태코드 200으로 JSON을 내려보냄
+				    res.setStatus(200);
+				    res.setContentType("application/json;charset=UTF-8");
+				    res.getWriter().write("{\"ok\":true}");
+				})
+			);
 		
 		// 소셜 로그인 관련 설정
 		String defaultSuccessUrl = frontEndBaseUrl + "/socialLogin/success";

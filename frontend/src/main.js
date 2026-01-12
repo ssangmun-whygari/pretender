@@ -39,6 +39,7 @@ import LoginView from './components/members/LoginView.vue' // deprecated
 import LoginModal from './components/members/LoginModal.vue'
 import AbstractCirclePatternShader from './components/members/AbstractCirclePatternShader.vue'
 import LogoutView from './components/members/LogoutView.vue'
+import LogoutLink from './components/members/LogoutLink.vue'
 import SocialLoginSuccess from './components/members/SocialLoginSuccess.vue'
 // test
 // import Test from './components/test/Test.vue'

@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="dialog" max-width="1280">
     <template v-slot:activator="{ props: activatorProps }">
-      <div class="ml-1 mr-1" v-bind="activatorProps">회원가입</div>
+      <div class="ml-1 mr-1" v-bind="activatorProps"><a href="javascript:void(0);">회원가입</a></div>
     </template>
 
     <template v-slot:default="{ isActive }">

@@ -1,5 +1,7 @@
 package com.pretender.myApp.persistence;
 
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +42,17 @@ public class MediaInfoDAO {
 		map.put("type", type);
 		map.put("characterId", characterId);
 		return ses.selectList(ns+"selVoteReasons", map);
-  }
+	}
+	
+	public int getVote(String memberId, String mediaId, String type) {
+		Map<String, Object> params = Map.of("memberId", memberId, "mediaId", mediaId, "type", type);
+		return ses.selectOne(ns + "selectVote", params);
+	}
+	
+	public int vote(String memberId, String mediaId, String characterId, String type, int why) {
+		Map<String, Object> params = Map.of("memberId", memberId, "mediaId", mediaId, "characterId", characterId, "type", type, "why", why);
+		return ses.insert(ns + "insertVote", params);
+	}
 	
 	public Float getAverageStars(String mediaId, String mediaType) {
 		Map<String, Object> params = new HashMap<>();

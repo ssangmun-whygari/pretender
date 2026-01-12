@@ -42,7 +42,7 @@
     		then true
     	end as isAdmin
     	from members
-    	where id = #{username} and oauth_id = null
+    	where id = #{username} and oauth_id is null
     </select>
     
     <update id="updateProfileImageName">
@@ -109,7 +109,7 @@
 	<insert id="insertOAuthUserToMembers">
 		insert into members(id, password, gender, status, nickname, oauth_id)
 		values (#{providerId}, 
-			#{providerId}, 
+			left(#{providerId}, 15), 
 			'N', 
 			'active', 
 			#{nickname},

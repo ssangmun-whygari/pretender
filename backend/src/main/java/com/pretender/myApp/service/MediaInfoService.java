@@ -6,13 +6,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
 import com.pretender.myApp.component.TMDBclient;
-import com.pretender.myApp.controller.MediaInfoController;
-import com.pretender.myApp.model.AISummaryDTO;
 import com.pretender.myApp.model.CastLikeCategoryDTO;
 import com.pretender.myApp.model.CastVotesDTO;
 import com.pretender.myApp.model.VoteReasonsDTO;
@@ -162,5 +161,24 @@ public class MediaInfoService {
 
 	public List<Map<String, String>> requesDetailFortAiSummaryProvidedList(List<String> idList) {
 		return mediaInfoDAO.getDetailForAiSummaryProvidedList(idList);
+	}
+
+	public boolean getVote(String memberId, String mediaId, String type) {
+		int result = mediaInfoDAO.getVote(memberId, mediaId, type);
+		if (result != 1) {
+			return false;
+		}
+		return true;
+	}
+	
+	public int vote(String memberId, String mediaId, String characterId, String type, int why) {
+		int result;
+		try {
+			result = mediaInfoDAO.vote(memberId, mediaId, characterId, type, why);
+		} catch (DataIntegrityViolationException e) {
+			log.info("중복된 entry 삽입 시도");
+			result = 0;
+		}
+		return result;
 	}
 }

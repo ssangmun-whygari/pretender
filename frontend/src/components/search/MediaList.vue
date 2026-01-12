@@ -48,9 +48,8 @@
                   <v-sheet class="ma-3 py-3 w-100 h-100 border rounded-lg poster-image-sheet"
                     :elevation="2">
                     <RouterLink 
-                    class="d-flex justify-center h-100 w-100"
-                    :to="{path: '/detail', query: {id : innerItem['id'], type : currentCategory}}"
-                    v-on:click.prevent="handleClick(innerItem['id'], backDropPath(innerItem['backdrop_path']))">
+                      class="d-flex justify-center h-100 w-100"
+                      :to="{path: '/detail', query: {id : innerItem['id'], type : currentCategory}}">
                     <div class="poster-image-container">
                       <img 
                       :src="posterPath(innerItem['poster_path'])"

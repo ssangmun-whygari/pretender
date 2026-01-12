@@ -20,9 +20,7 @@
       <RouterLink  to="/myPage">
         마이페이지
       </RouterLink> /
-      <RouterLink to="logout" @click="onLogout">
-        로그아웃
-      </RouterLink>
+      <LogoutLink @requestCheckAuthenticated="executeCheckAuthenticated"/>
     </div>
     <div class="mr-3 d-flex" v-else>
       <SignUpModal></SignUpModal> / 
@@ -57,18 +55,16 @@
 
 <script setup>
   import { ref, watch, onMounted } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { useNavigationStore } from '../composables/stores/navigation';
   import axios from 'axios'
+  import { useDisplay } from 'vuetify';
+  import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
+  import LogoutLink from './members/LogoutLink.vue';
 
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  const { lgAndUp } = useDisplay();
   const emitRestoreTrigger = defineEmits(["requestRestoreTrigger"])
-  function requestRestoreTrigger() {
-    console.log("AppHeader가 자식 컴포넌트로부터 requestRestoreTrigger 요청을 받음")
-    loginModalTriggered.value = false
-    emitRestoreTrigger("requestRestoreTrigger")
-  }
-
-  // 부모가 내려주는 props
   const props = defineProps({
     loginModalTriggered: {
       type: Boolean,
@@ -76,51 +72,32 @@
     }
   })
   const loginModalTriggered = ref(false)
+  const isAuthenticated = ref(false)
+  const navigationStore = useNavigationStore()
+  const route = useRoute()
+  const router = useRouter()
+  const word = ref('') // 검색기능
 
-  watch(() => {return props.loginModalTriggered}, (bool) => {
-    console.log("AppHeader에서 loginModalTriggered props의 변화를 감지함")
-    if (bool === true) {
-      console.log("loginModalTriggered props 값은 true임")
-      loginModalTriggered.value = true // LoginModal에게 props로 내려주는 값
-    }
-  })
-
-  let isAuthenticated = ref(false)
-  let navigationStore = useNavigationStore()
-  let route = useRoute()
+  function requestRestoreTrigger() {
+    console.log("AppHeader가 자식 컴포넌트로부터 requestRestoreTrigger 요청을 받음")
+    loginModalTriggered.value = false
+    emitRestoreTrigger("requestRestoreTrigger")
+  }
 
   async function executeCheckAuthenticated()  {
-    isAuthenticated.value = await checkAuthenticated()
-  }
-  onMounted(executeCheckAuthenticated)
-
-  async function checkAuthenticated() {
-    const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-    let response = await axios.get(
-      apiBaseUrl + '/api/authenticated',
-      {
-        withCredentials: true,
-
-        headers: {
-          "X-Requested-With": "XMLHttpRequest"
-        }
-      }
-    ) // axios.get end
-    console.log(`authenticated? : ${response.data && response.data.authenticated == true}`)
-    return response.data && response.data.authenticated == true
+    isAuthenticated.value = await useCheckAuthenticated()
   }
 
-  function savePreviousPage(){
-    navigationStore.setPreviousPage(route.fullPath);
+  /* deprecated
+  async function onLogout() {
+    const response = await axios.post(`${apiBaseUrl}/logout`, null, {withCredentials: true}); // 주소, body, 옵션
+    alert(JSON.stringify(response.data));
+    if (response.data.ok === true) {
+      alert("로그아웃 성공함");
+      isAuthenticated.value = false;
+    }
   }
-
-  function onLogout() {
-    savePreviousPage()
-  }
-
-  import { useDisplay } from 'vuetify';
-
-  const { lgAndUp } = useDisplay();
+  */
 
   const updateSearchBarLength = (isScreenWidthLong) => {
     if (isScreenWidthLong) {
@@ -130,16 +107,6 @@
     }
   }
 
-  onMounted(() => {
-    updateSearchBarLength(lgAndUp.value)
-  })
-
-  watch(() => { return lgAndUp.value }, updateSearchBarLength)
-
-  // 검색 기능
-  import { useRouter } from 'vue-router';
-  let word = ref('')
-  const router = useRouter()
   const onEnter = async () => {
     router.push({
             path: '/search',
@@ -148,5 +115,18 @@
             }
           })
   }
+
+  onMounted(executeCheckAuthenticated)
+  watch(() => {return props.loginModalTriggered}, (bool) => {
+    console.log("AppHeader에서 loginModalTriggered props의 변화를 감지함")
+    if (bool === true) {
+      console.log("loginModalTriggered props 값은 true임")
+      loginModalTriggered.value = true // LoginModal에게 props로 내려주는 값
+    }
+  })
+  onMounted(() => {
+    updateSearchBarLength(lgAndUp.value)
+  })
+  watch(() => { return lgAndUp.value }, updateSearchBarLength)
 
 </script>

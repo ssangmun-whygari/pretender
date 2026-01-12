@@ -1,5 +1,6 @@
 package com.pretender.myApp.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pretender.myApp.model.CastLikeCategoryDTO;
 import com.pretender.myApp.model.CastVotesDTO;
 import com.pretender.myApp.model.VoteReasonsDTO;
+import com.pretender.myApp.model.VoteRequestDTO;
 import com.pretender.myApp.service.MediaInfoService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +82,7 @@ public class MediaInfoController {
 		return ResponseEntity.ok(result);
 	}
 	
+	// 어떤 작품의 배역 정보를 반환
 	@GetMapping("/api/detail/cast")
 	public ResponseEntity<Map> getCastById(
 			@RequestParam String type,
@@ -94,6 +97,7 @@ public class MediaInfoController {
 		return ResponseEntity.ok(result);
 	}
 	
+	// 가능한 투표 이유의 종류를 반환
 	@GetMapping("/api/detail/cast/likeCategory")
 	public ResponseEntity<List<CastLikeCategoryDTO>> getLikeCategory() {
 		List<CastLikeCategoryDTO> result = null;
@@ -106,14 +110,52 @@ public class MediaInfoController {
 		return ResponseEntity.ok(result);
 	}
 	
+	// 한 작품에 대하여 캐릭터 당 얻은 투표 수를 반환
 	@GetMapping("api/detail/castVotes")
 	public ResponseEntity<List<CastVotesDTO>> getCastVotes(@RequestParam String mediaId, @RequestParam String type) {
-		System.out.println("it's working!"+mediaId+" : "+type);
 		List<CastVotesDTO> castVotes = mediaInfoService.requestCastVotes(mediaId,type);
-		System.out.println("#######@@@@@@@@@@@@@@@###########castVotes :" +castVotes);
 		return ResponseEntity.ok(castVotes);
 	}
 	
+	// 어떤 회원이 한 작품에 투표했는 지 반환
+	@GetMapping("api/detail/vote")
+	public ResponseEntity<Map<String, Object>> getVote(
+		@RequestParam String memberId,
+		@RequestParam String mediaId,
+		@RequestParam String type) {
+		boolean exist;
+		Map<String, Object> map = new HashMap<>();
+		try {
+			exist = mediaInfoService.getVote(memberId, mediaId, type);
+		} catch (Exception e) {
+			exist = false;
+			e.printStackTrace();
+		}
+		map.put("result", exist);
+		return ResponseEntity.ok(map);
+	}
+	
+	
+	@PostMapping("api/detail/vote")
+		public ResponseEntity<Map<String, Object>> vote(@RequestBody VoteRequestDTO req) {
+			String memberId = req.getMemberId();
+			String mediaId = req.getMediaId();
+			String characterId = req.getCharacterId();
+			String type = req.getType();
+			int why = req.getWhy();
+			Map<String, Object> map = new HashMap<>();
+			int result = mediaInfoService.vote(memberId, mediaId, characterId, type, why);
+			if (result == 0) {
+				map.put("result", "duplicated");
+			} else if (result == 1) {
+				map.put("result", "success");
+			} else {
+				map.put("result", "fail");
+			}
+			return ResponseEntity.ok(map);
+		}
+			
+	// 어떤 작품의 캐릭터에 대해 투표 이유를 집계하여 반환
 	@GetMapping("api/detail/votesReasons")
 	public ResponseEntity<List<VoteReasonsDTO>> getVotesReasons(@RequestParam String mediaId, 
 			@RequestParam String type, @RequestParam String characterId) {

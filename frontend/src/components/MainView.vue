@@ -6,9 +6,7 @@
       <RouterLink to="/myPage">
         마이페이지
       </RouterLink> / 
-      <RouterLink to="logout" @click="onLogout">
-        로그아웃
-      </RouterLink>
+      <LogoutLink @requestCheckAuthenticated="executeCheckAuthenticated"/>
     </div>
     <div v-else class="d-flex">
       <SignUpModal></SignUpModal> / 
@@ -324,6 +322,8 @@
     isAuthenticated.value = false
     savePreviousPage()
   }
+
+
   function savePreviousPage(){
     navigationStore.setPreviousPage(route.fullPath);
   }

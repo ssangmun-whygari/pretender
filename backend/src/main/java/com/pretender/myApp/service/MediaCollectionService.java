@@ -41,7 +41,7 @@ public class MediaCollectionService {
 	public boolean addItemInWatchList(String memberId, String mediaId, String mediaType) {
 		boolean result = false;
 		try {
-			Map<String, Object> response = mediaInfoService.requestDetail(mediaType, mediaId);
+			Map<String, Object> response = mediaInfoService.requestDetail(mediaType, mediaId).getBody();
 			String mediaTitle = (String) (response.get("name") == null ? response.get("title") : response.get("name"));
 			String posterPath = (String) response.get("poster_path");
 			if (mediaCollectionDAO.addItemInWatchList(memberId, mediaId, mediaType, mediaTitle, posterPath) == 1) {

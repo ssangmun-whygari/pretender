@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="modalActivated" max-width="1280">
     <template v-slot:activator="{ props: activatorProps }">
-      <div class="ml-1 mr-1" v-if="logined == false" v-bind="activatorProps">로그인</div>
+      <div class="ml-1 mr-1" v-if="logined == false" v-bind="activatorProps"><a href="javascript:void(0);">로그인</a></div>
     </template>
 
     <template v-slot:default="{ isActive }">

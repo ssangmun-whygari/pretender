@@ -36,13 +36,38 @@
               </div>
             </v-sheet>
 
-            <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
+            <!-- {{ JSON.stringify(mostVotedCharacter) }} -->
+            <v-sheet v-if="mostVotedCharacter.apiFetched" border class="mt-3 mb-3 pa-3 rounded-lg">
               <h2>이 작품에서 가장 인기있는 캐릭터는?</h2>
-              <div class="d-flex justify-center">
-                <div style="font-size: 120px; filter: grayscale(100%);">🤔</div>
+              <div v-if="mostVotedCharacter.result">
+                <v-row>
+                  <v-col v-if="smAndUp" cols="3">
+                    <img class="most-voted-character-profile-image" :src="profileBaseUrl + mostVotedCharacter.result.profilePath"/>
+                  </v-col>
+                  <v-col cols="9">
+                    <div class="d-flex flex-column h-100">
+                      <div class="vote-panel-line1">
+                        <h1 class="mt-5">{{ mostVotedCharacter.result.characterName }}</h1>
+                        <div>{{ `(배우 : ${mostVotedCharacter.result.actorName})` }}</div>
+                      </div>
+                      <div  class="vote-panel-line2 flex-grow-1">
+                        <v-btn color="primary" class="go-to-vote-btn" @click="goToCharacterVote">투표하러 가기</v-btn>
+                      </div>
+                      <!-- <div  class="vote-panel-line2 flex-grow-1">
+                        <v-btn color="primary">투표결과 보기</v-btn>
+                      </div> -->
+                    </div>
+                  </v-col>
+                </v-row>
               </div>
-              <div class="d-flex justify-center align-center">
-                <h3>아직 투표한 사람이 없어요</h3><span class="ml-3"> <a href="javascript:void(0);" @click="goToCharacterVote">👉투표하러 가기</a></span>
+              <div v-else>
+                <div class="d-flex justify-center">
+                  <div style="font-size: 120px; filter: grayscale(100%);">🤔</div>
+                </div>
+                <div class="d-flex justify-center align-center">
+                  <h3>아직 투표한 사람이 없어요</h3>
+                  <span class="ml-3"> <a href="javascript:void(0);" @click="goToCharacterVote">👉투표하러 가기</a></span>
+                </div>
               </div>
             </v-sheet>
 
@@ -80,7 +105,13 @@
 
         <v-expand-transition class="contents">
           <div v-show="showCharacterView === true">
-            <CharacterVote v-bind:id="id" v-bind:type="type" @hide-character-view="onHideCharacterView"/>
+            <CharacterVote 
+              :id="id" 
+              :type="type" 
+              v-model:voteChartDialogProxy="voteChartDialogProxy"
+              v-model:mostVotedCharacter="mostVotedCharacter"
+              @hide-character-view="onHideCharacterView" 
+              @requestOpenLoginModal="requestOpenLoginModal"/>
           </div>
         </v-expand-transition>
 
@@ -128,35 +159,62 @@
     text-align: center;
     background-color: #d1d1d1;
   }
+
+  .most-voted-character-profile-image {
+    width: 100%;
+    height: 250px;
+    display: block;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .vote-panel-line2 {
+    display: flex;
+    justify-content: center;
+    padding-top: 12px;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  .go-to-vote-btn {
+    width: 100%;
+  }
 </style>
 
 <script setup>
   import axios from 'axios'
   import { useRoute, useRouter } from 'vue-router';
   import { ref, reactive, onMounted, computed } from 'vue'
+  import { useDisplay } from 'vuetify'
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
   import { useNavigationStore } from '@/composables/stores/navigation';
   import { useReviewSaveStore } from '@/composables/stores/reviewSave';
   import MediaDetailBackdop from './MediaDetailBackdop.vue';
   import CharacterVote from './CharacterVote.vue';
 
+  const props = defineProps({
+    voteChartDialog: Object
+  })
+  const emit = defineEmits(["requestOpenLoginModal", "update:voteChartDialog"])
+  const voteChartDialogProxy = computed({
+    get: () => props.voteChartDialog,
+    set: (val) => emit("update:voteChartDialog", val) // 자식컴포넌트에서 voteChartDialogProxy = val을 할 시 여기서 emit이 호출된다.
+  })
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-  const emit = defineEmits(["requestOpenLoginModal"])
-  let route = useRoute()
-  let router = useRouter()
+  const profileBaseUrl = "http://image.tmdb.org/t/p/w185"
+  const contentProviderImageBaseUrl = "http://image.tmdb.org/t/p/w45"
+  const { smAndUp } = useDisplay()
+  const route = useRoute()
+  const router = useRouter()
   const reviewStore = useReviewSaveStore()
-  const navigationStore = useNavigationStore()
-  let showCharacterView = ref(false)
+  const showCharacterView = ref(false)
   const id = ref(useRoute().query.id) // 주소창에서 id 쿼리를 얻어옴
   const type = ref(useRoute().query.type)
-  let mediaInfo = ref({})
-  let contentProviderImageBaseUrl = "http://image.tmdb.org/t/p/w45"
-  let hasWatched = ref(false)
-  let videoPlaying = ref(false)
-  let commentsComponentRef = ref(null)
-  let review = ref("")
-  let userStars = ref(0.0)
-  let getContentProviders = computed(() => {
+  const mediaInfo = ref({})
+  const commentsComponentRef = ref(null)
+  const review = ref("")
+  const userStars = ref(0.0)
+  const getContentProviders = computed(() => {
     if (!(mediaInfo.value)["watch/providers"]) { return [] }
     let providerInfos = (mediaInfo.value)["watch/providers"]["results"]["KR"]
     if (!providerInfos) {return []}
@@ -174,6 +232,7 @@
     }
     return filteredProviderInfoArray
   })
+  const mostVotedCharacter = ref({apiFetched: false});
 
   function requestOpenLoginModal() {
     console.log("MediaDetail에서 requestOpenLoginModal를 요청함")
@@ -239,9 +298,10 @@
     mediaInfo.value = response.data
   }
 
-  getResponse()
   onMounted(() => {
     review.value = reviewStore.draft.content
     reviewStore.clearDraft()
   })
+
+  getResponse()
 </script>

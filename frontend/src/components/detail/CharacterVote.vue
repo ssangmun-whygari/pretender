@@ -1,20 +1,25 @@
 <template>
-  <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
-    <h2>캐릭터 통계 <a href="javascript:void(0);" @click="$emit('hideCharacterView')"><v-icon size="20" color="primary" icon="mdi-arrow-expand-right" /></a></h2>
-    <h3>인기순위</h3>
+  <v-sheet border class="mt-8 mb-3 rounded-lg sheet-container">
+    <div class="slide-btn clickable" @click="$emit('hideCharacterView')">
+      <v-sheet border class="w-100 h-100 d-flex justify-center align-center" :elevation="3">
+        <v-icon icon="mdi-arrow-down-drop-circle" size="large"></v-icon>
+      </v-sheet>
+    </div>
+
+    <h2>캐릭터 통계</h2>
     <!-- <LikeGraphPanel :media_id="id" :media_type="media_type" :cast_info = "castInfo"/> --> <!--deprecated-->
-    <LikeGraphPanelV2 :media_id="id" :media_type="media_type" :cast_info = "castInfo"/>
+    <LikeGraphPanelV2 :cast_info = "castInfo" :vote="voteRef"/>
     <h2>캐릭터들</h2>
     <div v-if="totalItemLength > 0">
       <v-row v-for="n in Math.ceil(totalItemLength / denominator)" v-if="castInfo.length > 0">
         <v-col v-for="(item, index) in slicedCastInfo(castInfo, n - 1)" md="4" cols="12">
-          <v-card class="cast-info-container pa-3" :hover="true" @click="expandPanel(n, index)">
+          <v-card class="cast-info-container pa-3 border rounded-lg" :hover="true" @click="expandPanel(n, index)">
             <v-row>
               <v-col class="d-flex align-center" cols="5">
                 <img class="cast-image" :src="getProfileImagePath(item.profile_path)"></img>
               </v-col>
               <v-col cols="7">
-                {{ `${n}, ${index}` }}<v-card-title>{{ item.character }}</v-card-title>
+                <!-- {{ `${n}, ${index}` }} --><v-card-title>{{ item.character }}</v-card-title>
                 <v-card-subtitle>{{`(배우 : ${item.name})`}}</v-card-subtitle>
               </v-col>
             </v-row>
@@ -22,8 +27,8 @@
         </v-col>
 
         <v-col v-show="panelExpanded[n - 1] === true" cols="12" v-if="true">
-          {{ n - 1 }}
-          <v-sheet :elevation="2" cols="12" class="pa-3">
+          <!-- {{ n - 1 }} -->
+          <v-sheet :elevation="2" cols="12" class="pa-3 border rounded-lg">
             <v-row>
               <v-col v-if="smAndUp" cols="3">
                 <img class="vote-target-profile-image" :src="getProfileImagePath(castInfo[currentActiveIndex].profile_path)"></img>
@@ -37,11 +42,7 @@
                         <h1>{{ castInfo[currentActiveIndex].character }}</h1>
                         <div>{{ `(배우 : ${castInfo[currentActiveIndex].name})` }}</div>
                       </v-col>
-                      <v-col cols="2">
-                        <a href="javascript:void(0);" @click="showLikePerCharacterGraphPanel">
-                          <v-icon size="60" color="primary" icon="mdi-arrow-expand-right" />
-                        </a>
-                      </v-col>
+                      <v-col cols="2"></v-col>
                     </v-row>
                   </div>
                   <div class="vote-panel-line3">
@@ -50,7 +51,7 @@
                         <div v-if="characterLikeCategory.length > 0">
                           <v-chip v-for="(item, _) in characterLikeCategory" 
                             :key="item.why"
-                            :variant="item.why === currentCharacterLikeWhy ? 'elevated' : 'tonal'"
+                            :variant="getWhyButtonStyle(item.why)"
                             @click="setCharacterLikeWhy(item.why)"
                             class="mr-1"
                           >
@@ -58,7 +59,10 @@
                           </v-chip>
                         </div>
                       </v-col>
-                      <v-col cols="2"><v-btn color="primary">투표하기</v-btn></v-col>
+                      <v-col cols="2">
+                        <v-btn v-if="votedByLoginedMember" color="secondary" @click="emit('update:voteChartDialogProxy', {show: true, character_id: character_id})">결과보기</v-btn>
+                        <v-btn v-else color="primary" @click="vote(currentCharacterLikeWhy)">투표하기</v-btn>
+                      </v-col>
                     </v-row>
                   </div>
                 </div>
@@ -66,7 +70,7 @@
                 <div v-if="likePerCharacterGraphPanelShown === true">
                   <LikePerCharacterGraphPanel
                     :media_id="id"
-                    :media_type="media_type"
+                    :media_type="type"
                     :character_id="character_id"
                   />
                 </div>
@@ -75,6 +79,9 @@
           </v-sheet>
         </v-col>
       </v-row>
+    </div>
+    <div v-else>
+      <h3>등록된 캐릭터 정보가 없습니다.</h3>
     </div>
   </v-sheet>
 </template>
@@ -111,12 +118,6 @@
     height: 200px;
   }
 
-  /* .vote-panel-line1 {
-  }
-
-  .vote-panel-line2 {
-  } */
-
   .vote-panel-line3 {
     margin-top: auto;
   }
@@ -129,11 +130,30 @@
     object-fit: contain;
     object-position: center;
   }
+
+  .sheet-container {
+    padding: 32px 12px 12px 12px;
+    position: relative;
+  }
+
+  .slide-btn {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20%;
+    height: 40px;
+  }
+
+  .clickable {
+    cursor: pointer;
+    user-select: none;
+  }
 </style>
 
 <script setup>
   import axios from 'axios'
-  import { ref, toRef, computed, onMounted } from 'vue'
+  import { ref, watch, toRef, computed, onMounted } from 'vue'
   import { useDisplay } from 'vuetify'
   import LikePerCharacterGraphPanel from './LikePerCharacterGraphPanel.vue'
   import LikeGraphPanel from './LikeGraphPanel.vue'
@@ -142,24 +162,37 @@
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL;
   const profileBaseUrl = "http://image.tmdb.org/t/p/w185"
   const props = defineProps({
-      id: String,
-      type: String
+    id: String,
+    type: String,
   })
+  const { mdAndUp, smAndUp } = useDisplay()
+  const emit = defineEmits(["requestOpenLoginModal", "update:voteChartDialogProxy", "update:mostVotedCharacter"]);
   const id = toRef(props, 'id')
   const type = toRef(props, 'type')
-  const media_type = ref("tv") // TODO : 고쳐야 함
-  const character_id = ref(0)
+  const character_id = ref("")
   const currentCharacterLikeWhy = ref(-1)
+  const totalItemLength = ref(0)
+  const panelExpanded = ref([])
+  const denominator = computed(() => mdAndUp.value ? 3 : 1)
+  const currentActiveIndex = ref(0)
   const castInfo = ref([])
-  const { mdAndUp, smAndUp } = useDisplay()
-  let totalItemLength = ref(0)
-  let panelExpanded = ref([])
-  let currentActiveIndex = ref(0)
-  let characterLikeCategory = ref([])
-  let likePerCharacterGraphPanelShown = ref(false)
-  let denominator = computed(() => mdAndUp.value ? 3 : 1)
+  const characterLikeCategory = ref([])
+  const likePerCharacterGraphPanelShown = ref(false)
+  let loginedId = null;
+  const votedByLoginedMember = ref(false);
+  const voteRef = ref({
+    likeGraphPanelReady: false,
+    apiSuccess: false,
+    anyVoteExists: false,
+    voteData: null
+  });
   
-
+  function getWhyButtonStyle(why) {
+    if (votedByLoginedMember.value) {
+      return 'tonal' // 이미 투표했으면 선택할 수 없음
+    }
+    return why === currentCharacterLikeWhy.value ? 'elevated' : 'tonal'
+  }
   function getProfileImagePath(path) {
     if (path) return profileBaseUrl + path
     else return apiBaseUrl + '/resource/characterVoteNoImage'
@@ -190,18 +223,72 @@
     likePerCharacterGraphPanelShown.value = true;
   }
   function setCharacterLikeWhy(why) {
+    if (votedByLoginedMember.value) {
+      return currentCharacterLikeWhy.value = -1;
+    }
     currentCharacterLikeWhy.value = why;
+  }
+
+  async function vote(why) {
+    let loginedId = await checkAuthenticated()
+    if (!loginedId) {
+      // 로그인 안했다면 로그인 요청하고 조기 종료
+      emit('requestOpenLoginModal')
+      return;
+    }
+    alert(`투표합니다. why : ${why}`);
+    if (characterLikeCategory.value.map(entry => entry.why).indexOf(why) === -1) {
+      alert('유효하지 않은 투표 이유')
+      return
+    }
+    const payload = {
+      memberId: loginedId,
+      mediaId: id.value,
+      characterId: character_id.value,
+      type: type.value,
+      why: why,
+    };
+    alert(JSON.stringify(payload));
+    const response = await axios.post(apiBaseUrl + "/api/detail/vote", payload);
+    console.log(response.data)
+    if (response.data.result === "success") {
+      alert("투표 성공");
+      votedByLoginedMember.value = true;
+    } else if (response.data.result === "duplicated") {
+      alert("이미 투표함");
+      votedByLoginedMember.value = true;
+    }
+  }
+
+  async function checkAuthenticated() {
+    loginedId = null;
+    try {
+      let response = await axios.get(
+        apiBaseUrl + '/api/authenticated',
+        {
+          withCredentials: true,
+
+          headers: {
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        }
+      ) // axios.get end
+      if (response.data.authenticated) {
+        // TODO : loginedId 변경
+        return response.data.id;
+      }
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+    return null;
   }
 
   async function requestCharacterLikeCategory() {
     let response = await axios.get(
       apiBaseUrl + '/api/detail/cast/likeCategory',
     ) // axios.get end
-    console.log("########## requestCharacterLikeCategory() ##########")
-    console.log(response)
-    console.log(response.data)
     characterLikeCategory.value = response.data
-    console.log("########## requestCharacterLikeCategory() END ##########")
   }
 
   async function requestCastInfo() {
@@ -224,8 +311,107 @@
     console.log("########## requestCastInfo() END ##########")
   }
 
+  async function getVoteByCurrentMember(loginedId) {
+    try {
+      let response = await axios.get(
+        apiBaseUrl + '/api/detail/vote',
+        {
+          params: {
+            type: type.value,
+            mediaId: id.value,
+            memberId: loginedId
+          }
+        }
+      )
+      console.log("########### getVoteByCurrentMember() ############");
+      console.log(response)
+      console.log("########### getVoteByCurrentMember() END ############");
+      return response.data.result
+    } catch (error) {
+      console.error("API 호출 실패", error);
+      return null;
+    }
+  }
+
+  async function fetchVoteData(media_id, media_type) {
+    try {
+      const response = await axios.get(
+        apiBaseUrl + '/api/detail/castVotes', // url
+        {
+          params: {
+            mediaId: media_id, 
+            type: media_type
+          }
+        }
+      )
+      return response
+    } catch (error) {
+      console.error("투표 정보를 불러오는 데 실패했습니다.")
+      console.error(error)
+      return null
+    }
+  }
+
+  async function updateVoteData(voteRef) {
+    let temp = {
+      likeGraphPanelReady: false,
+      apiSuccess: false,
+      anyVoteExists: false,
+      voteData: null
+    }
+
+    const response = await fetchVoteData(props.id, props.type);
+    if (!response) {
+      temp.likeGraphPanelReady = true;
+      voteRef.value = temp;
+      return;
+    }
+    temp.apiSuccess = true;
+    if (response.data.length <= 0) {
+      temp.likeGraphPanelReady = true;
+      temp.voteData = response.data;
+      voteRef.value = temp;
+      return;
+    }
+    temp.anyVoteExists = true;
+    temp.voteData = response.data;
+    temp.likeGraphPanelReady = true;
+    voteRef.value = temp;
+  }
+
+  function updateMostVotedCharacterInfo(obj) {
+    emit("update:mostVotedCharacter", obj);
+  }
+
+  watch(() => {return { vote: voteRef.value, castInfo: castInfo.value }}, (newVal, oldVal) => {
+    console.log("newVal", newVal)
+    if (newVal.vote.voteData && newVal.vote.voteData.length == 0) {
+      return updateMostVotedCharacterInfo({apiFetched: true, result: null})
+    }
+    if (newVal.vote.voteData && newVal.vote.voteData.length > 0 && newVal.castInfo.length > 0) {
+      let voteData = newVal.vote.voteData;
+      let castInfo = newVal.castInfo;
+      voteData.sort((a, b) => b.votes-a.votes);
+      let profilePath = castInfo.find((entry) => entry.id == voteData[0].character_id)?.profile_path;
+      updateMostVotedCharacterInfo({
+        apiFetched: true,
+        result: {
+          characterName : voteData[0].character_name,
+          actorName: voteData[0].actor_name,
+          profilePath: profilePath
+        }
+      });
+    }
+  })
+
   onMounted(async () => {
-    await requestCastInfo()
-    await requestCharacterLikeCategory()
+    loginedId = await checkAuthenticated();
+    if (loginedId) {
+      let exists = await getVoteByCurrentMember(loginedId);
+      votedByLoginedMember.value = exists ? true : false;
+    }
+    await updateVoteData(voteRef);
+    await requestCastInfo();
+    await requestCharacterLikeCategory();
   })
 </script>

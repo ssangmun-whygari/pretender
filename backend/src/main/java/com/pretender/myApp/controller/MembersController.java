@@ -85,12 +85,14 @@ public class MembersController {
             res.put("loginType", "OAUTH2");
             res.put("providerId", providerId);
             res.put("nickname", nickname);
+            res.put("id", auth.getName());
             return res;
         }
         // 로컬(DB) 로그인(UserDetails 기반)
         if (principal instanceof PretenderUserDetails userDetails) {
             res.put("loginType", "LOCAL");
             res.put("nickname", userDetails.getNickname());
+            res.put("id", auth.getName());
             return res;
         }
         

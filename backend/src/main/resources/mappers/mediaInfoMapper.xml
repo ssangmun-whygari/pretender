@@ -31,6 +31,16 @@
 		ORDER BY votes DESC
 	</select>
 	
+	<select id="selectVote" resultType="int">
+		select count(*) from cast_likes
+		where members_id = #{memberId} and media_id = #{mediaId} and media_type = #{type}
+	</select>
+	
+	<insert id="insertVote">
+		insert into cast_likes(media_id, media_type, character_id, members_id, why)
+		values (#{mediaId}, #{type}, #{characterId}, #{memberId}, #{why})
+	</insert>
+	
 	<select id="selectAiSummary" resultType="com.pretender.myApp.model.AISummaryDTO">
 		select work_id as workId, 
 			one_point as onePoint, 
