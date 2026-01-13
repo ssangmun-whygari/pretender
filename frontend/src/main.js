@@ -51,7 +51,8 @@ import SocialLoginSuccess from './components/members/SocialLoginSuccess.vue'
 
 // swiper 등록
 import { register } from 'swiper/element/bundle'
-register()
+import { useCheckAuthenticated } from './composables/checkAuthenticated'
+
 
 const pinia = createPinia()
 
@@ -63,7 +64,19 @@ const routes = [
     { path: '/socialLogin/success', component: SocialLoginSuccess},
     { path: '/login', component: LoginView},
     { path: '/logout', component: LogoutView},
-    { path: '/myPage', component: MyPageView},
+    { 
+      path: '/myPage', 
+      component: MyPageView,
+      // myPage 접근시 로그인 안되어있으면 메인으로 돌려보냄
+      beforeEnter: async (to) => {
+        const auth = await useCheckAuthenticated();
+        if (!auth) {
+          return { path: '/' }
+        } else {
+          return true;
+        }
+      }
+    },
     // { path: '/test', component: Test },
     // { path: '/test2', component: Test2 },
     // { path: '/test3', component: Test3 },
@@ -84,6 +97,8 @@ app.config.warnHandler = (msg, instance, trace) => {
     debugger // ✅ 여기서 멈춤 (DevTools 열어둔 상태)
   }
 }
+
+register()
 
 app.use(Tres)
 app.use(pinia)

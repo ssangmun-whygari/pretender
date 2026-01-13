@@ -2,7 +2,7 @@
     <AppHeader></AppHeader>
     <div class="bg-container"></div>
     <!-- mediaListComponentKey가 바뀔떄마다 다시 컴포넌트가 렌더링됨 -->
-    <MediaList v-show="showMode === 'primary'" :key="mediaListComponentKey" v-bind:mediaInfo="mediaInfo"/>
+    <MediaList v-show="showMode === 'primary'" :key="mediaListComponentKey" :mediaInfo="mediaInfo"/>
 </template>
 
 <style scoped>
@@ -26,12 +26,12 @@
   import { ref, watch, onMounted } from 'vue'
   import { useRoute } from 'vue-router';
   import AppHeader from '../AppHeader.vue';
-  let route = useRoute()
-  let mediaInfo = ref({"tv": [], "movie": [], "allLoaded": false}) // 자식 컴포넌트가 length로 접근하기 때문에 에러 방지
-  let mediaListComponentKey = 'initial'
-  let showMode = "primary" // primary or more
-
-  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
+  const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL;
+  const route = useRoute();
+  const mediaInfo = ref({"tv": [], "movie": [], "allLoaded": false}) // 자식 컴포넌트가 length로 접근하기 때문에 에러 방지
+  const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage';
+  let mediaListComponentKey = 'initial';
+  let showMode = "primary"; // primary or more
 
   // axios 요청
   async function requestMediaList(word) {
@@ -61,7 +61,10 @@
     console.log(mediaInfo.value)
     console.log("==========mediaInfo=============")
   }
-  requestMediaList(route.query.word)
+  
+  onMounted(() => {
+    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
+  })
 
   // 쿼리 변경 감지
   watch(
@@ -75,12 +78,5 @@
     },
   );
 
-  const backgroundImageUrl = apiBaseUrl + '/resource/backgroundImage'
-  // deprecated
-  // onMounted(() => {
-  //   document.querySelector('.bg-container').style.setProperty('--background-image-url', `url(${backgroundImageUrl})`)
-  // })
-  onMounted(() => {
-    document.querySelector('.bg-container').style.setProperty('--background-image-url', `url('/images/SL-120722-54440-04.jpg')`)
-  })
+  requestMediaList(route.query.word)
 </script>

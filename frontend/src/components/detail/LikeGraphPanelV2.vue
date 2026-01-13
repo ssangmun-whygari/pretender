@@ -180,7 +180,6 @@
       if (castInfo.length === 0) return;
       if (!vote.voteData) return;
       // chartData를 만든다.
-      vote.voteData.sort((a, b) => a.votes - b.votes);
       let labels = vote.voteData.map((v) => {
         let i = castInfo.findIndex((c) => c.id === v.character_id);
         return (i === -1) ? 'Unknown' : castInfo[i].character;

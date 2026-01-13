@@ -350,7 +350,7 @@
 
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, defineExpose } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { useNavigationStore } from '../../composables/stores/navigation';

@@ -110,7 +110,7 @@ public class MediaInfoController {
 		return ResponseEntity.ok(result);
 	}
 	
-	// 한 작품에 대하여 캐릭터 당 얻은 투표 수를 반환
+	// 한 작품에 대하여 캐릭터 당 얻은 투표 수를 반환, 투표 수가 큰 순서대로 정렬됨
 	@GetMapping("api/detail/castVotes")
 	public ResponseEntity<List<CastVotesDTO>> getCastVotes(@RequestParam String mediaId, @RequestParam String type) {
 		List<CastVotesDTO> castVotes = mediaInfoService.requestCastVotes(mediaId,type);

@@ -32,14 +32,13 @@
   </v-container>
   <v-container class="w-100 d-flex flex-column justify-center position-relative">
     <v-row justify="center">
-
-      <v-col class="mt-5" cols="12">
-        <v-row justify="center">
-          <v-col lg="5" cols="6" class="emphasized-bg-left d-flex flex-column justify-center ga-3" style="background-color: #00A1FF;">
+      <v-col class="mt-5" xl="12">
+        <v-row justify="center" v-if="lgAndUp">
+          <v-col xl="5" lg="6" cols="12" class="emphasized-bg-left d-flex flex-column justify-center ga-3" style="background-color: #00A1FF;">
             <div class="ml-3" style="font-size: 48px;">사람처럼 똑똑합니다.</div>
             <div class="ml-3" style="font-size: 20px;">- 똑똑한 AI 요약 정보로 '아는 척' 해보세요.</div>
           </v-col>
-          <v-col lg="4" cols="6">
+          <v-col xl="4" lg="6">
             <TresCanvas>
               <TresPerspectiveCamera
                 :position="[0, 4, 7.2]"
@@ -61,10 +60,16 @@
               <TresAmbientLight :intensity="1.5" />
             </TresCanvas>
           </v-col>
+        </v-row> <!--mdAndUp-->
+        <v-row v-else>
+          <v-col cols="12" class="emphasized-bg-small d-flex flex-column justify-center ga-3" style="background-color: #00A1FF;">
+            <div class="ml-3" style="font-size: 48px;">사람처럼 똑똑합니다.</div>
+            <div class="ml-3" style="font-size: 20px;">- 똑똑한 AI 요약 정보로 '아는 척' 해보세요.</div>
+          </v-col>
         </v-row>
       </v-col>
 
-      <v-col class="mt-5" lg="9" cols="12">
+      <v-col class="mt-5" xl="9" lg="12" cols="12">
         <v-sheet border class="mt-3 mb-3 pa-3 rounded-lg">
           <div style="font-size: xx-large; font-weight: bold;">🧐 똑똑한 AI 요약이 제공되는 작품 리스트에요</div>
         </v-sheet>
@@ -116,8 +121,8 @@
       </v-col>
 
       <v-col class="mt-5" cols="12">
-        <v-row justify="center">
-          <v-col lg="4" cols="6">
+        <v-row justify="center" v-if="lgAndUp">
+          <v-col xl="4" lg="6">
             <TresCanvas>
               <Suspense>
                 <MovieCut/>
@@ -132,9 +137,15 @@
               ></TresSpotLight>
             </TresCanvas>
           </v-col>
-          <v-col lg="5" cols="6" class="emphasized-bg-right d-flex flex-column justify-center align-end ga-3" style="background-color: #00CEB6;">
+          <v-col xl="5" lg="6" cols="12" class="emphasized-bg-right d-flex flex-column justify-center align-end ga-3" style="background-color: #00CEB6;">
             <div class="mr-3" style="font-size: 48px;">당신의 최애는 누구인가요?</div>
             <div class="mr-3" style="font-size: 20px;">- 최애에게 소중한 한표를 주세요!</div>
+          </v-col>
+        </v-row> <!--lgAndUp-->
+        <v-row v-else>
+          <v-col xl="5" lg="6" cols="12" class="emphasized-bg-small d-flex flex-column justify-center ga-3" style="background-color: #00CEB6;">
+            <div class="ml-3" style="font-size: 48px;">당신의 최애는 누구인가요?</div>
+            <div class="ml-3" style="font-size: 20px;">- 최애에게 소중한 한표를 주세요!</div>
           </v-col>
         </v-row>
       </v-col>
@@ -174,6 +185,12 @@
   .emphasized-bg-right {
     border-radius: 100px 0px 0px 100px / 200px 0px 0px 200px;
     height: 400px;
+    color: white;
+  }
+
+  .emphasized-bg-small {
+    border-radius: 20px;
+    height: 200px;
     color: white;
   }
 
@@ -229,7 +246,7 @@
   import { usePageTransition } from '@/composables/pageTransition';
   import { useCheckAuthenticated } from '@/composables/checkAuthenticated';
   
-  const { lgAndUp } = useDisplay();
+  const { mdAndUp, lgAndUp } = useDisplay();
   const router = useRouter();
   const route = useRoute();
   const navigationStore = useNavigationStore();

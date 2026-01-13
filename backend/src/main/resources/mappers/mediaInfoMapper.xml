@@ -14,11 +14,10 @@
 	</select>
 	
 	<select id="selCastVotes" resultType="com.pretender.myApp.model.CastVotesDTO">
-		SELECT c.character_id, c.character_name, c.actor_name, count(l.character_id) as votes
-		FROM cast_likes l LEFT JOIN casts c
-		ON c.character_id = l.character_id
-		where c.media_id = #{mediaId} and c.media_type= #{type}
-		GROUP BY c.character_id, c.character_name, c.actor_name
+		SELECT character_id, count(character_id) as votes
+		FROM cast_likes
+		where media_id = #{mediaId} and media_type= #{type}
+		GROUP BY character_id
 		ORDER BY votes DESC
 	</select>
 	

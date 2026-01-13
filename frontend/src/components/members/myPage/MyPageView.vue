@@ -1,7 +1,5 @@
 <template>
     <AppHeader></AppHeader>
-    <!-- <h1>마이페이지</h1>
-    <h2>환영합니다. {{ userId }} 님</h2> -->
     <v-container fluid>
       <v-row justify="center">
         <v-col id="profile-section" lg="8" cols="12">
@@ -97,7 +95,7 @@
         </v-tabs-window-item>
       </v-tabs-window>
     </v-container>
-    <Background3Dmodel class="background-model"/>
+    <!-- <Background3Dmodel class="background-model"/> -->
 </template>
 
 <style>

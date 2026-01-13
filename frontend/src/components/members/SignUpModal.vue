@@ -52,8 +52,6 @@
                 <v-date-picker
                   v-model="selectedDate"
                   @update:modelValue="onDateSelected"
-                  @update:month="onMonthChange"
-                  @update:year="onYearChange"
                 />
               </v-menu>
               <div class="validation-message d-flex flex-column justify-center">
@@ -134,120 +132,29 @@
   import axios from 'axios'
   import { ref, watch, onMounted, nextTick } from 'vue'
   const apiBaseUrl = import.meta.env.VITE_APP_API_BASE_URL
-  const dialog = ref(null)
-
-  const menuOpened = ref(null)
-  const selectedDate = ref(null)
-  const formattedDate = ref(null)
   const koreanYoils = ['일', '월', '화', '수', '목', '금', '토']
   const monthTable = {
     'Jan' : 1, 'Feb': 2, 'Mar' : 3, 'Apr' : 4, 'May' : 5, 'Jun' : 6, 'Jul' : 7,
     'Aug' : 8, 'Sep' : 9, 'Oct' : 10, 'Nov' : 11, 'Dec' : 12
   }
-  // const lastEngYearAndMonth = ref(null)
-
-  watch(menuOpened, (opened) => {
-    if (opened === true) {
-      nextTick(() => {
-        let titleElement = document.querySelector(".v-picker-title")
-        console.log(titleElement)
-        titleElement.style.display = 'none'
-        let infoElement = document.querySelector(".v-date-picker-header__content")
-        infoElement.innerText = '날짜를 선택해주세요'
-        let monthButton = document.querySelector('[data-testid="month-btn"]')
-        let prevMonthButton = document.querySelector('[data-testid="prev-month"]')
-        let nextMonthButton = document.querySelector('[data-testid="next-month"]')
-        monthButton.addEventListener('click', translateYoil)
-        // prevMonthButton.addEventListener('click', translateYoil)
-        // nextMonthButton.addEventListener('click', translateYoil)
-        translateYoil()
-        translateYearMonthButton(monthButton)
-      })
-    }
-  })
-
-  function onMonthChange(month) {
-    // console.log("monthChanged!!! : " + month)
-    let button = document.querySelector('[data-testid="month-btn"]')
-    let element = button.querySelector('.v-btn__content')
-    let words = element.textContent.split(" ") // 예) 2025년 8월
-    words[1] = parseInt(month) + 1 + "월"
-    let newText = words.join(" ")
-    // console.log("newText : " + newText)
-    element.textContent = newText
-    nextTick(() => {
-      translateYoil()
-    })
-  }
-
-  function onYearChange(year) {
-    // console.log("yearChanged!!! : " + year)
-    let button = document.querySelector('[data-testid="month-btn"]')
-    let element = button.querySelector('.v-btn__content')
-    let words = element.textContent.split(" ") // 예) 2025년 8월
-    words[0] = parseInt(year) +  "년"
-    let newText = words.join(" ")
-    // console.log("newText : " + newText)
-    element.textContent = newText
-    nextTick(() => {
-      translateYoil()
-    })
-  }
-
-  function translateYearMonthButton(button) {
-    let element = button.querySelector('.v-btn__content')
-    let string = element.textContent
-    // lastEngYearAndMonth.value = string
-    let words = string.split(" ")
-    let month = String(monthTable[words[0].slice(0, 3)])
-    let year = words[1]
-    element.textContent = `${year}년 ${month}월`
-  }
-
-  function translateYoil() {
-    // 요일 번역
-    let yoil = document.querySelectorAll('.v-date-picker-month__weekday');
-    let start = 0;
-    for (let i = 0; i < yoil.length; i++) {
-      yoil[i].innerText = koreanYoils[i % koreanYoils.length]
-    }
-  }
-
-  function onDateSelected() {
-    let date = selectedDate.value
-    let year = date.getFullYear();
-    let month = String(date.getMonth() + 1).padStart(2, '0')
-    let day = String(date.getDate()).padStart(2, '0')
-    formattedDate.value = `${year}-${month}-${day}`
-    menuOpened.value = false
-  }
-
-  const userId = ref('')
-  const userPassword = ref('')
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{6,15}$/;
+  const dialog = ref(null)
+  const menuOpened = ref(null)
+  const selectedDate = ref(null)
+  const formattedDate = ref(null)
+  // const lastEngYearAndMonth = ref(null)
+  const genderErrorMessage = ref('')
+  const nicknameErrorMessage = ref('')
+  const birthdateErrorMessage = ref('')
+  const passwordErrorMessage = ref('')
+  const emailErrorMessage = ref('')
+  const userId = ref('')
+  const userPassword = ref('')
   const isValidPassword = ref(false)
   const gender = ref(null)
   const nickname = ref('')
 
-  // 입력이 변할때만 유효성 체크
-  watch(userPassword, (password) => {
-    setPasswordErrorMessage()
-  })
-  watch(userId, (id) => {
-    setEmailErrorMessage()
-  })
-  watch(formattedDate, (string) => {
-    setBirthdayErrorMessage()
-  })
-  watch(gender, (g) => {
-    setGenderErrorMessage()
-  })
-  watch(nickname, (n) => {
-    setNicknameErrorMessage()
-  })
-
-  let passwordErrorMessage = ref('')
   function setPasswordErrorMessage() {
     if (!PASSWORD_REGEX.test(userPassword.value)) {
       passwordErrorMessage.value = "⚠️ 6~15자, 영문 대소문자, 숫자, 특수문자를 포함"
@@ -312,11 +219,8 @@
     nicknameErrorMessage.value = ""
     birthdateErrorMessage.value = ""
     genderErrorMessage.value = ""
-
-
   }
 
-  const emailErrorMessage = ref('')
   function setEmailErrorMessage() {
     if (!EMAIL_REGEX.test(userId.value)) {
       emailErrorMessage.value = "⚠️ 유효한 이메일 주소를 입력하세요"
@@ -327,8 +231,6 @@
     }
   }
 
-
-  const nicknameErrorMessage = ref('')
   function setNicknameErrorMessage() {
     if (!nickname.value || nickname.value.length <= 0) {
       nicknameErrorMessage.value = "⚠️ 닉네임을 설정해주세요"
@@ -340,7 +242,7 @@
     nicknameErrorMessage.value =""
     return true
   }
-  const birthdateErrorMessage = ref('')
+
   function setBirthdayErrorMessage() { // false 반환시 생일입력에 문제가 있음
     if (formattedDate.value && formattedDate.value.length > 0) {
       birthdateErrorMessage.value = ""
@@ -350,7 +252,7 @@
       return false
     }
   }
-  const genderErrorMessage = ref('')
+
   function setGenderErrorMessage() {
     if (gender.value) {
       genderErrorMessage.value = ""
@@ -361,5 +263,95 @@
     }
   }
 
+  function onMonthChange(month) {
+    // console.log("monthChanged!!! : " + month)
+    let button = document.querySelector('[data-testid="month-btn"]')
+    let element = button.querySelector('.v-btn__content')
+    let words = element.textContent.split(" ") // 예) 2025년 8월
+    words[1] = parseInt(month) + 1 + "월"
+    let newText = words.join(" ")
+    // console.log("newText : " + newText)
+    element.textContent = newText
+    nextTick(() => {
+      translateYoil()
+    })
+  }
 
+  function onYearChange(year) {
+    // console.log("yearChanged!!! : " + year)
+    let button = document.querySelector('[data-testid="month-btn"]')
+    let element = button.querySelector('.v-btn__content')
+    let words = element.textContent.split(" ") // 예) 2025년 8월
+    words[0] = parseInt(year) +  "년"
+    let newText = words.join(" ")
+    // console.log("newText : " + newText)
+    element.textContent = newText
+    nextTick(() => {
+      translateYoil()
+    })
+  }
+
+  function translateYearMonthButton(button) {
+    let element = button.querySelector('.v-btn__content')
+    let string = element.textContent
+    // lastEngYearAndMonth.value = string
+    let words = string.split(" ")
+    let month = String(monthTable[words[0].slice(0, 3)])
+    let year = words[1]
+    element.textContent = `${year}년 ${month}월`
+  }
+
+  // 요일 번역
+  function translateYoil() {
+    let yoil = document.querySelectorAll('.v-date-picker-month__weekday');
+    let start = 0;
+    for (let i = 0; i < yoil.length; i++) {
+      yoil[i].innerText = koreanYoils[i % koreanYoils.length]
+    }
+  }
+
+  function onDateSelected() {
+    let date = selectedDate.value
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, '0')
+    let day = String(date.getDate()).padStart(2, '0')
+    formattedDate.value = `${year}-${month}-${day}`
+    menuOpened.value = false
+  }
+
+  // 입력이 변할때만 유효성 체크
+  watch(userPassword, (password) => {
+    setPasswordErrorMessage()
+  })
+  watch(userId, (id) => {
+    setEmailErrorMessage()
+  })
+  watch(formattedDate, (string) => {
+    setBirthdayErrorMessage()
+  })
+  watch(gender, (g) => {
+    setGenderErrorMessage()
+  })
+  watch(nickname, (n) => {
+    setNicknameErrorMessage()
+  })
+
+  watch(menuOpened, (opened) => {
+    if (opened === true) {
+      nextTick(() => {
+        let titleElement = document.querySelector(".v-picker-title")
+        let infoElement = document.querySelector(".v-date-picker-header__content")
+        let monthButton = document.querySelector('[data-testid="month-btn"]')
+        let prevMonthButton = document.querySelector('[data-testid="prev-month"]')
+        let nextMonthButton = document.querySelector('[data-testid="next-month"]')
+
+        titleElement.style.display = 'none'
+        infoElement.innerText = '날짜를 선택해주세요'
+
+        // monthButton.addEventListener('click', translateYoil)
+        // translateYoil()
+        // translateYearMonthButton(monthButton)
+      })
+    }
+  })
 </script>

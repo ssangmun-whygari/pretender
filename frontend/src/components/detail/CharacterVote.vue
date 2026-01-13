@@ -236,9 +236,9 @@
       emit('requestOpenLoginModal')
       return;
     }
-    alert(`투표합니다. why : ${why}`);
+    // alert(`투표합니다. why : ${why}`);
     if (characterLikeCategory.value.map(entry => entry.why).indexOf(why) === -1) {
-      alert('유효하지 않은 투표 이유')
+      // alert('유효하지 않은 투표 이유')
       return
     }
     const payload = {
@@ -252,10 +252,11 @@
     const response = await axios.post(apiBaseUrl + "/api/detail/vote", payload);
     console.log(response.data)
     if (response.data.result === "success") {
-      alert("투표 성공");
+      // alert("투표 성공");
       votedByLoginedMember.value = true;
+      await updateVoteData(voteRef); // 투표 결과를 갱신함.
     } else if (response.data.result === "duplicated") {
-      alert("이미 투표함");
+      // alert("이미 투표함");
       votedByLoginedMember.value = true;
     }
   }
@@ -391,14 +392,13 @@
     if (newVal.vote.voteData && newVal.vote.voteData.length > 0 && newVal.castInfo.length > 0) {
       let voteData = newVal.vote.voteData;
       let castInfo = newVal.castInfo;
-      voteData.sort((a, b) => b.votes-a.votes);
-      let profilePath = castInfo.find((entry) => entry.id == voteData[0].character_id)?.profile_path;
+      let i = castInfo.findIndex((c) => c.id === voteData[0].character_id);
       updateMostVotedCharacterInfo({
         apiFetched: true,
         result: {
-          characterName : voteData[0].character_name,
-          actorName: voteData[0].actor_name,
-          profilePath: profilePath
+          characterName : (i === -1) ? 'Unknown' : castInfo[i].character,
+          actorName: (i === -1) ? 'Unknown' : castInfo[i].name,
+          profilePath: (i === -1) ? '' : castInfo[i].profile_path
         }
       });
     }
