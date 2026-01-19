@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
 import com.pretender.myApp.component.TMDBclient;
+import com.pretender.myApp.model.AISummaryDTO;
 import com.pretender.myApp.model.CastLikeCategoryDTO;
 import com.pretender.myApp.model.CastVotesDTO;
 import com.pretender.myApp.model.VoteReasonsDTO;
@@ -97,13 +98,13 @@ public class MediaInfoService {
 		Float averageStars = mediaInfoDAO.getAverageStars(mediaId, type);
 		responseBody.put("average_stars", averageStars);
 		
-		// TODO : AI 요약 조회
-//		AISummaryDTO aiSummary = mediaInfoDAO.getAiSummary(mediaId, type);
-//		responseBody.put("ai_summary", aiSummary);
-//		if (aiSummary != null) {
-//			Map<Integer, String> aiSummaryCategory = mediaInfoDAO.getAiSummaryCategory();
-//			responseBody.put("ai_summary_category", aiSummaryCategory);
-//		}
+		// AI 요약 조회
+		AISummaryDTO aiSummary = mediaInfoDAO.getAiSummary(mediaId, type);
+		responseBody.put("ai_summary", aiSummary);
+		if (aiSummary != null) {
+			Map<Integer, String> aiSummaryCategory = mediaInfoDAO.getAiSummaryCategory();
+			responseBody.put("ai_summary_category", aiSummaryCategory);
+		}
 		return ResponseEntity.ok(responseBody);
 	}
 
@@ -159,7 +160,7 @@ public class MediaInfoService {
 		return mediaInfoDAO.getAiSummaryProvidedList();
 	}
 
-	public List<Map<String, String>> requesDetailFortAiSummaryProvidedList(List<String> idList) {
+	public List<Map<String, String>> requesDetailFortAiSummaryProvidedList(List<Integer> idList) {
 		return mediaInfoDAO.getDetailForAiSummaryProvidedList(idList);
 	}
 

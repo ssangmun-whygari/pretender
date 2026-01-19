@@ -54,11 +54,11 @@
 	</select>
 	
 	<select id="selectAiSummaryProvidedList" resultType="String">
-		select work_id from ai_summary
+		select cast(work_id as char) from ai_summary
 	</select>
 	
 	<select id="selectDetailForAiSummaryProvidedList" resultType="map">
-		select work_id as mediaId, poster_path as posterPath, work_title as title 
+		select cast(work_id as char) as mediaId, poster_path as posterPath, work_title as title 
 		from ai_summary
 		where work_id in
 		<foreach item="item" collection="list" open="(" separator="," close=")">

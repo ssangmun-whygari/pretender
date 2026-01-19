@@ -69,10 +69,11 @@ public class MediaInfoController {
 	
 	@PostMapping("/api/detail/aiSummaryProvided")
 	public ResponseEntity<List<Map<String, String>>> getAiSummaryProvidedList(
-			@RequestBody List<String> idList
+			@RequestBody List<Integer> idList
 			) {
 		System.out.println("도착한 idList : " + idList.toString());
 		List<Map<String, String>> result = null;
+		System.out.println("result : " + result);
 		try {
 			result = mediaInfoService.requesDetailFortAiSummaryProvidedList(idList);
 		} catch (Exception e) {

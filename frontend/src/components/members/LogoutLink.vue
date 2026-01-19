@@ -10,9 +10,9 @@
 
   async function onLogout() {
     const response = await axios.post(`${apiBaseUrl}/logout`, null, {withCredentials: true}); // 주소, body, 옵션
-    alert(JSON.stringify(response.data));
+    // alert(JSON.stringify(response.data));
     if (response.data.ok === true) {
-      alert("로그아웃 성공함");
+      // alert("로그아웃 성공함");
       emit('requestCheckAuthenticated');
     }
   }

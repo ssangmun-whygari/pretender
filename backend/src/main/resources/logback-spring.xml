@@ -45,7 +45,7 @@
 	            <level>ERROR</level>
 	        </filter>
             <encoder>
-                <pattern>${LOG_PATTERN_WITH_LONG_TRACE}</pattern>
+                <pattern>${LOG_PATTERN_WITH_EXCEPTION_TRACE}</pattern>
             </encoder>
         </appender>
         

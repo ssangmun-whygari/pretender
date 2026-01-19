@@ -193,6 +193,8 @@ public class MembersService {
 		if (result != 0) { // 새로운 회원임
 			nickname = provider + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
 			membersDAO.insertOAuthUserToMembers(provider, providerId, nickname);
+		} else { // 이미 있는 회원임
+			nickname = membersDAO.selectNicknameOfSocialLoginMember(provider, providerId);
 		}
 		return nickname;
 	}

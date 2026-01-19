@@ -41,14 +41,17 @@
                 <div class="button-text">로그인하기</div>
               </v-btn>
               <v-btn 
-                class="mt-5" height="48"  block outlined 
+                class="mt-5 naver-login-btn" height="48"  block outlined 
                 @click="requestSocialLoginNaver">
-                <div class="button-text">네이버로 로그인하기</div>
+                <img class="naver-login-img" src="/images/NAVER_login.png"></img>
               </v-btn>
               <v-btn 
-                class="mt-5" height="48"  block outlined 
+                class="mt-5 kakao-login-btn" height="48"  block outlined 
                 @click="requestSocialLoginKakao">
-                <div class="button-text">카카오로 로그인하기</div>
+                <div class="d-flex justify-center align-center">
+                  <img class="mr-1" style="height: 30px;" src="/images/kakao_symbol.png"></img>
+                  <div style="font-size: 18px;">카카오 로그인</div>
+                </div>
               </v-btn>
             </v-card-text>
             <v-card-actions>
@@ -63,6 +66,18 @@
 </template>
 
 <style scoped>
+  .naver-login-btn {
+    background-color: rgb(3, 169, 77);
+  }
+
+  .naver-login-img {
+    height: 22px;
+  }
+
+  .kakao-login-btn {
+    background-color: #FEE500;
+  }
+
   .members-form-title {
     font-size: 32px;
     font-weight: bold;
@@ -73,7 +88,7 @@
   }
 
   .button-text {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .card-text {

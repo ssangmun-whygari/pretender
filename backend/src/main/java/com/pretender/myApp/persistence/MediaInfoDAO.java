@@ -63,11 +63,11 @@ public class MediaInfoDAO {
 
 	public AISummaryDTO getAiSummary(String mediaId, String type) {
 		HashMap<String,Object> params = new HashMap<>();
-		params.put("mediaId", mediaId);
+		params.put("mediaId", Integer.parseInt(mediaId));
 		params.put("type", type);
 		
 		AISummaryDTO result = ses.selectOne(ns + "selectAiSummary", params);
-		System.out.println(result);
+		System.out.println("result : " + result);
 		return result;
 	}
 
@@ -84,7 +84,7 @@ public class MediaInfoDAO {
 		return ses.selectList(ns + "selectAiSummaryProvidedList");
 	}
 
-	public List<Map<String, String>> getDetailForAiSummaryProvidedList(List<String> idList) {
+	public List<Map<String, String>> getDetailForAiSummaryProvidedList(List<Integer> idList) {
 		return ses.selectList(ns + "selectDetailForAiSummaryProvidedList", idList);
 	}
 }

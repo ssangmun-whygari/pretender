@@ -296,6 +296,7 @@
       }
     ) // axios.get end
     mediaInfo.value = response.data
+    console.log('mediaInfo', mediaInfo.value)
   }
 
   onMounted(() => {

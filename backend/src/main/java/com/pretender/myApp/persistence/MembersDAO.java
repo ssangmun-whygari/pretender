@@ -101,5 +101,11 @@ public class MembersDAO {
 		map.put("nickname", nickname);
 		return ses.insert(ns + "insertOAuthUserToMembers", map);
 	}
-
+	
+	public String selectNicknameOfSocialLoginMember(String provider, String providerId) {
+		Map<String, Object> map = new HashMap<>();
+		map.put("provider", provider);
+		map.put("providerId", providerId);
+		return ses.selectOne(ns + "selectNicknameOfSocialLoginMember", map);
+	}
 }

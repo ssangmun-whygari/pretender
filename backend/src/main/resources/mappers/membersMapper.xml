@@ -108,7 +108,7 @@
 	
 	<insert id="insertOAuthUserToMembers">
 		insert into members(id, password, gender, status, nickname, oauth_id)
-		values (#{providerId}, 
+		values (#{providerId},
 			left(#{providerId}, 15), 
 			'N', 
 			'active', 
@@ -120,5 +120,14 @@
 				limit 1)
 		)
 	</insert>
+	
+	<select id="selectNicknameOfSocialLoginMember" resultType="String">
+		select nickname
+		from members
+		where oauth_id = (
+			select id from members_oauth
+			where provider = #{provider} and member_id = #{providerId}
+		)
+	</select>
 	
 	</mapper>
